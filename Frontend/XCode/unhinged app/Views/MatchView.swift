@@ -23,6 +23,8 @@ struct MatchView : View {
         
         ZStack {
             
+            //Profile Image
+            
             GeometryReader { geometry in
                 
                 Image("stockPhoto")
@@ -33,22 +35,25 @@ struct MatchView : View {
                     .mask(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 
             }
+            .shadow(radius: 10)
             
             VStack {
                 
                 Spacer()
                 
+                //Profile Information
+                
                 VStack {
                     
                     HStack(spacing: 20){
                     
-                        Text("Name")
+                        Text("John Doe")
                             .font(.system(.largeTitle, weight: .bold))
-                            .offset(x: -2)
-                        Text("Age")
-                            .font(.system(.subheadline))
-                            .offset(y: 5)
+                            //.offset(x: -2)
                         Spacer()
+                        Text("21")
+                            .font(.system(.title))
+                        
                         
                     }
                     
@@ -59,12 +64,14 @@ struct MatchView : View {
                     }
                     
                 }
+                .foregroundStyle(.white)
+                .shadow(radius: 5)
                 .padding(.horizontal, 20)
                 .padding(.vertical, 30)
                 .background{
                     
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(.thinMaterial)
+                        .fill(.ultraThinMaterial)
                     
                 }
                 
@@ -147,19 +154,91 @@ struct MatchView : View {
         
     }
     
+    @ViewBuilder
+    func MainButtons() -> some View {
+        
+        HStack() {
+            Spacer()
+            
+            
+            Button { Pass() } label: {
+                Image(systemName: "xmark")
+                    .imageScale(.large)
+                    .symbolRenderingMode(.monochrome)
+                    .foregroundStyle(.primary)
+                    .font(.system(.title, weight: .black))
+                    .foregroundStyle(.pink)
+                    .padding()
+                    .background{
+                        
+                        Circle()
+                            .fill(.ultraThickMaterial)
+                    }
+            }
+            
+            Spacer()
+            
+            Button { OpenProfileDetails() } label: {
+                Image(systemName: "heart.text.square.fill")
+                    .imageScale(.large)
+                    .symbolRenderingMode(.monochrome)
+                    .font(.system(.title, weight: .black))
+                    .foregroundStyle(.yellow)
+                    .padding()
+                    .background{
+                        
+                        Circle()
+                            .fill(.ultraThickMaterial)
+                        
+                    }
+            }
+            
+            Spacer()
+            
+            Button { Match() } label: {
+                Image(systemName: "heart.fill")
+                    .imageScale(.large)
+                    .symbolRenderingMode(.monochrome)
+                    .font(.system(.title, weight: .black))
+                    .foregroundStyle(.green)
+                    .padding()
+                    .background{
+                        
+                        
+                        Circle()
+                            .fill(.ultraThickMaterial)
+                        
+                    }
+            }
+            
+            Spacer()
+            
+        }
+        .padding()
+        .background{
+            
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.background)
+                .shadow(color: .black.opacity(0.2),radius: 5)
+            
+        }
+        
+        
+    }
+    
     var body: some View {
         
-        NavigationView {
+        NavigationStack {
+            
             ZStack {
                 
                 VStack{
                     
                     ProfileCard()
-                        .padding(30)
+                        .padding()
                     
                     MainButtons()
-                        .padding(.bottom, 20)
-                    
+                        .padding(.horizontal, 20)
                     
                 }
                 
@@ -169,7 +248,8 @@ struct MatchView : View {
                     
                     Text("Find a Match")
                         .font(.title)
-                        .fontWeight(.bold)
+                        .fontWeight(.semibold)
+                        
                     
                 }
                 ToolbarItem(placement: .topBarTrailing){
@@ -196,7 +276,7 @@ struct MatchView : View {
                     
                     Button(action: {}){
                         
-                        Image(systemName: "envelope.fill")
+                        Image(systemName: "message.fill")
                             
                         
                     }
@@ -262,83 +342,6 @@ struct MatchView : View {
         
         
         
-    }
-    
-}
-
-private struct MainButtons : View {
-    
-    @ViewBuilder
-    func PassButtonLabel() -> some View {
-        
-        Image(systemName: "xmark")
-            .imageScale(.large)
-            .symbolRenderingMode(.monochrome)
-            .foregroundStyle(.primary)
-            .font(.system(.largeTitle, weight: .black))
-            .foregroundStyle(.green)
-            .padding()
-            .background{
-                
-                Circle()
-                    .fill(.regularMaterial)
-                    .shadow(radius: 3)
-            }
-        
-    }
-    
-    @ViewBuilder
-    func DetailsButtonLabel() -> some View {
-
-        Image(systemName: "heart.text.square.fill")
-            .imageScale(.large)
-            .symbolRenderingMode(.monochrome)
-            .font(.system(.largeTitle, weight: .black))
-            .foregroundStyle(.yellow)
-            .padding()
-            .background{
-                
-                Circle()
-                    .fill(.regularMaterial)
-                    .shadow(radius: 3)
-                
-            }
-        
-       
-    }
-    
-    
-    @ViewBuilder
-    func LikeButtonLabel() -> some View {
-        
-        Image(systemName: "heart.fill")
-            .imageScale(.large)
-            .symbolRenderingMode(.monochrome)
-            .font(.system(.largeTitle, weight: .black))
-            .foregroundStyle(.pink)
-            .padding()
-            .background{
-                
-                
-                Circle()
-                    .fill(.regularMaterial)
-                    .shadow(radius: 3)
-                
-            }
-        
-        
-    }
-    
-    var body: some View {
-        
-        HStack(spacing: 20) {
-            
-            PassButtonLabel()
-            DetailsButtonLabel()
-            LikeButtonLabel()
-            
-        }
-    
     }
     
 }
