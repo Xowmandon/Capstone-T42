@@ -6,11 +6,8 @@ app = Flask(__name__)
 def home():
     return "Hello from Flask on EC2!"
 
-<<<<<<< Updated upstream
 
 
-=======
->>>>>>> Stashed changes
 @app.route('/messages/send')
 def sendMessage():
     return "Message sent!"
