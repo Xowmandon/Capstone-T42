@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import SQLAlchemyError
-from models import db, User, Match, Message, Swipe, Report
+from src.models import db, User, Match, Message, Swipe, Report
 
 
 # Create a new Blueprint for the API
@@ -10,7 +10,7 @@ app = Blueprint('app', __name__)
 
 @app.route('/')
 def home():
-    return "Welcome to the Unhinged API!"
+    return "Welcome to the UnHinged API!"
 
 # Create a new user in RDS
 # POST /Users/Create
@@ -46,6 +46,7 @@ def create_user():
         
         # Extract the values from the data
         name = data.get('name')
+        username = data.get('username')
         email = data.get('email')
         
         # Check if the user already exists - Filter by email
@@ -54,14 +55,14 @@ def create_user():
             return jsonify({"error": "User with this Email already exists."}), 409
         
         # Create a new user object
-        new_user = User(name=name, email=email)
+        new_user = User(name=name,username=username,email=email)
         
         # Add the new user to the session
         db.session.add(new_user)
         # Commit the changes to the database
         db.session.commit()
         
-        return "User created successfully!"
+        return jsonify({"Success":"User created successfully!"}), 201
     
     except SQLAlchemyError as e:
         
@@ -74,6 +75,27 @@ def create_user():
         # Unexpected error, return Details back
         return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
 
+# Get all users from RDS
+# GET /Users/GetAll
+@app.route('/users', methods=['GET'])
+def get_all_users():
+    """
+    Summary: Get all users from the database.
+    
+    Returns:
+        list: A list of all users in the database.
+        
+    """
+    try:
+        # Get all users from the database
+        users = User.query.all()
+        
+    except Exception as e:
+            return jsonify({"error": "An error occurred"}), 500
+        
+    # Return the users as a list of dictionaries
+    return jsonify([user.to_dict() for user in users]), 200
+
 # Get user by ID from RDS
 # GET /Users/Get/{id}
 @app.route('/users/<int:id>', methods=['GET'])
@@ -82,7 +104,7 @@ def get_user(id) :
 
 # Get all matches for a user
 # GET /Users/Matches/{id}
-@app.route('/users/matches', methods=['GET'])
+@app.route('/users/matches/<int:id>', methods=['GET'])
 def get_matches(id):
     """
     Summary: Get all matches for a user by ID.
@@ -151,7 +173,7 @@ def create_swipe():
         # Commit the changes to the database
         db.session.commit()
         
-        return "Swipe created successfully!"
+        return "Swipe created successfully!", 201
     
     except SQLAlchemyError as e:
         
