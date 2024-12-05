@@ -13,7 +13,7 @@ public struct ConversationsView: View {
     
     @Environment(\.modelContext) private var modelContext
     
-    
+        
     
     public var body: some View {
         List{

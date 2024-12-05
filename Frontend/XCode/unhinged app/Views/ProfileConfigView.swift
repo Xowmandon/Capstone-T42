@@ -7,6 +7,9 @@
 
 import SwiftUI
 
+
+// Note - keep track of changed fields
+
 struct ProfileConfigView : View {
     
     var body : some View {

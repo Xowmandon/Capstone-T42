@@ -7,9 +7,12 @@
 
 import SwiftUI
 import SwiftData
+import AuthenticationServices
 
 @main
 struct unhinged_appApp: App {
+    
+    //TODO: @EnvironmentObject appModel : AppModel
     
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -23,10 +26,22 @@ struct unhinged_appApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
-
+    
+    // TODO: Store user ID from ASAuthorization
+    // TODO: Make LoginView the root View and configure
+    
+    func getAuthenticationStatus() {
+        let appleIDProvider = ASAuthorizationAppleIDProvider()
+        //appleIDProvider.getCredentialState(forUserID: appModel.account.userID?, completion: <#T##(ASAuthorizationAppleIDProvider.CredentialState, (any Error)?) -> Void#>)
+    }
+    
     var body: some Scene {
+        
         WindowGroup {
-            MatchView()
+            NavigationStack{
+                MatchView()
+                    .navigationTitle("Find a Match")
+            }
         }
         .modelContainer(sharedModelContainer)
     }

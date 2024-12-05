@@ -218,7 +218,7 @@ struct MatchView : View {
         .background{
             
             RoundedRectangle(cornerRadius: 20)
-                .fill(.background)
+                .fill(Color(UIColor.separator))
                 .shadow(color: .black.opacity(0.2),radius: 5)
             
         }
@@ -244,14 +244,14 @@ struct MatchView : View {
                 
             }
             .toolbar{
-                ToolbarItem(placement: .topBarLeading){
+                /*ToolbarItem(placement: .topBarLeading){
                     
                     Text("Find a Match")
                         .font(.title)
                         .fontWeight(.semibold)
                         
                     
-                }
+                }*/
                 ToolbarItem(placement: .topBarTrailing){
                     
                     
@@ -347,7 +347,9 @@ struct MatchView : View {
 }
 
 #Preview {
-    
-    MatchView()
-    
+    NavigationStack{
+        MatchView()
+            .navigationTitle("Find a Match")
+
+    }
 }
