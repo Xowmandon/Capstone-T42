@@ -57,3 +57,17 @@ def get_all_matches():
     # Return the matches as a list of dictionaries
     return jsonify([match_schema.dump(match) for match in matches]), 200
 
+
+
+# Get all Messages for a User
+@aggregate_bp.route('/aggregate/users/messages', methods=['GET'])
+def get_users_agg_messages():
+    
+    data = request.get_json()
+    user = data.get('user')
+    
+    # Get the messages for the user
+    messages = models.message.Message.query.filter_by(sender=user).all()
+    
+    # Return the messages - 
+    return jsonify([models.message.MessageSchema().dump(message) for message in messages]), 200 
