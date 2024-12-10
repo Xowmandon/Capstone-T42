@@ -2,7 +2,7 @@ import os, sys
 
 
 # Add the parent directory to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
 from src.utils import DevDBConfig, LocalDBConfig, EnvManager

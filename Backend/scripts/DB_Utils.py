@@ -6,10 +6,10 @@ import sys
 
 
 # Add the parent directory to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-from src.app import app
+from app import app
 from src.models import db
 from src.utils import EnvManager
 

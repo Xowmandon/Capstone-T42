@@ -6,13 +6,16 @@ import gnupg
 class EnvManager:
     
     def __init__(self):
+        
+        # Load the .env file from the root directory
         self.env_file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../.env'))
         load_dotenv(self.env_file_path)
     
-
+    # Wrapper for Retrieval Passed variable Name
     def load_env_var(self, var_name):
         return os.getenv(var_name)
     
+    # Utility Function to Decrypt and Load the .env File - Now Decrypted
     def load_encrypted_env(self, passphrase):
         gpg = gnupg.GPG()
         with open(self.env_file_path, 'rb') as f:
@@ -24,6 +27,8 @@ class EnvManager:
             else:
                 raise Exception("Failed to decrypt the .env file")
 
+# Base Configuration Class
+# Contains the Common Configuration Options 
 class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
@@ -32,6 +37,8 @@ class BaseConfig:
         return f"Config({self.SQLALCHEMY_DATABASE_URI})"
 
 
+# Development Configuration Class
+# Config Options for AWS RDS
 class DevDBConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = URL.create(
         "postgresql",
@@ -41,7 +48,8 @@ class DevDBConfig(BaseConfig):
         database="Unhinged_DB",
     )
 
-
+# Test Configuration DB
+# Config Options for Local Testing - Uses Local Postgres DB
 class TestDBConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = URL.create(
         "postgresql",
