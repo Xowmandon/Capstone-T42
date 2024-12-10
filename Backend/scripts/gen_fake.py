@@ -27,6 +27,9 @@ from Backend.app import app # Import the Flask App from app.py
 
 # Generates Fake User Data and Actions for Demo Purposes
 
+user_schema = models.user.UserSchema()
+match_schema = models.match.MatchSchema()
+
 class GenFake():
     
     # Init Faker Instance, Seed Locale
@@ -55,7 +58,7 @@ class GenFake():
         # Randomly Assign Gender
         # TODO: Probabilistics Weight
         user.gender = self.fake.random_element(elements=('Male', 'Female', 'Other'))
-        user.age = self.fake.random_int(min=15, max=100)
+        user.age = self.fake.random_int(min=18, max=100)
         
         user.fake = True
                 
@@ -80,10 +83,9 @@ class GenFake():
 
     # Get Two Unique Sampled Fake Users from DB, Ensure they are not Already Matched
     def get_two_fake_users(self):
-        while True:
-            pair_users = tuple(random.sample(self.get_fake_users(), 2)) # Get Two Random Users
-            if not self._is_matched(pair_users[0], pair_users[1]): # Check if Users are Already Matched
-                return pair_users
+     
+        pair_users = tuple(random.sample(self.get_fake_users(), 2)) # Get Two Random Users
+        return pair_users
 
     # Check if User1 and User2 are already Matched
     def is_matched(self,user1, user2):
@@ -119,25 +121,15 @@ class GenFake():
     # Generates Fake Match between two Faked Users
     # Constraints - Matcher and Matchee are Different Users
     #             - Collision of Match Objects is Possible (if Matcher and Matchee are already Matched)     
-    def gen_fake_match(self):
+    def gen_fake_match(self, matcher, matchee):
         while True:
-            pair_users = self.get_two_fake_users()
-            if not self.is_matched(pair_users[0], pair_users[1]):
-                matcher = pair_users[0]
-                matchee = pair_users[1]
+            if not self.is_matched(matcher, matchee):
                 match = models.match.Match.Match(matcher=matcher, matchee=matchee, match_date=self.fake.date_time())
                 return match
         
         
     # Generates Fake Swipe between two Faked Users
-    def gen_fake_swipe(self,swiper):
-        
-        # Get Two Fake Users
-        pair_users = self.get_two_fake_users()
-        
-        # Set Swiper and Swipee
-        swiper = pair_users[0]
-        swipee = pair_users[1]
+    def gen_fake_swipe(self,swiper,swipee):
         
         # Create a Swipe Object
         # Will not Function Properly without Correct Model Mapping in ORM (Refer to models.py)
@@ -145,7 +137,51 @@ class GenFake():
         
         return swipe
         
-
+    def gen_fake_message(self, messager, messagee):
+        
+        # Create a Message Object
+        message = models.message.Message(messager=messager, 
+                                         messagee=messagee, 
+                                         message_text=self.fake.text(max_nb_chars=200), 
+                                         message_date=self.fake.date_time())
+        
+        return message
+    
+    def gen_fake_conversation(self, user1, user2):
+              
+        # Get Two Fake Users - a Pair
+        pair = (user1, user2)      
+                
+        try:
+        
+            for users in pair:
+                if not db.session.query(models.user.User).filter_by(email=users.email).first():
+                    db.session.add(users)
+                    db.session.commit()
+                    db.session.refresh(users)
+        
+    
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+        
+                    
+        for _ in range(20):
+            
+            # Randomly Select Sender and Receiver
+            rand_choice_sender = random.choice(pair)
+            rand_choice_receiver = user1 if rand_choice_sender == user2 else user2
+            
+            # Construct Message Instance Between Users
+            message = self.gen_fake_message(rand_choice_sender, rand_choice_receiver)
+            
+            # Add to DB
+            models.db.session.add(message)
+            
+            # Commit Changes
+            models.db.session.commit()
+            
+        
     # Generates Fake Value for a Particular Field of a Data Model ORM
     # BUG: Refer to Bug in gen_fake_user -  Functionality Deprecated As of Now
     def _fake_value_for_field(self,field):
@@ -162,55 +198,62 @@ class GenFake():
         # Return the Fake Value for the Field, or None if not found
         return fake_funcs[field.__class__.__name__]()
 
+    def gen_write_to_csv_db(self):
+           
+        # Generate 100 Fake Users and store in CSV file
+        test_fake_users = [self.gen_fake_user() for _ in range(100)]
+        
+        # Write the Generated Fake Users to CSV
+        # data_path is the path to a data holding directory - Child of Backend
+        data_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
+        csv_f = data_path + '/fake_users.csv'
+        
+        with open(csv_f, 'a') as f:
+            
+            for user in test_fake_users:
+                try:
+                    # Validate the User Data
+                    user_schema.load(user_schema.dump(user))
+                    
+                    with app.app_context():
+                        db.session.add(user) # Add the User to the DB
+                        #db.session.flush() # Flush the session to generate the primary key id
+                        
+                        db.session.commit()
+                        db.session.refresh(user)
+                    
+                except ValidationError as e:
+                    print(f"Error: {e}")
+                    continue
+                
+                f.write(str(user_schema.dump(user)))
+                f.write("\n")
+                print("Fake Users Generated and Stored in DB")
+
+
 
 # Main Function
 if __name__ == '__main__':
-    UserGenerator = GenFake()
-    user_schema = models.user.UserSchema()
-    match_schema = models.match.MatchSchema()
-        
-    # Generate 100 Fake Users and store in CSV file
-    test_fake_users = [UserGenerator.gen_fake_user() for _ in range(100)]
-    
-    # Drop and Create the DB - Testing
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
-    
+   
+    Generator = GenFake()
+    pair = Generator.get_two_fake_users()
 
-    # Write the Generated Fake Users to CSV
-    # data_path is the path to a data holding directory - Child of Backend
-    data_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))
-    csv_f = data_path + '/fake_users.csv'
+    # Generate a Fake Match Between Two Users
+    match = Generator.gen_fake_match()
     
-    with open(csv_f, 'a') as f:
-        
-        for user in test_fake_users:
-            try:
-                # Validate the User Data
-                user_schema.load(user_schema.dump(user))
-                
-                with app.app_context():
-                    db.session.add(user) # Add the User to the DB
-                    #db.session.flush() # Flush the session to generate the primary key id
-                    
-                    db.session.commit()
-                    db.session.refresh(user)
-                
-            except ValidationError as e:
-                print(f"Error: {e}")
-                continue
-            
-            f.write(str(user_schema.dump(user)))
-            f.write("\n")
-
-
-    print("Fake Users Generated and Stored in DB")
+    # Generate a Fake Swipe Between Two Users
+    swipe = Generator.gen_fake_swipe(pair[0], pair[1])
+    
+    # Generate a Fake Conversation Between Two Users
+    Generator.gen_fake_conversation(pair[0], pair[1])
+    
+    """
     with app.app_context():
         #print(db.session.query(models.user.User).all())
         for user in db.session.query(models.user.User).all():
-            print(user_schema.dump(user))
-            print("\n")
+            if user is not None:
+                print(user_schema.dump(user))
+                print("\n")
 
 
     # Get Two Random Fake Users
@@ -222,4 +265,4 @@ if __name__ == '__main__':
     # Validate the Match Data Against the Match Schema
     match_schema = models.match.MatchSchema(only=('matchee', 'match_date'))
     #print(match_schema.dump(match))
-    
+    """
