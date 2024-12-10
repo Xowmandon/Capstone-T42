@@ -11,9 +11,7 @@ import SwiftData
 
 public struct ConversationsView: View {
     
-    @Environment(\.modelContext) private var modelContext
-    
-        
+    @EnvironmentObject var appModel: AppModel
     
     public var body: some View {
         List{
@@ -22,6 +20,14 @@ public struct ConversationsView: View {
             
         }
     }
+    
+    private func getConversations() -> [Conversation] {
+        
+        
+        return []
+        
+    }
+    
 }
 
 

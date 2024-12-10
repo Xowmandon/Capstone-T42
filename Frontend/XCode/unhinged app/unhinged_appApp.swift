@@ -6,43 +6,61 @@
 //
 
 import SwiftUI
-import SwiftData
 import AuthenticationServices
 
 @main
 struct unhinged_appApp: App {
     
-    //TODO: @EnvironmentObject appModel : AppModel
-    
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @StateObject var appModel : AppModel = AppModel()
     
     // TODO: Store user ID from ASAuthorization
-    // TODO: Make LoginView the root View and configure
+    // TODO: Make LoginView the root View and add authentication check
     
-    func getAuthenticationStatus() {
+    private var account : AccountData = AccountData.shared
+    
+    @State private var userIsAuthenticated : Bool = false
+    
+    init(){
+        
+        self.account = AccountData(hasBeenAuthenticated: false)
+        
+        userIsAuthenticated = getAuthenticationStatus(account: self.account)
+        
+    }
+    
+    func getAuthenticationStatus(account: AccountData) -> Bool {
+        var success : Bool = false
         let appleIDProvider = ASAuthorizationAppleIDProvider()
-        //appleIDProvider.getCredentialState(forUserID: appModel.account.userID?, completion: <#T##(ASAuthorizationAppleIDProvider.CredentialState, (any Error)?) -> Void#>)
+        appleIDProvider.getCredentialState(forUserID: account.getUserID() ?? "0"){ credentialState, error in
+            
+            if (credentialState == .authorized){
+                
+                success = true
+                
+            }
+            
+        }
+        
+        return success
     }
     
     var body: some Scene {
         
         WindowGroup {
             NavigationStack{
-                MatchView()
-                    .navigationTitle("Find a Match")
+                if userIsAuthenticated {
+                    
+                    MatchView()
+                        .navigationTitle("Find a Match")
+                    
+                } else {
+                    
+                    LoginView(userIsAuthenticated: $userIsAuthenticated)
+                    
+                }
             }
+            .environmentObject(appModel)
         }
-        .modelContainer(sharedModelContainer)
+        
     }
 }
