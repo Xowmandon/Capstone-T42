@@ -8,8 +8,6 @@ db = SQLAlchemy()
 ma = Marshmallow(app)
 
 
-
-
 # TODO - TODO: Consider Using FlaskMarshmallow for Serialization/Deserialization
 # - Can also Include Validation and Error Handling Easier than Manual Methods like to_dict
 

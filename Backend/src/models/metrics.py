@@ -1,7 +1,7 @@
 # Desc: Models for Activity and Game Metrics
 # Schema for Deserializing and Serializing
 
-from src.extensions import db, ma
+from Backend.src.extensions import db, ma
 
 
 class ActivityMetrics(db.Model):
@@ -12,11 +12,14 @@ class ActivityMetrics(db.Model):
     # ?? Update to ActivityMetrics on Event or A Type of Chron Job Ran on Backend ??
     # If Chron Job, Aggregate Metrics from Associated Tables Store in RDS
     # ?? There Might be a Way to Automate this with a Trigger or Stored Procedure ??
+    
+    # TODO: Implement CASCADE on User Deletion
         
     # Supplementary Primary ID 
     id = db.Column(db.Integer, primary_key=True)
         
     # Foreign Keys - User To Track Activity Metrics
+    # On Delete of User - Cascade to Remove Associated Activity Metrics
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
         
     # Activity Metrics

@@ -1,28 +1,35 @@
+from enum import Enum
+
 # Desc: Swipe Model for Swipes Table
 # Schema for Deserializing and Serializing
 
-from src.extensions import db, ma # DB and Marshmallow Instances
-from src.models.user import User, UserSchema # User Model
+from  Backend.src.extensions import db, ma # DB and Marshmallow Instances
+from  Backend.src.models.user import User, UserSchema # User Model
+
+# Enum for Swipe Result
+class SwipeResult(Enum):
+    PENDING = 0
+    ACCEPTED = 1
+    REJECTED = 2
+
+# ...
 
 # Swipe Model for Swipes Table
+# TODO: Implement CASCADE on User Deletion
 class Swipe(db.Model):
     __tablename__ = 'swipes'
     
     # Foreign Keys - User ID's of Swiper and Swipee
+    # On Delete of User - Cascade to Remove Associated Swipes
     swiper = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
     swipee = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
     
-    # ---Dimensional Fields---
-   
-    # TODO: Refactor with Enum for Swipe Result
-    # 0 - Pending (Swiper Swiped Right, Swipee Hasn't Swiped Back Yet), 
-    # 1 - Accepted (Both Swiped Right),
-    # 2 - Rejected (Swiper Swipped Right, Swipee Swiped Left)
-    swipe_result = db.Column(db.Integer, nullable=False)
+    swipe_result = db.Column(db.Enum(SwipeResult), nullable=False)
     
     # ---Dimensional Fields---
     swipe_date = db.Column(db.DateTime, nullable=False)
     
+    """
     def to_dict(self):
         return {
             'swiper': User.query.get(self.swiper),
@@ -34,11 +41,12 @@ class Swipe(db.Model):
     
     def __repr__(self):
         return f"<Swipe swiper={self.swiper}, swipee={self.swipee}, swipe_result={self.swipe_result}, swipe_date={self.swipe_date}>"
-
+    """
 
 class SwipeSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Swipe
+        load_instance = True
 
     swiper = ma.Nested(UserSchema)
     swipee = ma.Nested(UserSchema)

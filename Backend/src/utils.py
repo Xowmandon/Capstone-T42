@@ -54,9 +54,10 @@ class TestDBConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = URL.create(
         "postgresql",
         username="postgres",
-        #password="test_password",
+        password="joshua16",
         host="localhost",
         port=5432,
         database="test_unhinged_db",
     )
     SQLALCHEMY_ECHO = True
+
