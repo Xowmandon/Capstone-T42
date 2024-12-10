@@ -1,8 +1,13 @@
 from flask import Blueprint, request, jsonify
 from sqlalchemy.exc import SQLAlchemyError
 import logging
-from src.models import db, User, Match, Message, Swipe, Report
 
+from src.extensions import db
+
+# Import the Models and Schemas
+import src.models as models
+
+# Usage: User.query.all() - Returns all Users in the Database
 
 # TODO: ? Determine if Parameters should be passed in as JSON or URL Parameters in Routes ?
 
@@ -69,12 +74,12 @@ def create_user():
         email = data.get('email')
         
         # Check if the user already exists - Filter by email
-        existing_user = User.query.filter_by(email=email).first()
+        existing_user = models.user.User.query.filter_by(email=email).first()
         if existing_user:
             return jsonify({"error": "User with this Email already exists."}), 409
         
         # Create a new user object
-        new_user = User(name=name,username=username,email=email)
+        new_user = models.user.User(name=name,username=username,email=email)
         
         # Add the new user to the session
         db.session.add(new_user)
@@ -107,7 +112,7 @@ def get_all_users():
     """
     try:
         # Get all users from the database
-        users = User.query.all()
+        users = models.user.User.query.all()
         
     except Exception as e:
             return jsonify({"error": "An error occurred"}), 500
@@ -119,7 +124,7 @@ def get_all_users():
 # GET /Users/Get/{id}
 @app.route('/users/<int:id>', methods=['GET'])
 def get_user(id) :
-    return db.get_or_404(User, id).to_dict()
+    return db.get_or_404(models.user.User, id).to_dict()
 
 
 #-----Match Routes-----
@@ -140,7 +145,7 @@ def get_matches(email):
        
     """
     # Get the matches for the user
-    matches = Match.query.filter_by(matcher=email).all()
+    matches = models.match.Match.query.filter_by(matcher=email).all()
     
     # Return the matches - 
     return jsonify([match.to_dict() for match in matches]), 200
@@ -184,7 +189,7 @@ def create_match():
         match_date = data.get('match_date')
         
         # Create a new match object
-        new_match = Match(matcher=matcher, matchee=matchee, match_date=match_date)
+        new_match = models.match.Match(matcher=matcher, matchee=matchee, match_date=match_date)
         
         # Add the new match to the session
         db.session.add(new_match)
@@ -245,7 +250,7 @@ def create_swipe():
         swipe_date = data.get('swipe_date') # Date of the Swipe
         
         # Create a new swipe object
-        new_swipe = Swipe(swiper=swiper, swipee=swipee, swipe_result=swipe_result, swipe_date=swipe_date)
+        new_swipe = models.swipe.Swipe(swiper=swiper, swipee=swipee, swipe_result=swipe_result, swipe_date=swipe_date)
         
         # Add the new swipe to the session
         db.session.add(new_swipe)
@@ -298,7 +303,7 @@ def get_swipes():
     email = data.get('email')
     
     # Get the swipes for the user
-    swipes = Swipe.query.filter_by(swiper=email).all()
+    swipes = models.swipe.Swipe.query.filter_by(swiper=email).all()
     
     # Return the swipes  
     return jsonify([swipe.to_dict() for swipe in swipes])

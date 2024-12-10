@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text, URL
 from sqlalchemy.exc import SQLAlchemyError, OperationalError, TimeoutError
 
 from src.utils import EnvManager, DevDBConfig, TestDBConfig
-from src.models import *
+from src.extensions import *
 from src.middleware import before_request
 from src.routes import app as routes_api
 
@@ -21,9 +21,6 @@ app.config.from_object(TestDBConfig)
 
 # Initialize the DB with Flask
 db.init_app(app)
-
-# Initialize the Marshmallow Schema with Flask
-# Must be initialized after the DB
 
 
 # Register the API and Routing Blueprint with the App

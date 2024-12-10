@@ -2,7 +2,7 @@ import unittest
 from flask_testing import TestCase
 import os, sys
 
-from src.models import db, User, Match
+from Backend.src.extensions import db
 
 # TODO: Separate Creation and Retrieval of Models
 # TODO: Implement Real Unit Tests
@@ -14,7 +14,12 @@ from src.models import db, User, Match
 
 from Backend.app import app
 from Backend.src.utils import TestDBConfig
-from Backend.src.models import db, User
+
+# Import the Models and Schemas
+from Backend.src.models.user import User, UserSchema
+from Backend.src.models.match import Match, MatchSchema
+from Backend.src.models.swipe import Swipe, SwipeSchema
+from Backend.src.models.message import Message, MessageSchema
 
 class AppTest(TestCase):
     def create_app(self):

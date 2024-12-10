@@ -10,7 +10,7 @@ import sys
 
 
 from app import app
-from src.models import db
+from Backend.src.extensions import db
 from src.utils import EnvManager
 
 # Create all tables in the database, according to the models defined
