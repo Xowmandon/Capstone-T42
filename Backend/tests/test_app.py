@@ -85,7 +85,7 @@ class AppTest(TestCase):
         match = Match(matcher=matcher.email, matchee=matchee.email, match_date='2024-01-01')   
         db.session.add(match)   
 
-        # GET Matches for User, Validate Response
+        # GET Matches for User
         response = self.client.get(f'/users/matches/{matcher.email}')
         self.assertEqual(response.status_code, 200)
         

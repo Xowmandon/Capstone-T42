@@ -111,18 +111,18 @@ class Message(db.Model):
     message_read = db.Column(db.Boolean, nullable=False) #Indicate if Message has been Read
     
     
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'sender': User.query.get(self.sender),
-            'receiver': User.query.get(self.receiver),
-            'message': self.message,
-            'message_date': self.message_date,
-            'message_read': self.message_read
-        }
+    #def to_dict(self):
+        #return {
+            #'id': self.id,
+            #'sender': User.query.get(self.sender),
+            #'receiver': User.query.get(self.receiver),
+            #'message': self.message,
+            #'message_date': self.message_date,
+            #'message_read': self.message_read
+        #}
 
-    def __repr__(self):
-        return f"<Message id={self.id}, sender={self.sender}, receiver={self.receiver}, message={self.message}, message_date={self.message_date}>"
+    #def __repr__(self):
+        #return f"<Message id={self.id}, sender={self.sender}, receiver={self.receiver}, message={self.message}, message_date={self.message_date}>"
 
 
 class Swipe(db.Model):
