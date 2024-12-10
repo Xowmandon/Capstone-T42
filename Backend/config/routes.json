@@ -2,8 +2,8 @@
     {
         "path": "/static/<path:filename>",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
             "OPTIONS"
         ]
     },
@@ -17,8 +17,8 @@
     {
         "path": "/users/<string:email>",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
             "OPTIONS"
         ]
     },
@@ -39,16 +39,16 @@
     {
         "path": "/users//matches",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
             "OPTIONS"
         ]
     },
     {
         "path": "/users/matches",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
             "OPTIONS"
         ]
     },
@@ -69,8 +69,8 @@
     {
         "path": "/users/swipes>",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
             "OPTIONS"
         ]
     },
@@ -82,26 +82,49 @@
         ]
     },
     {
+        "path": "/users/messages",
+        "methods": [
+            "POST",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/messages/conversation",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
         "path": "/aggregate/users",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
             "OPTIONS"
         ]
     },
     {
         "path": "/aggregate/matches",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/aggregate/users/messages",
+        "methods": [
+            "HEAD",
+            "GET",
             "OPTIONS"
         ]
     },
     {
         "path": "/",
         "methods": [
-            "GET",
             "HEAD",
+            "GET",
             "OPTIONS"
         ]
     }
