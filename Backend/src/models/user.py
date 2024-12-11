@@ -20,7 +20,7 @@ class User(db.Model):
     # Fields of Users, data types provided - May need to change
     id = db.Column(db.Integer, primary_key=True, nullable=True) # Primary Key
 
-    username = db.Column(db.String(50), nullable=False)
+    username = db.Column(db.String(50), nullable=True)
     #password = db.Column(db.String(100), nullable=False)   # TODO: Hash + Salt Password
     
     # Unique Constraint on Email
@@ -28,8 +28,8 @@ class User(db.Model):
     
     # General User Information
     name = db.Column(db.String(50), nullable=False)
-    gender = db.Column(db.String(10), nullable=False)
-    age = db.Column(db.Integer, nullable=False)
+    gender = db.Column(db.String(10), nullable=True)
+    age = db.Column(db.Integer, nullable=True)
     
     # Location Information
     #city = db.Column(db.String(50), nullable=True)
