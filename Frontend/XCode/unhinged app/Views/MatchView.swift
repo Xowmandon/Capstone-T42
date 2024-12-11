@@ -11,8 +11,13 @@ import SwiftData
 
 struct MatchView : View {
     
+    @EnvironmentObject var appModel : AppModel
+    
     @State private var showAccountConfigSheet : Bool = false
     
+    @State private var offsetX: CGFloat = 0       // For sliding the card horizontally
+    @State private var opacity: Double = 1.0     // For fading in and out
+    @State private var shouldAnimateProfileCard: Bool = true
     
     //TODO: change values with profile instance
     @ViewBuilder
@@ -44,7 +49,7 @@ struct MatchView : View {
                     
                     HStack(spacing: 20){
                     
-                        Text("John Doe")
+                        Text(profile.name)
                             .font(.system(.largeTitle, weight: .bold))
                             //.offset(x: -2)
                         Spacer()
@@ -158,7 +163,11 @@ struct MatchView : View {
             Spacer()
             
             
-            Button { Pass() } label: {
+            Button {
+                
+                Pass()
+                
+            } label: {
                 Image(systemName: "xmark")
                     .imageScale(.large)
                     .symbolRenderingMode(.monochrome)
@@ -192,7 +201,12 @@ struct MatchView : View {
             
             Spacer()
             
-            Button { Match() } label: {
+            Button {
+                
+                Match()
+                
+                
+            } label: {
                 Image(systemName: "heart.fill")
                     .imageScale(.large)
                     .symbolRenderingMode(.monochrome)
@@ -231,8 +245,20 @@ struct MatchView : View {
                 
                 VStack{
                     
-                    ProfileCard(profile: Profile())
-                        .padding()
+                    ZStack{
+                    
+                        ForEach(appModel.prospectiveMatches.reversed()){ profile in
+                            
+                            ProfileCard(profile: profile)
+                                .padding()
+                                .opacity(opacity)
+                                .offset(x: offsetX)
+                                .animation(shouldAnimateProfileCard ? .snappy(duration: 0.5) : nil, value: offsetX) // Slide animation
+                                .animation(.easeInOut(duration: 0.5), value: opacity) // Fade animation
+                        }
+                            
+                            
+                    }
                     
                     MainButtons()
                         .padding(.horizontal, 20)
@@ -271,12 +297,20 @@ struct MatchView : View {
                 ToolbarItem(placement: .topBarTrailing){
                     
                     
+                    NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
+                        
+                        Image(systemName: "message.fill")
+                        
+                    }
+                    
+                    /*
                     Button(action: {}){
                         
                         Image(systemName: "message.fill")
                             
                         
                     }
+                    */
                    
                 }
                 
@@ -296,11 +330,18 @@ struct MatchView : View {
     func Pass(){
         
         //Left swipe animation
+        withAnimation(){
+            
+            offsetX = -UIScreen.main.bounds.width // Slide to the right
+            opacity = 0
+            
+        }
         
         //Add profile to user's disliked list
         
         //Refresh match prospects
         
+        refreshMatches()
         
     }
     
@@ -308,18 +349,53 @@ struct MatchView : View {
     func Match(){
         
         //Right Swipe animation
+        withAnimation (Animation.easeIn(duration: 1)) {
+            offsetX = UIScreen.main.bounds.width // Slide to the right
+            opacity = 0
+        }
         
         //add matched profile to matches list
             
         
         //refresh conversations
         
-            //Create conversation with matched profile
+        //Create conversation with matched profile
             
         //Push changes to DB
         
         //Refresh match prospects
+        refreshMatches()
+        
+    }
+    
+    func refreshMatches(){
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
             
+            shouldAnimateProfileCard = false
+            
+            offsetX = 0
+            
+            withAnimation (Animation.snappy(duration: 1)) {
+                
+                shouldAnimateProfileCard = true
+                opacity = 1
+                
+                if !appModel.prospectiveMatches.isEmpty{
+                 
+                    appModel.prospectiveMatches.removeFirst()
+                    
+                }
+                
+            }
+            
+            
+        }
+        
+        
+        //API.getMatches
+        appModel.prospectiveMatches.append(Profile())
+        
         
     }
     
@@ -333,13 +409,11 @@ struct MatchView : View {
         //Push details view onto nav stack
         
     }
-    
-    
-    private func didDismissAccountConfigSheet(){
-        
-        
+
+    func didDismissAccountConfigSheet(){
         
     }
+    
     
 }
 
@@ -347,6 +421,7 @@ struct MatchView : View {
     NavigationStack{
         MatchView()
             .navigationTitle("Find a Match")
+            .environmentObject(AppModel())
 
     }
 }

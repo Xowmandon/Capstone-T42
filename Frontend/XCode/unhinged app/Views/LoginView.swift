@@ -31,36 +31,37 @@ struct LoginView: View {
                         
                     case .success(let auth):
                         print("authentication successful")
+                        print(auth)
+                        
                         guard let credentials = auth.credential as? ASAuthorizationAppleIDCredential else {return}
                         
                         let credentialEmail = credentials.email
                         let credentialFirstName = credentials.fullName?.givenName
                         let credentialLastName = credentials.fullName?.familyName
+                        
+                        print(credentials)
                         //guard let identityToken = credentials.identityToken, let identityTokenString = String(data: identityToken, encoding: .utf8) else { return }
                         //let body = ["appleIdentityToken": identityTokenString]
                         //guard let jsonData = try? JSONEncoder().encode(body) else { return }
                         // This is where you'd fire an API request to your server to authenticate with the identity token attached in the request headers.
                         
+                        // Set account information
+                        AccountData.shared.setEmail(credentialEmail!)
+                        let accountProfile = Profile(name: (credentialFirstName ?? "nil"), imageName: "stockPhoto")
+                        AccountData.shared.setProfile(accountProfile)
                         
-                        let accountExists : Bool = APIClient.shared.assertAccountExistence()
                         
+                        //Ensure account exists in DB
+                        let accountExists : Bool = APIClient.shared.assertAccountExistence(userEmailID: credentialEmail!)
                         if (accountExists) {
                             
                             // Mark account's authentication status
                             AccountData.shared.authenticate()
                             
-                            // Set account information
-                            AccountData.shared.setEmail(credentialEmail)
-                            let accountProfile = Profile(name: (credentialFirstName ?? "nil"), imageName: "stockPhoto")
-                            AccountData.shared.setProfile(accountProfile)
-                            
-                            // Go to Match page
-                            
-                            
                             
                         } else {
                             
-                            //APIClient.shared.createAccount
+                            APIClient.shared.createAccount(account: AccountData.shared)
                             
                         }
                         
@@ -72,6 +73,8 @@ struct LoginView: View {
                         
                     }
                     
+                    
+                    //Confirm authentication and go to match view
                     userIsAuthenticated = true
                     
                 })

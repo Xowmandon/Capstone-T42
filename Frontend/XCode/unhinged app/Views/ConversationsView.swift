@@ -13,10 +13,49 @@ public struct ConversationsView: View {
     
     @EnvironmentObject var appModel: AppModel
     
-    public var body: some View {
-        List{
+    @State private var conversations : [Conversation]
+    
+    init(){
+        self.conversations = [Conversation(), Conversation()]
+    }
+    
+    @ViewBuilder
+    func conversationRow(conversation: Conversation) -> some View {
+        
+        NavigationLink(destination: MessageView(profile: conversation.with)){
             
-           
+            HStack{
+                
+                Image(conversation.with.imageName)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 50, height: 50)
+                    .clipShape(Circle())
+                    .shadow(radius: 3)
+                
+                VStack {
+                    
+                    Text(conversation.with.name)
+                        .bold()
+                    
+                    Text(conversation.messages.last?.content ?? "No Messages")
+                        .font(.footnote)
+                        .padding(.horizontal)
+                }
+                .frame(alignment: .topLeading)
+                
+            
+            }
+            
+        }
+        
+        
+    }
+    
+    public var body: some View {
+        List(conversations){conversation in
+            
+            conversationRow(conversation: conversation)
             
         }
     }
@@ -32,5 +71,7 @@ public struct ConversationsView: View {
 
 
 #Preview {
-    ConversationsView()
+    NavigationStack{
+        ConversationsView()
+    }
 }

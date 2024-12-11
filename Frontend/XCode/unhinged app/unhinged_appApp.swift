@@ -22,9 +22,11 @@ struct unhinged_appApp: App {
     
     init(){
         
-        self.account = AccountData(hasBeenAuthenticated: false)
+        self.account = AccountData(hasBeenAuthenticated: false, email: "")
         
         userIsAuthenticated = getAuthenticationStatus(account: self.account)
+        
+        APIClient.shared.test_post_user()
         
     }
     

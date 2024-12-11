@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Message {
+struct Message : Identifiable {
     
     enum Kind : String, Codable {
         case text

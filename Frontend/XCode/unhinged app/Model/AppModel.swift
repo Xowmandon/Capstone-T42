@@ -10,12 +10,12 @@ import SwiftUI
 
 final class AppModel : ObservableObject {
     
-    var prospectiveMatches : [Profile]
+    @Published var prospectiveMatches : [Profile]
     
     var conversations : [Conversation]
     
     init() {
-        self.prospectiveMatches = []
+        self.prospectiveMatches = [Profile(), Profile(name: "john doe1", imageName: "stockPhoto"), Profile(name: "john doe2", imageName: "stockPhoto")]
         self.conversations = []
     }
     

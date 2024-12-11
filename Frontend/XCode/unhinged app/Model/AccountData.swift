@@ -9,17 +9,17 @@ import Foundation
 
 final class AccountData {
     
-    static let shared = AccountData(hasBeenAuthenticated: false)
+    static let shared = AccountData(hasBeenAuthenticated: false, email: "")
     
     private var hasBeenAuthenticated : Bool = false
     
     private var userID : String?
     
-    private var email : String?
+    private var email : String
     
     private var profile : Profile? 
     
-    init(hasBeenAuthenticated: Bool, userID: String? = nil, email: String? = nil, profile: Profile? = nil) {
+    init(hasBeenAuthenticated: Bool, userID: String? = nil, email: String, profile: Profile? = nil) {
         self.hasBeenAuthenticated = hasBeenAuthenticated
         self.userID = userID
         self.email = email
@@ -38,12 +38,20 @@ final class AccountData {
         self.userID = newUserID
     }
 
-    func setEmail(_ newEmail: String?) {
+    func getEmail() -> String? {
+        return self.email
+    }
+    
+    func setEmail(_ newEmail: String) {
         self.email = newEmail
     }
 
     func setProfile(_ newProfile: Profile?) {
         self.profile = newProfile
+    }
+    
+    func getProfile() -> Profile? {
+        return self.profile
     }
     
     
