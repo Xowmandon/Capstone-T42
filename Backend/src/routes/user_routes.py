@@ -25,6 +25,10 @@ def post_user():
     Payload: JSON object with the following fields:
         - name: str, required
         - email: str, required
+        - username: str, required
+        - gender: str, required
+        - age: int, required
+        
         
     Returns:
         str: A message indicating the success or failure of the user creation.
