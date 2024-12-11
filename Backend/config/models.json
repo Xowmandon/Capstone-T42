@@ -1,0 +1,79 @@
+[
+    {
+        "model_name": "User",
+        "fields": [
+            "id",
+            "username",
+            "email",
+            "name",
+            "gender",
+            "age",
+            "profile_picture",
+            "bio",
+            "fake"
+        ]
+    },
+    {
+        "model_name": "Match",
+        "fields": [
+            "id",
+            "matcher_id",
+            "matchee_id",
+            "match_date"
+        ]
+    },
+    {
+        "model_name": "Swipe",
+        "fields": [
+            "swiper",
+            "swipee",
+            "swipe_result",
+            "swipe_date"
+        ]
+    },
+    {
+        "model_name": "Message",
+        "fields": [
+            "id",
+            "messager_id",
+            "messagee_id",
+            "message_content",
+            "message_date",
+            "message_read"
+        ]
+    },
+    {
+        "model_name": "ActivityMetrics",
+        "fields": [
+            "id",
+            "user_id",
+            "total_swipes",
+            "total_matches",
+            "total_messages",
+            "total_reports",
+            "activity_date"
+        ]
+    },
+    {
+        "model_name": "GameMetrics",
+        "fields": [
+            "id",
+            "user_id",
+            "total_games",
+            "total_wins",
+            "total_losses",
+            "game_metrics_date"
+        ]
+    },
+    {
+        "model_name": "Report",
+        "fields": [
+            "id",
+            "reporter",
+            "reportee",
+            "report_reason",
+            "report_message",
+            "report_date"
+        ]
+    }
+]
