@@ -1,3 +1,7 @@
+//Created by: Benjamin Steinberg
+//Date Created: 12/9
+//Updates: Press T to switch players, need to implement with app and import names, export who won
+
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;

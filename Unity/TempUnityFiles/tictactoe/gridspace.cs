@@ -1,3 +1,7 @@
+//Created by: Benjamin Steinberg
+//Date Created: 12/9
+//Updates: Fully functional, just need some future UI updates
+
 using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
