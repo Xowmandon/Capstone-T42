@@ -17,8 +17,8 @@
         "model_name": "Match",
         "fields": [
             "id",
-            "matcher",
-            "matchee",
+            "matcher_id",
+            "matchee_id",
             "match_date"
         ]
     },
@@ -35,9 +35,9 @@
         "model_name": "Message",
         "fields": [
             "id",
-            "messager",
-            "messagee",
-            "message",
+            "messager_id",
+            "messagee_id",
+            "message_content",
             "message_date",
             "message_read"
         ]
