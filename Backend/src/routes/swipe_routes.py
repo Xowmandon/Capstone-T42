@@ -26,7 +26,10 @@ swipe_schema = models.swipe.SwipeSchema()
 @swipe_bp.route('/users/swipes', methods=['POST'])
 def create_swipe():
     """
-    Summary: Create a new swipe event and add it to the database.
+    Summary: Create a new swipe event or Update and add it to the database.
+    
+    # TODO: Check if Swipe Already Exists, Update Instead of Creating New If So
+    
     
     Payload: JSON object with the following fields:
         - swiper: int, required
