@@ -1,25 +1,56 @@
-from flask import request, jsonify, Blueprint
-from sqlalchemy.exc import SQLAlchemyError
-from marshmallow import ValidationError
+# Routes for Message Resource
+
 import logging
 
+from flask import request, jsonify, Blueprint
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import or_, and_, asc
+from marshmallow import ValidationError
+
 from Backend.src.extensions import db # Import the DB Instance
-import Backend.src.models as models # Import the Models and Schemas
+import Backend.src.models as models# Import the Models and Schemas
+from Backend.src.models import message
 
 # Blueprint for the Message Routes
 message_bp = Blueprint('message_bp', __name__)
 
 message_bp_schema = models.message.MessageSchema()
 
+# Schemas for Message Resource
+message_schema = models.message.MessageSchema()
+message_schema_filtered = models.message.MessageSchemaOnlyEmails(only = ('messager', 'messagee', 'message_content'))
 
 @message_bp.route('/users/messages', methods=['POST'])
 def post_message():
+    """ 
+    Summary: Create a new message and add it to the database.
     
+    Parameters:
+        JSON object with the following fields:
+            - messager_email str, required
+            - messagee_email: str, required
+            - message_content: str, required
+            - message_date: str, required
+    """
     
     try:
         
-        # Get the data from the request body
         data = request.get_json()
+        
+        # Get the data from the request body
+        user1_email = data.get('messager_email')
+        user2_email = data.get('messagee_email')
+        
+        # Get the Users ID's from DB
+        user1 = models.user.User.query.filter_by(email=user1_email).first()
+        user2 = models.user.User.query.filter_by(email=user2_email).first()
+        
+        new_message = {
+            "messager": user1.id,
+            "messagee": user2.id,
+            "message_content": data.get('message_content'),
+            "message_date": data.get('message_date')
+        }
         
         # Extract the values from the data
         message = message_bp_schema.load(data)
@@ -40,37 +71,98 @@ def post_message():
 
 
 @message_bp.route('/users/messages/conversation', methods=['GET'])
-def get_ordered_convo():
+def get_conversation():
     
     """Summary: Get all messages between two users, ordered by DateTime.
     
     Payload:
+    
+        ---Required---
         messager_email (string): The Email of the user sending the message.
         messagee_email (string): The Email of the user receiving the message.
+        
+        ---Optional---
+        limit (int): The number of messages to return.
+        offset (int): The number of messages to skip.
 
     Returns:
         List[dict]: A list of messages between two users, ordered by DateTime., 200
     """
         
     data = request.get_json()
-        
-    user1 = data.get('messager_email')
-    user2 = data.get('messagee_email')
     
-    # Get the messages between the two users
-    messager_to_messagee = models.message.Message.query.filter_by(messager=user1, messagee=user2).all()
-    messagee_to_messager = models.message.Message.query.filter_by(messager=user2, messagee=user1).all()
+    # Check if required parameters are missing
+    if 'messager_email' not in data or 'messagee_email' not in data:
+        return jsonify({"error": "Required parameters missing."}), 400
     
-    # Return the messages as Conversation - List of Messages (Dict) Between Two Users
-    conversation = [models.message.MessageSchema().dump(message) for message in messager_to_messagee]
-    conversation.extend([models.message.MessageSchema().dump(message) for message in messagee_to_messager])
+    # Get the User Emails from the Request
+    user1_email = data.get('messager_email')
+    user2_email = data.get('messagee_email')
     
-    # Remove the Messagee Item - Not Needed for Conversation, as we can infer from the sender
-    conversation = [message.pop("messagee") for message in conversation]  # Remove unnecessary 'del' keyword and fix parentheses
+    # Get the optional limit and offset values
+    limit = data.get('limit')
+    offset = data.get('offset')
+    get_all_messages = data.get('get_all_messages')
+    
+    # Get the Users ID's from DB
+    user1 = models.user.User.query.filter_by(email=user1_email).first()
+    user2 = models.user.User.query.filter_by(email=user2_email).first()
+    
+    # Check if user1 or user2 is not found
+    if not user1 or not user2:
+        return jsonify({"error": "User not found in DB."}), 404
+    
+    # List of Messages Instances between two users, Retrieved from DB
+    conversation = get_messages_between_users(user1.id, user2.id, limit, offset)
+    
+    # Filter the Shared Messages - Only Return User Emails and Message Content
+    # According to the MessageSchemaOnlyEmails Schema and Only Filter
+    normalized_conversation = [message_schema_filtered.dump(msg)for msg in conversation]
+    
+    for message in normalized_conversation:
+        logging.info(f"Common Message: {message}")
+    
+    # Return the messages
+    return jsonify(normalized_conversation), 200
+    
+    
+#-------- Helper Functions --------#    
+#----------------------------------#
+#----------------------------------#
+   
+# Get Messages between two users, with optional limit and offset
+def get_messages_between_users(user1_id, user2_id, limit=10, offset=0, get_all_messages=False):
+    
+    # SQL Filter to get Messages between two users
+    # where User1 is the Messager AND User2 is the Messagee, OR Vice Versa
+    conversation_filter = or_(
+                and_(message.Message.messager.has(id=user1_id), message.Message.messagee.has(id=user2_id)),
+                and_(message.Message.messager.has(id=user2_id), message.Message.messagee.has(id=user1_id))
+            )
+    
+    # Query, Filter, Order and Paginate the Messages between two users
+    # Order by DateTime, Oldest to Newest
+    # Offset and Limit the Results (Optionally)
+    conversation = (
+        db.session.query(models.message.Message)
+        .filter(
+            conversation_filter
+        )
+        .order_by(models.message.Message.message_date.asc())  # Order messages by timestamp
+        .offset(offset)  # Support pagination, start at offset when returning results   # Return limited results
+    )
+    
+    # Return all messages if all_messages is True
+    if not get_all_messages:
+        return conversation.limit(limit)
+    
+    return conversation.all()
 
-    # Order Conversation by DateTime, Oldest to Newest
-    conversation = sorted(conversation, key=lambda x: x['message_date'])
-
-    # Return the messages - 
-    return jsonify(conversation), 200
+    # ----Alternative Method---
+    #user1_messages = set(user1.sent_messages)
+    #user2_received_messages = set(user2.received_messages)
+            
+    #common_messages = user1_messages.intersection(user2_received_messages)
+            
     
+ 
