@@ -187,13 +187,18 @@ class GenFake():
         logging.info("Fake Conversation Generated Successfully!")
         return conversation
     
+    def gen_num_fake_users(self, num_users=100):
+            
+            users = []
+            for _ in range(int(num_users)):
+                user = self.gen_fake_user()
+                users.append(user)
+            return users
     
-    def gen_add_fake_users_to_db(self,num_users=100):
-        
-        users = [self.gen_fake_user() for _ in range(num_users)]
+    def add_fake_users_to_db(self,users,num_users=100):
         
         try:
-        
+           
             for user in users:
                 
                 user_in_db = db.session.query(models.user.User).filter_by(email=user.email).first()
@@ -292,6 +297,11 @@ if __name__ == '__main__':
     
     # Parse CLI Arguments
     args = sys.argv[1:]
+    
+    if "--reset-db" in args:
+            with app.app_context():
+                db.drop_all()
+                db.create_all()
     
     # Check for specific arguments and perform corresponding actions
     if "--gen-fake-users" in args:
