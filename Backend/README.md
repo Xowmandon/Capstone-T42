@@ -1,5 +1,7 @@
 # Backend Directory Structure
 
+**Last Update:** Dec 10, 2024
+
 This document outlines the structure and usage of the `Backend` directory, providing clarity for developers.
 
 ## Overview
@@ -21,35 +23,43 @@ The `Backend` directory contains the main backend application code for the proje
 
 #### `config/`
 Contains configuration files:
+- **`models.json`**: JSON Representing database models - Gen by meta_info and meta_display in `scripts/`
 - **`requirements.txt`**: Lists the dependencies for the project.
+- **`routes.json`**: JSON Repr. of API Routes - Gen by meta_info and meta_display in `scripts/`
 
 #### `data/`
 Stores data files:
 - **`fake_users.csv`**: Sample user data in CSV format.
 
+#### `docs/`
+Directory for additional documentation.
+
 #### `logs/`
 Directory for log files.
-
-#### `src/`
-Contains the main source code for the backend:
-- **`__init__.py`**: Marks the directory as a Python package.
-- **`middleware.py`**: Middleware functions for the application.
-- **`models.py`**: Defines database models.
-- **`routes.py`**: Handles API routes.
-- **`utils.py`**: Includes utility functions and classes.
 
 #### `scripts/`
 Contains utility scripts for the project:
 - **`__init__.py`**: Marks the directory as a Python package.
-- **`DB_Utils.py`**: Provides database utility functions.
-- **`gen_fake.py`**: Generates fake data.
+- **`DB_Utils.py`**: Provides database utility functions - Deletion and Creation
+- **`gen_fake.py`**: Generates fake data, used to populate and simulate DB
+- **`meta_display.py`**: Script for displaying route and model metadata
+- **`meta_info.py`**: Script for Generating current routes and models in JSON
+- **`sql/`**: Directory for SQL scripts.
+
+#### `src/`
+Contains the main source code for the backend:
+- **`__init__.py`**: Marks the directory as a Python package.
+- **`extensions.py`**: Extensions for the application, db and ma configs
+- **`models/`**: Contains database model definitions.
+- **`routes/`**: Handles API routes. 
+- **`utils.py`**: Includes utility functions and classes.
+- **`validators/`**: Contains validation functions.
 
 #### `tests/`
 Holds unit tests for the backend:
 - **`__init__.py`**: Marks the directory as a Python package.
 - **`test_app.py`**: Tests for the Flask application.
 - **`test_DB.py`**: Tests for database functionality.
-- **`test_fake.py`**: Tests for fake data generation scripts.
 
 ---
 
@@ -59,14 +69,7 @@ When running Python scripts or main application files, use absolute paths to ens
 
 - To run `gen_fake.py`:
   ```bash
-  python3 -m scripts.gen_fake
-  ```
-- The `-m` flag specifies that the file is part of a module (indicated by `__init__.py`).
-
-This practice also applies to running tests located in the `tests` module:
-```bash
-python3 -m tests.test_app
-```
+  python3 -m Backend.scripts.gen_fake
 
 ---
 
