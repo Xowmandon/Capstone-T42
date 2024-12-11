@@ -10,14 +10,13 @@ from flask_testing import TestCase
 from unittest.mock import patch
 
 from Backend.app import app
-from  Backend.src.extensions import db, ma
+from  Backend.src.extensions import db, ma, URL
 
 from  Backend.src.utils import TestDBConfig
 import Backend.src.models as models
 from Backend.scripts.gen_fake import GenFake
 
 user_schema = models.user.UserSchema()
-
 
 class TestGetConversationRoute(TestCase):
     """Tests for the /users/messages/conversation route."""
@@ -56,13 +55,14 @@ class TestGetConversationRoute(TestCase):
 def test_get_conversation():
     
     # Define the API URL
-    url = "http://127.0.0.1:5000/users/messages/conversation"
+    url = URL + "/users/messages/conversation"
     
     with app.app_context():
         
-        # Clear the DB
+        """ # Clear the DB
         db.drop_all()
-        db.create_all()
+        db.create_all()"
+        """
         
         # Generate Fake User Pair
         # Add the fake users to the DB if they don't exist

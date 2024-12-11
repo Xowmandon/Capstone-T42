@@ -4,13 +4,15 @@ from flask_testing import TestCase
 from unittest.mock import patch
 
 from Backend.app import app
-from  Backend.src.extensions import db, ma
+from  Backend.src.extensions import db, ma, URL
 
 from  Backend.src.utils import TestDBConfig
 import Backend.src.models as models
 from Backend.scripts.gen_fake import GenFake
 
 user_schema = models.user.UserSchema()
+
+
 
 def test_post_user():
     
@@ -48,9 +50,23 @@ def test_post_user():
         print("\n")
         print(f"----Response JSON----\n: {response.json()}")
 
-        
-        
+
+def test_get_user():
+    response = requests.get(URL + "/users", json={"email": "rjennings@example.com"})
+    
+    # If the response is not 200, print the error and Exit
+    if response.status_code != 200:
+        print(f"Error: {response.status_code}")
+        return
+    
+    user_data = response.json() # Get the JSON Response
+    
+    # Print the User Data, Filtered with only email, username, name, and age
+    user_schema_filter = models.user.UserSchema(only=("email", "username", "name", "age"))
+    print(f"User Data: {user_schema_filter.dump(user_data)}")
+    
 if __name__ == "__main__":
-    test_post_user()
+    #test_post_user()
+    test_get_user()
     
     

@@ -1,6 +1,6 @@
 
 #-----Swipe Routes-----
-
+# WIP - Not yet implemented For the Swipe Routes
 
 from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
@@ -32,8 +32,8 @@ def create_swipe():
     
     
     Payload: JSON object with the following fields:
-        - swiper: int, required
-        - swipee: int, required
+        - swiper_email, str, required
+        - swipee_email, stry, required
         - swipe_result: int, required
         - swipe_date: str, required
         
@@ -47,9 +47,35 @@ def create_swipe():
         # Get the data from the request body
         data = request.get_json()
     
+        swiper = db.session.query(models.user.User).filter(models.user.User.email == data.get('swiper_email')).first()
+        swipee = db.session.query(models.user.User).filter(models.user.User.email == data.get('swipee_email')).first()
         
-        swipe = swipe_schema.load(data)
+        if swiper is None or swipee is None:
+            return jsonify({"error": "One or more users not found."}), 404
         
+        # Check if the swipe already exists bidirectionally - Filter by email
+        swiper_swipe = models.swipe.Swipe.query.filter_by(swiper=swiper, swipee=swipee).first()
+        swipee_swipe = models.swipe.Swipe.query.filter_by(swiper=swipee, swipee=swiper).first()
+        
+        if swiper_swipe is not None:
+            
+            new_result = data.get('swipe_result')
+            if new_result == 1 or new_result == models.swipe.SwipeResult.ACCEPTED: 
+                # Successful Match Made
+                return
+                
+            
+            
+            #swipe.swipe_date = data.get('swipe_date') 
+        else:
+            swipe = models.swipe.Swipe(
+                swiper=swiper, 
+                swipee=swipee, 
+                swipe_result=data.get('swipe_result'), 
+                swipe_date=data.get('swipe_date')
+            )
+        
+           
        
         # Add the new swipe to the session
         db.session.add(swipe)
@@ -129,6 +155,8 @@ def update_swipe():
     # Retrieve Swipe from Database
     swipe = models.swipe.Swipe.query.filter_by(swiper=new_swipe.swiper.email, swipee=new_swipe.swipee_email).first()
     
+    if swipe is None:
+        return jsonify({"error": "Swipe not found."}), 404
     # Update User Data with New User Data, Excluding the Email and ID
     # Only Updates Values Sent in payload with Validated Data (Not None)
      
@@ -136,7 +164,8 @@ def update_swipe():
         new_attr = getattr(new_swipe, field)
         if new_attr is not None:
             setattr(swipe, field, new_attr)
-                   
+            
+               
     # Commit the changes to the database
     db.session.commit()
         

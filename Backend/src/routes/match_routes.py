@@ -125,6 +125,14 @@ def delete_match():
         db.session.delete(match)
         db.session.commit()
         
+        
+        # Emit Successfull Match to Client
+        #room_name = get_private_chat_room(matcher, matchee)
+        
+         # Emit the new message to the private chat room
+        #socketio.emit('deleted_match')
+        
+        
         return "Match deleted successfully!", 200
     
     except SQLAlchemyError as e:

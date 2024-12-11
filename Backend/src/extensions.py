@@ -1,11 +1,17 @@
 from flask import app
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-
+from flask_socketio import SocketIO
 
 
 db = SQLAlchemy()
 ma = Marshmallow(app)
+
+
+# Initialize SocketIO TODO
+#socketio = SocketIO(app, cors_allowed_origins="*")
+
+URL = "https://cowbird-expert-exactly.ngrok-free.app"
 
 
 # TODO - TODO: Consider Using FlaskMarshmallow for Serialization/Deserialization

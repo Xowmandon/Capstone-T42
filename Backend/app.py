@@ -1,9 +1,10 @@
 import logging
 
 from flask import Flask, jsonify,request
+from flask_socketio import SocketIO, emit
 
 from Backend.src.utils import EnvManager, DevDBConfig, TestDBConfig
-from Backend.src.extensions import db, ma
+from Backend.src.extensions import db, ma #socketio
 #from Backend.src.middleware import before_request
 
 # Import the Main Routes and Blueprints
@@ -15,6 +16,8 @@ logger = logging.getLogger(__name__)
 # Init Flask App
 app = Flask("UnHinged-API")
 
+# Initialize SocketIO TODO
+#socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Load the DB Configurations, (Host, Port, Database Name), etc
 app.config.from_object(TestDBConfig)
@@ -36,6 +39,9 @@ db.init_app(app)
 ma.init_app(app)
 
 #app.register_blueprint(routes_api)
+
+with app.app_context():
+    db.create_all()
 
 @app.route('/')
 def home():
@@ -79,19 +85,24 @@ def after_request(response):
 
 
 
-def main():
+
+# Main Entry Point for the API Application
+if __name__ == '__main__':
     # TODO - Test the Flask App on EC2 Instance
+    
+    # Create DB Tables
+    with app.app_context():
+        db.create_all()
     
     # Set up Logging
     #logging.basicConfig(filename='./logs/app.log', level=logging.INFO)
     
     #logger.info('Started')
     
-    # Run the Flask App on Port 5000
+    # Run the Flask App with HTTP Support
     app.run(host='0.0.0.0', port=3000)
     
+     # Run the Flask App with WebSocket support
+   # socketio.run(app, host='0.0.0.0', port=3000)
+    
     #logger.info('Finished')
-
-# Main Entry Point for the API Application
-if __name__ == '__main__':
-    main()
