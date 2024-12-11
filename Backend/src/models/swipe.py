@@ -26,10 +26,13 @@ class Swipe(db.Model):
     swiper = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
     swipee = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
     
-    swipe_result = db.Column(db.Enum(SwipeResult), nullable=False)
+    swipe_result = db.Column(db.Enum(SwipeResult), nullable=False, default=SwipeResult.PENDING)
     
     # ---Dimensional Fields---
     swipe_date = db.Column(db.DateTime, nullable=False)
+    
+    swiper_user = relationship("User", foreign_keys=[swiper])
+    swipee_user = relationship("User", foreign_keys=[swipee])
     
     """
     def to_dict(self):
