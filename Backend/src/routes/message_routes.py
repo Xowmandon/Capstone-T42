@@ -7,9 +7,11 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import or_, and_, asc
 from marshmallow import ValidationError
 
-from Backend.src.extensions import db # Import the DB Instance
+from Backend.src.extensions import db # socketio # Import the DB Instance
 import Backend.src.models as models# Import the Models and Schemas
 from Backend.src.models import message
+
+#from Backend.src.sockets import get_private_chat_room
 
 # Blueprint for the Message Routes
 message_bp = Blueprint('message_bp', __name__)
@@ -59,6 +61,19 @@ def post_message():
         db.session.add(message)
         # Commit the changes to the database
         db.session.commit()
+        
+        #room_name = get_private_chat_room(user1.email, user2.email)
+        
+        """
+        # Emit the new message to the private chat room
+        socketio.emit('new_message', {
+            "id": message.id,
+            "messager_email": user1.email,
+            "messagee_email": user2.email,
+            "message_content": message.message_content,
+            "message_date": message.message_date
+        }, room=room_name)
+        """
         
         return jsonify({"Success":"Message created successfully!"}), 201
     
