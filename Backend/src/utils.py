@@ -59,5 +59,5 @@ class TestDBConfig(BaseConfig):
         port=5432,
         database="test_unhinged_db",
     )
-    SQLALCHEMY_ECHO = True
+    #SQLALCHEMY_ECHO = True
 
