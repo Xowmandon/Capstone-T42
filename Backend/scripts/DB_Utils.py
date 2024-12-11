@@ -6,11 +6,11 @@ import sys
 
 
 # Add the parent directory to the system path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 
-from src.app import app
-from src.models import db
+from app import app
+from Backend.src.extensions import db
 from src.utils import EnvManager
 
 # Create all tables in the database, according to the models defined

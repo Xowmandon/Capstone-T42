@@ -1,0 +1,131 @@
+[
+    {
+        "path": "/static/<path:filename>",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users",
+        "methods": [
+            "POST",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/<string:email>",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users",
+        "methods": [
+            "PUT",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users",
+        "methods": [
+            "DELETE",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users//matches",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/matches",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/matches",
+        "methods": [
+            "DELETE",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/swipes",
+        "methods": [
+            "POST",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/swipes>",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/swipes",
+        "methods": [
+            "PUT",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/messages",
+        "methods": [
+            "POST",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/users/messages/conversation",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/aggregate/users",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/aggregate/matches",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/aggregate/users/messages",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    },
+    {
+        "path": "/",
+        "methods": [
+            "HEAD",
+            "GET",
+            "OPTIONS"
+        ]
+    }
+]
