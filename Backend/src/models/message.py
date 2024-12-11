@@ -52,8 +52,9 @@ class Message(db.Model):
     # Message Content as String
     message_content = db.Column(db.String(MESSAGE_CONTENT_LENGTH), nullable=False)
 
-    # ---Dimensional Fields---
+    # TODO: Implement Date, Time, and TimeZone for Messages in the TimeDate Models
     message_date = db.Column(db.DateTime, nullable=False)
+
 
     message_read = db.Column(db.Boolean, nullable=False, default=False) #Indicate if Message has been Read
     
