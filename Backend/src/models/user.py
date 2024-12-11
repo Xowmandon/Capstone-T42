@@ -3,6 +3,8 @@
 
 import validators # URL Validation
 
+from marshmallow_sqlalchemy import fields
+from sqlalchemy.orm import relationship
 from marshmallow import validates, ValidationError
 from better_profanity import profanity # Profanity Filter
 
@@ -44,6 +46,20 @@ class User(db.Model):
     # Flag to Indicate Fake User, Default is False - Internal Use
     fake = db.Column(db.Boolean, nullable=True, default=False)
     
+    #------Relationships--------------
+    #swipes = relationship('Swipe', backref='user_swipes')
+    #matches = relationship('Match', backref='user_matches')
+    #messages = relationship('Message', backref='user_messages')
+    
+    
+    #all_matches_matcher = relationship("Match", foreign_keys="[Match.matcher_id]", backref="matcher_user")
+    #all_matches_matchee = relationship("Match", foreign_keys="[Match.matchee_id]", backref="matchee_user")
+    
+    #@property
+    #def get_all_matches(self):
+        #MatchAlias = aliased(Match)
+        #return [match for match in self.all_matches_matcher] + [match for match in self.all_matches_matchee]
+
 
     # String representation of a User, Outputting each Field Associated
     # TODO: Correlate with Self Attributes

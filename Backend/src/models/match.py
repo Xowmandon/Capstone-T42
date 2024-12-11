@@ -20,8 +20,8 @@ class Match(db.Model):
     
     # Relationship for Matcher and Matchee
     # Backref for User to Access All Matches of a User
-    messager = relationship("User",  foreign_keys=[matcher_id], backref="all_matches")
-    messagee = relationship("User",  foreign_keys=[matchee_id], backref="all_matches")
+    matcher = relationship("User",  foreign_keys=[matcher_id], backref="match_as_matcher")
+    matchee = relationship("User",  foreign_keys=[matchee_id], backref="match_as_matchee")
     
     # ---Dimensional Fields---
     match_date = db.Column(db.DateTime, nullable=False)
