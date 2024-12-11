@@ -25,9 +25,6 @@ def post_user():
     Payload: JSON object with the following fields:
         - name: str, required
         - email: str, required
-        - username: str, required
-        - gender: str, required
-        - age: int, required
         
         
     Returns:
@@ -48,7 +45,7 @@ def post_user():
         
 
         # Extract the values from the data
-        user = user_schema.load(data)
+        user = user_schema.load(data, partial=True)
         
         # Add the new user to the session
         db.session.add(user)
