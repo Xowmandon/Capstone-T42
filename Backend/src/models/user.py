@@ -11,6 +11,7 @@ from  Backend.src.extensions import db, ma # Import the Database and Marshmallow
 
 # TODO: User Model Needs Normalization - Separate Tables for User Information and Bio
 # TODO: Implement Apple ID - For Authentication
+# TODO: Refactor Nullable Fields to be Required - Add Default Values
 class User(db.Model):
     __tablename__ = 'users' # Define the table name
     
@@ -59,6 +60,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = User
         load_instance = True
+        include_relationships = True
 
         
     # Validate the Age Field - Must be Greater than 18

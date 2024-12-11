@@ -1,4 +1,6 @@
 from enum import Enum
+from marshmallow_sqlalchemy import fields
+from sqlalchemy.orm import relationship
 
 # Desc: Swipe Model for Swipes Table
 # Schema for Deserializing and Serializing
@@ -47,11 +49,28 @@ class SwipeSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Swipe
         load_instance = True
+        include_relationships = True
+        
+        
+class SwipeSchemaNested(SwipeSchema):
+
+    class Meta:
+        model = Swipe
+        load_instance = True
+        include_relationships = True
 
     swiper = ma.Nested(UserSchema)
     swipee = ma.Nested(UserSchema)
     
-    
+class SwipeSchemaOnlyEmails(SwipeSchema):
+    class Meta:
+        model = Swipe
+        load_instance = True
+        include_relationships = True
+        
+    # Nested User Schema for Swiper and Swipee
+    swiper = fields.Nested(UserSchema(only=("email",)))
+    swipee = fields.Nested(UserSchema(only=("email",)))
     
     """Example Dictionary Representation of Swipe Object
     {

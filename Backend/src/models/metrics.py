@@ -13,6 +13,8 @@ class ActivityMetrics(db.Model):
     # If Chron Job, Aggregate Metrics from Associated Tables Store in RDS
     # ?? There Might be a Way to Automate this with a Trigger or Stored Procedure ??
     
+    # Consider Backrefs with Model Relationships for User to Access Activity Metrics
+    
     # TODO: Implement CASCADE on User Deletion
         
     # Supplementary Primary ID 

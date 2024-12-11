@@ -1,10 +1,15 @@
 # Desc: Report Model and Schema for Reports Table
 # Schema for Deserializing and Serializing
+from marshmallow import ValidationError, validates
 
 from Backend.src.extensions import db, ma # DB and Marshmallow Instances
 
 from Backend.src.models.user import User # User Model
 from Backend.src.models.message import Message # Message Model
+from Backend.src.validators.text import TextValidator # Custom Validators
+
+REPORT_CONTENT_LENGTH = 300
+
 
 # Report Model for Reports Table
 class Report(db.Model):
@@ -18,7 +23,7 @@ class Report(db.Model):
     reportee = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True,  nullable=False)
     
     # Report Reason and Associated Message
-    report_reason = db.Column(db.String(500), primary_key=True, nullable=False)
+    report_reason = db.Column(db.String(REPORT_CONTENT_LENGTH), primary_key=True, nullable=False)
     report_message = db.Column(db.Integer, db.ForeignKey('messages.id'),nullable=True) # Optional
     
     report_date = db.Column(db.DateTime, nullable=False)
@@ -40,12 +45,23 @@ class Report(db.Model):
 class ReportSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Report
+        load_instance = True
+        include_relationships = True
         
-    # Nested User Schema for Reporter and Reportee
+    
+    @validates("report_reason")
+    def validate_report_reason(self, reason):
+        # Length and Profanity Filter
+        TextValidator.val_length(reason, upper_bound=REPORT_CONTENT_LENGTH)
+    
+class ReportSchemaNested(ReportSchema):
+    class Meta:
+        model = Report
+        load_instance = True
+        include_relationships = True
+        
     reporter = ma.Nested(User)
     reportee = ma.Nested(User)
-    
-    # Nested Message Schema for Report Message
     report_message = ma.Nested(Message)
     
-  
+    
