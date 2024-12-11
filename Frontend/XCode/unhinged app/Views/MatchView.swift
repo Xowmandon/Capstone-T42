@@ -11,15 +11,12 @@ import SwiftData
 
 struct MatchView : View {
     
-    
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
     @State private var showAccountConfigSheet : Bool = false
     
     
+    //TODO: change values with profile instance
     @ViewBuilder
-    func ProfileCard() -> some View {
+    func ProfileCard(profile: Profile) -> some View {
         
         ZStack {
             
@@ -27,7 +24,7 @@ struct MatchView : View {
             
             GeometryReader { geometry in
                 
-                Image("stockPhoto")
+                Image(profile.imageName)
                     .resizable()
                     .scaledToFill()
                     .frame(width: geometry.size.width, height: geometry.size.height)
@@ -234,7 +231,7 @@ struct MatchView : View {
                 
                 VStack{
                     
-                    ProfileCard()
+                    ProfileCard(profile: Profile())
                         .padding()
                     
                     MainButtons()

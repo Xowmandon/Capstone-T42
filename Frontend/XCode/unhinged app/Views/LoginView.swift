@@ -10,9 +10,7 @@ import AuthenticationServices
 
 struct LoginView: View {
     
-    //@Environment(\.authorizationController) private var authorizationController
-    
-    //var
+    @Binding var userIsAuthenticated : Bool
     
     var body: some View {
         VStack {
@@ -22,33 +20,67 @@ struct LoginView: View {
                 .font(.system(.largeTitle, weight: .heavy))
             Spacer()
             
-            SignInWithAppleButton(.signIn, onRequest: {requests in
-                
-                requests.requestedScopes = [.email, .fullName]
-                
-            }, onCompletion: { result in
-                
-                switch result {
-                    //TODO: API call for account information push
-                case .success(let auth):
-                    guard let credentials = auth.credential as? ASAuthorizationAppleIDCredential else {return}
-                    let userID = credentials.user //pass to model
-                    let email = credentials.email
-                    //guard let identityToken = credentials.identityToken, let identityTokenString = String(data: identityToken, encoding: .utf8) else { return }
-                    //let body = ["appleIdentityToken": identityTokenString]
-                    //guard let jsonData = try? JSONEncoder().encode(body) else { return }
-                    // This is where you'd fire an API request to your server to authenticate with the identity token attached in the request headers.
-                    break
-            
-                case .failure(let error):
-                    print(error)
-                    break
+            if (!userIsAuthenticated) {
+                SignInWithAppleButton(.signIn, onRequest: {requests in
+                    requests.requestedScopes = [.email, .fullName]
+                    let authController = ASAuthorizationController(authorizationRequests: [requests])
+                    //authController.performRequests()
+                }, onCompletion: { result in
                     
-                }
+                    switch result {
+                        
+                    case .success(let auth):
+                        print("authentication successful")
+                        guard let credentials = auth.credential as? ASAuthorizationAppleIDCredential else {return}
+                        
+                        let credentialEmail = credentials.email
+                        let credentialFirstName = credentials.fullName?.givenName
+                        let credentialLastName = credentials.fullName?.familyName
+                        //guard let identityToken = credentials.identityToken, let identityTokenString = String(data: identityToken, encoding: .utf8) else { return }
+                        //let body = ["appleIdentityToken": identityTokenString]
+                        //guard let jsonData = try? JSONEncoder().encode(body) else { return }
+                        // This is where you'd fire an API request to your server to authenticate with the identity token attached in the request headers.
+                        
+                        
+                        let accountExists : Bool = APIClient.shared.assertAccountExistence()
+                        
+                        if (accountExists) {
+                            
+                            // Mark account's authentication status
+                            AccountData.shared.authenticate()
+                            
+                            // Set account information
+                            AccountData.shared.setEmail(credentialEmail)
+                            let accountProfile = Profile(name: (credentialFirstName ?? "nil"), imageName: "stockPhoto")
+                            AccountData.shared.setProfile(accountProfile)
+                            
+                            // Go to Match page
+                            
+                            
+                            
+                        } else {
+                            
+                            //APIClient.shared.createAccount
+                            
+                        }
+                        
+                        break
+                        
+                    case .failure(let error):
+                        print(error)
+                        break
+                        
+                    }
                     
-            })
-            .frame(width: 200, height: 60)
-            .mask(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    userIsAuthenticated = true
+                    
+                })
+                .frame(width: 200, height: 60)
+                .mask(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            } else {
+                
+                
+            }
             
             /*
             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -88,6 +120,3 @@ struct LoginView: View {
     }
 }
 
-#Preview {
-    LoginView()
-}

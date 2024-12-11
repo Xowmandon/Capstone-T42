@@ -6,12 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		DF71C03B2CF5975100D65A60 /* AWSEC2 in Frameworks */ = {isa = PBXBuildFile; productRef = DF71C03A2CF5975100D65A60 /* AWSEC2 */; };
-		DF71C03D2CF5975100D65A60 /* AWSRDS in Frameworks */ = {isa = PBXBuildFile; productRef = DF71C03C2CF5975100D65A60 /* AWSRDS */; };
-		DF71C03F2CF5975100D65A60 /* AWSRDSData in Frameworks */ = {isa = PBXBuildFile; productRef = DF71C03E2CF5975100D65A60 /* AWSRDSData */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		DF12F1992CDD3FB4006A0DC2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -79,9 +73,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DF71C03D2CF5975100D65A60 /* AWSRDS in Frameworks */,
-				DF71C03B2CF5975100D65A60 /* AWSEC2 in Frameworks */,
-				DF71C03F2CF5975100D65A60 /* AWSRDSData in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -150,9 +141,6 @@
 			);
 			name = "unhinged app";
 			packageProductDependencies = (
-				DF71C03A2CF5975100D65A60 /* AWSEC2 */,
-				DF71C03C2CF5975100D65A60 /* AWSRDS */,
-				DF71C03E2CF5975100D65A60 /* AWSRDSData */,
 			);
 			productName = "unhinged app";
 			productReference = DF12F1862CDD3FB3006A0DC2 /* unhinged app.app */;
@@ -235,7 +223,6 @@
 			mainGroup = DF12F17D2CDD3FB2006A0DC2;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				DF71C0392CF5975100D65A60 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DF12F1872CDD3FB3006A0DC2 /* Products */;
@@ -367,6 +354,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				NEW_SETTING = "";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
@@ -424,6 +412,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				NEW_SETTING = "";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
@@ -436,9 +425,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "unhinged app/unhinged app.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"unhinged app/Preview Content\"";
+				DEVELOPMENT_TEAM = HKCZYLGB4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -453,6 +444,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.harrysho.unhinged-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -465,9 +457,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "unhinged app/unhinged app.entitlements";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"unhinged app/Preview Content\"";
+				DEVELOPMENT_TEAM = HKCZYLGB4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -482,6 +476,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.harrysho.unhinged-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -604,35 +599,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		DF71C0392CF5975100D65A60 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/awslabs/aws-sdk-swift.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.48;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		DF71C03A2CF5975100D65A60 /* AWSEC2 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DF71C0392CF5975100D65A60 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSEC2;
-		};
-		DF71C03C2CF5975100D65A60 /* AWSRDS */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DF71C0392CF5975100D65A60 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSRDS;
-		};
-		DF71C03E2CF5975100D65A60 /* AWSRDSData */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = DF71C0392CF5975100D65A60 /* XCRemoteSwiftPackageReference "aws-sdk-swift" */;
-			productName = AWSRDSData;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DF12F17E2CDD3FB2006A0DC2 /* Project object */;
 }

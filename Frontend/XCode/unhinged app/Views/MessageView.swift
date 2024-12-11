@@ -4,14 +4,16 @@
 //
 //  Created by Harry Sho on 11/25/24.
 //
+//
+//
+
 import Foundation
 import SwiftUI
 import SwiftData
 
 struct MessageView : View {
     
-    
-    
+    let profile : Profile
     
     var body: some View {
         
@@ -21,9 +23,17 @@ struct MessageView : View {
     
     private func sendMesage(){
         
-        // Encapsulate Message
+        // push message
         
+        APIClient.shared
         
+    }
+    
+    private func fetchMessages(){
+        
+        //
+        
+        APIClient.shared
         
     }
     
@@ -32,7 +42,7 @@ struct MessageView : View {
 
 #Preview {
     
-    MessageView()
+    MessageView(profile: Profile())
     
 }
 
