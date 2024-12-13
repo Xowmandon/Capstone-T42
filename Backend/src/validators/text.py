@@ -10,9 +10,9 @@ class TextValidator:
         Raises ValidationError if the content is too long or too short.
         """
         if len(content) > upper_bound:
-            raise ValidationError("Message must be less than 500 characters.")
+            raise ValidationError(f"Message must be less than {upper_bound} characters.")
         if len(content) < lower_bound:
-            raise ValidationError("Message must be at least 1 character.")
+            raise ValidationError(f"Message must be at least {lower_bound} character.")
 
     @staticmethod
     def val_profanity(content, censor=True):
