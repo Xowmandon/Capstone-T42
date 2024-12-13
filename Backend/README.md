@@ -49,9 +49,10 @@ Contains utility scripts for the project:
 #### `src/`
 Contains the main source code for the backend:
 - **`__init__.py`**: Marks the directory as a Python package.
-- **`extensions.py`**: Extensions for the application, db and ma configs
+- **`extensions.py`**: Extensions for the application, db,ma, and socketIO configs
 - **`models/`**: Contains database model definitions.
-- **`routes/`**: Handles API routes. 
+- **`routes/`**: Handles API routes.
+- **`sockets/`**: Handles Socket Routes and Events
 - **`utils.py`**: Includes utility functions and classes.
 - **`validators/`**: Contains validation functions.
 
@@ -60,6 +61,8 @@ Holds unit tests for the backend:
 - **`__init__.py`**: Marks the directory as a Python package.
 - **`test_app.py`**: Tests for the Flask application.
 - **`test_DB.py`**: Tests for database functionality.
+- **`test_message_routes.py`**: Simple One-shot tests for Message Routes
+- **`test_user_routes.py`**: Simple One-shot tests for User Routes
 
 ---
 
@@ -86,8 +89,6 @@ When running Python scripts or main application files, use absolute paths to ens
        ```bash
        source ./.venv/bin/activate
        ```
-
-
 
 2. **Install Dependencies**
    
