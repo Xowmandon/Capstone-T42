@@ -11,7 +11,7 @@ class TextValidator:
         """
         if len(content) > upper_bound:
             raise ValidationError("Message must be less than 500 characters.")
-        if len(content) < upper_bound:
+        if len(content) < lower_bound:
             raise ValidationError("Message must be at least 1 character.")
 
     @staticmethod
