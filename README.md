@@ -23,19 +23,3 @@
 - **Gamified Elements**: Developed using the **Unity Game Engine**, integrated via the **Unity SDK for iOS**.
 
 ---
-
-## System Architecture
-The app’s architecture is designed for scalability, reliability, and a seamless user experience. Below is the system diagram:
-
-![System Diagram Placeholder](#)  
-*(Insert your system diagram here.)*
-
----
-
-## Installation
-To run the UnHinged app locally for development or testing purposes:
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/Xowmandon/Capstone-T42.git
-   
