@@ -14,6 +14,7 @@ class TextValidator:
         if len(content) < upper_bound:
             raise ValidationError("Message must be at least 1 character.")
 
+    # TODOL Opitional Settings
     @staticmethod
     def val_profanity(content, censor=True):
         """
