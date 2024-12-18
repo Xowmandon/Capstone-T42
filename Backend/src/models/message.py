@@ -1,6 +1,6 @@
 # Desc: Message Model and Schema for Messages Table
 # Schema for Deserializing and Serializing
-
+from datetime import datetime
 from marshmallow import ValidationError, validates
 
 from marshmallow_sqlalchemy import fields
@@ -8,7 +8,7 @@ from sqlalchemy.orm import relationship
 
 from Backend.src.extensions import db, ma # DB and Marshmallow Instances
 from Backend.src.models.user import UserSchema # User Model
-from Backend.src.validators.text import TextValidator # Custom Validators
+from Backend.src.validators.text_val import TextValidator # Custom Validators
  
 # Example JSON Response for querying a Message
 
@@ -44,36 +44,34 @@ class Message(db.Model):
     messager_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     messagee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-    # Relationship for Messager and Messagee
-    # Backref for User to Access All Sent and Received Messages
-    messager = relationship("User",  foreign_keys=[messager_id], backref="sent_messages")
-    messagee = relationship("User",  foreign_keys=[messagee_id], backref="received_messages")
-
     # Message Content as String
     message_content = db.Column(db.String(MESSAGE_CONTENT_LENGTH), nullable=False)
 
     # TODO: Implement Date, Time, and TimeZone for Messages in the TimeDate Models
-    message_date = db.Column(db.DateTime, nullable=False)
+    message_date = db.Column(db.DateTime, nullable=False, default = datetime.now(datetime.utc))
 
 
     message_read = db.Column(db.Boolean, nullable=False, default=False) #Indicate if Message has been Read
     
+    # -----Relationships-----
     
-    #def to_dict(self):
-        #return {
-            #'id': self.id,
-            #'sender': User.query.get(self.sender),
-            #'receiver': User.query.get(self.receiver),
-            #'message': self.message,
-            #'message_date': self.message_date,
-            #'message_read': self.message_read
-        #}
+    reports = relationship(
+        "Report", 
+        back_populates="reports_on_message",
+        lazy="dynamic"
+    )
 
-    #def __repr__(self):
-        #return f"<Message id={self.id}, sender={self.sender}, receiver={self.receiver}, message={self.message}, message_date={self.message_date}>"
-
-
-
+    # Many to One Relationship - Multiples Swipes to One User
+    messager = relationship(
+        "User",  
+        foreign_keys=[messager_id], 
+        backref="messages_sent"
+    )
+    messagee = relationship(
+        "User",  
+        foreign_keys=[messagee_id], 
+        backref="messages_received"
+    )
 
 # Marshmallow Base Schema for the Message
 class MessageSchema(ma.SQLAlchemyAutoSchema):
