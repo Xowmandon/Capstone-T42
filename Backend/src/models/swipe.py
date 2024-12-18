@@ -1,4 +1,5 @@
 from enum import Enum
+from datetime import datetime
 from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship
 
@@ -23,16 +24,29 @@ class Swipe(db.Model):
     
     # Foreign Keys - User ID's of Swiper and Swipee
     # On Delete of User - Cascade to Remove Associated Swipes
-    swiper = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
-    swipee = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
+    swiper_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
+    swipee_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
     
     swipe_result = db.Column(db.Enum(SwipeResult), nullable=False, default=SwipeResult.PENDING)
     
     # ---Dimensional Fields---
-    swipe_date = db.Column(db.DateTime, nullable=False)
+    swipe_date = db.Column(db.DateTime, nullable=False, default=datetime.now(datetime.utc))
     
-    swiper_user = relationship("User", foreign_keys=[swiper])
-    swipee_user = relationship("User", foreign_keys=[swipee])
+    
+    # ------Relationships------
+    
+    # Many to One Relationship - Multiples Swipes to One User
+    swiper = relationship(
+        "User", 
+        foreign_keys=[swiper_id],
+        back_populates="swipes_as_swiper"
+    )
+    
+    swipee = relationship(
+        "User", 
+        foreign_keys=[swipee_id],
+        back_populates="swipes_as_swipee"
+    )
     
     """
     def to_dict(self):

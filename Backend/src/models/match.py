@@ -1,5 +1,7 @@
 # Desc: Match Model for Successful Matches between Users
 # Schema for Deserializing and Serializing
+
+from datetime import datetime
 from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship
 
@@ -18,13 +20,22 @@ class Match(db.Model):
     matcher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     matchee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
-    # Relationship for Matcher and Matchee
-    # Backref for User to Access All Matches of a User
-    matcher = relationship("User",  foreign_keys=[matcher_id], backref="match_as_matcher")
-    matchee = relationship("User",  foreign_keys=[matchee_id], backref="match_as_matchee")
+
+    # Relationships for matcher and matchee
+    # Backref for User to Access All Matches
+    matcher = relationship(
+        "User",
+        foreign_keys=[matcher_id],
+        back_populates="matches_as_matcher"
+    )
+    matchee = relationship(
+        "User",  
+        foreign_keys=[matchee_id], 
+        backref="matches_as_matchee"
+    )
     
     # ---Dimensional Fields---
-    match_date = db.Column(db.DateTime, nullable=False)
+    match_date = db.Column(db.DateTime, nullable=False, default = datetime.now)
     
     # Unique Constraint for matcher and matchee combination
     db.UniqueConstraint('matcher_id', 'matchee_id')

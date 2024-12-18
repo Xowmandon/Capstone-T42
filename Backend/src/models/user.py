@@ -10,7 +10,6 @@ from better_profanity import profanity # Profanity Filter
 
 from  Backend.src.extensions import db, ma # Import the Database and Marshmallow - SQLAlchemy and Marshmallow --> Flask
 
-
 # TODO: User Model Needs Normalization - Separate Tables for User Information and Bio
 # TODO: Implement Apple ID - For Authentication
 # TODO: Refactor Nullable Fields to be Required - Add Default Values
@@ -31,44 +30,91 @@ class User(db.Model):
     gender = db.Column(db.String(10), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     
-    # Location Information
-    #city = db.Column(db.String(50), nullable=True)
-    #state = db.Column(db.String(50), nullable=True)
-    #country = db.Column(db.String(50), nullable=True)
-    
-    # User Description and Profile Picture
-    profile_picture = db.Column(db.String(500), nullable=True) # Profile Picture - URL to Image
+    #profile_picture = db.Column(db.String(500), nullable=True) # Profile Picture - URL to Image
     bio = db.Column(db.String(500), nullable=True) # Bio - Description of User
-    
-    # Dating Preferences - Age Range, Sexual Orientation, etc
-    #dating_preference = db.Column(db.Integer,db.ForeignKey('DatingPreferences.id'),nullable=True) # Dating Preference
+
+    # Location Information
+    #latitude = db.Column(db.Float, nullable=True)
+    #longitude = db.Column(db.Float, nullable=True)
     
     # Flag to Indicate Fake User, Default is False - Internal Use
     fake = db.Column(db.Boolean, nullable=True, default=False)
     
-    #------Relationships--------------
-    #swipes = relationship('Swipe', backref='user_swipes')
-    #matches = relationship('Match', backref='user_matches')
-    #messages = relationship('Message', backref='user_messages')
+    #------------Relationships--------------
+    dating_preference = relationship('DatingPreference', back_populates='user_dating_preference', uselist=False)
+    address = relationship('Address', back_populates='user_address', lazy="select", uselist=False) 
+    game_metrics = relationship('GameMetrics', back_populates='user_game_metrics',lazy="select", uselist=False)
+    activity_metrics = relationship('ActivityMetrics', back_populates='user_activity_metrics',lazy="select", uselist=False)
     
+    # Swipes, Matches, and Messages - One to Many Relationships - User Can Have Many Swipes, Matches, and Messages    
+    swipes_as_swiper = relationship(
+        "Swipe",
+        foreign_keys="Swipe.swiper_id",
+        back_populates="swiper",
+        lazy="dynamic"
+    )
     
-    #all_matches_matcher = relationship("Match", foreign_keys="[Match.matcher_id]", backref="matcher_user")
-    #all_matches_matchee = relationship("Match", foreign_keys="[Match.matchee_id]", backref="matchee_user")
+    swipes_as_swipee = relationship(
+        "Swipe",
+        foreign_keys="Swipe.swipee_id",
+        back_populates="swipee",
+        lazy="dynamic"
+    )
     
-    #@property
-    #def get_all_matches(self):
-        #MatchAlias = aliased(Match)
-        #return [match for match in self.all_matches_matcher] + [match for match in self.all_matches_matchee]
+    # Matches where the user is the matcher
+    matches_as_matcher = relationship(
+        "Match",
+        foreign_keys="Match.matcher_id",
+        back_populates="matcher",
+        lazy="dynamic"
+    )
 
-
-    # String representation of a User, Outputting each Field Associated
-    # TODO: Correlate with Self Attributes
-    #def __repr__(self):
-    #    return f"<User id={self.id}, name={self.name}, username={self.username}, email={self.email}, {self.gender}>"
-
-    #def __dir__(self):
-        #return ['id', 'name', 'username', 'email']
+    # Matches where the user is the matchee
+    matches_as_matchee = relationship(
+        "Match",
+        foreign_keys="Match.matchee_id",
+        back_populates="matchee",
+        lazy="dynamic"
+    )
     
+    # Messages
+    messages_sent = relationship(
+        "Message",
+        foreign_keys="Message.messager_id",
+        back_populates="messager",
+        lazy="dynamic"
+    )
+    
+    messages_received = relationship(
+        "Message",
+        foreign_keys="Message.messagee_id",
+        back_populates="messagee",
+        lazy="dynamic"
+    )
+    
+    
+    # Reports 
+    reports_received = relationship(
+        "Report",
+        foreign_keys="Report.reportee_id",
+        back_populates="reportee",
+        lazy="dynamic"
+    )
+    reports_sent = relationship(
+        "Report",
+        foreign_keys="Report.reporter_id",
+        back_populates="reporter",
+        lazy="dynamic"
+    )
+    
+    
+    # Combined matches (user is either the matcher or matchee)
+    @property
+    def matches(self):
+        """
+        Combines matches where the user is the matcher or the matchee.
+        """
+        return self.matches_as_matcher.union(self.matches_as_matchee)
 
 
 # Marshmallow Schema for the User Model

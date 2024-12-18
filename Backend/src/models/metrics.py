@@ -1,6 +1,6 @@
 # Desc: Models for Activity and Game Metrics
 # Schema for Deserializing and Serializing
-
+from datetime import datetime
 from Backend.src.extensions import db, ma
 
 
@@ -25,13 +25,20 @@ class ActivityMetrics(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
         
     # Activity Metrics
+    # TODO: Implement Aggregation of Metrics from Associated Tables - Automatically 
     total_swipes = db.Column(db.Integer, nullable=False)
     total_matches = db.Column(db.Integer, nullable=False)
     total_messages = db.Column(db.Integer, nullable=False)
     total_reports = db.Column(db.Integer, nullable=False)
-   
+    
     # ---Dimensional Fields---
-    activity_date = db.Column(db.DateTime, nullable=False)
+    activity_date = db.Column(db.DateTime, nullable=False, default=datetime.now(datetime.utc))
+    
+    
+    
+    # -----Relationships-----
+    user_activity_metrics = db.relationship("User", foreign_keys=[user_id], backref="activity_metrics")
+    
         
     def __repr__(self):
         return f"<ActivityMetrics id={self.id}, user_id={self.user_id}, total_swipes={self.total_swipes}, total_matches={self.total_matches}, total_messages={self.total_messages}, total_reports={self.total_reports}, activity_date={self.activity_date}>"
@@ -61,6 +68,9 @@ class GameMetrics(db.Model):
     total_losses = db.Column(db.Integer, nullable=False)
             
     game_metrics_date = db.Column(db.DateTime, nullable=False)
+    
+    
+    user_game_metrics = db.relationship("User",  foreign_keys=[user_id], back_populates="game_metrics")
             
     def __repr__(self):
         return f"<GameMetrics id={self.id}, user_id={self.user_id}, total_games={self.total_games}, total_wins={self.total_wins}, total_losses={self.total_losses}, game_metrics_date={self.game_metrics_date}>"
