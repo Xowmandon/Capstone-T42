@@ -1,15 +1,26 @@
 # Desc: Report Model and Schema for Reports Table
 # Schema for Deserializing and Serializing
+
+from datetime import datetime
+
 from marshmallow import ValidationError, validates
+from sqlalchemy import Enum
+from sqlalchemy.orm import relationship
 
 from Backend.src.extensions import db, ma # DB and Marshmallow Instances
 
 from Backend.src.models.user import User # User Model
 from Backend.src.models.message import Message # Message Model
-from Backend.src.validators.text import TextValidator # Custom Validators
+from Backend.src.validators.text_val import TextValidator # Custom Validators
 
 REPORT_CONTENT_LENGTH = 300
 
+# Define the ReportStatus Enum
+class ReportStatus(Enum):
+    PENDING = "Pending"
+    RESOLVED = "Resolved"
+    REJECTED = "Rejected"
+    
 
 # Report Model for Reports Table
 class Report(db.Model):
@@ -26,19 +37,16 @@ class Report(db.Model):
     report_reason = db.Column(db.String(REPORT_CONTENT_LENGTH), primary_key=True, nullable=False)
     report_message = db.Column(db.Integer, db.ForeignKey('messages.id'),nullable=True) # Optional
     
-    report_date = db.Column(db.DateTime, nullable=False)
+    report_date = db.Column(db.DateTime, nullable=False,default=datetime.now(datetime.utc))
     
-    def to_dict(self):
-        return {
-            'reporter': User.query.get(self.reporter),
-            'reportee': User.query.get(self.reportee),
-            'report_reason': self.report_reason,
-            'report_message': Message.query.get(self.report_message),
-            'report_date': self.report_date
-        }
+    # Report Status - Enum of Pending, Resolved, Rejected
+    status = db.Column(Enum(ReportStatus), nullable=False, default=ReportStatus.PENDING) # Report Status
     
-    def __repr__(self):
-        return f"<Report reporter={self.reporter}, reportee={self.reportee}, report_reason={self.report_reason}, report_date={self.report_date}>"
+    #-----Relationships-----
+    reports_as_reporter = relationship("User",  foreign_keys=[reporter], backref="reports_by_user")
+    reports_on_reportee = relationship("User",  foreign_keys=[reportee], backref="reports_on_user")
+    reports_on_message = relationship("Message", back_populates="reports")
+
 
 # Marshmallow Schema for the Report
 
