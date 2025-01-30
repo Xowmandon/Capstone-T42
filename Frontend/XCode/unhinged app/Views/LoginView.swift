@@ -55,8 +55,8 @@ struct LoginView: View {
                         let accountExists : Bool = APIClient.shared.assertAccountExistence(userEmailID: credentialEmail!)
                         if (accountExists) {
                             
-                            // Mark account's authentication status
-                            AccountData.shared.authenticate()
+                        // Mark account's authentication status
+                        AccountData.shared.authenticate()
                             
                             
                         } else {

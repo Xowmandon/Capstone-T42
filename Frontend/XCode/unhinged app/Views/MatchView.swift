@@ -358,7 +358,6 @@ struct MatchView : View {
             
         
         //refresh conversations
-        
         //Create conversation with matched profile
             
         //Push changes to DB

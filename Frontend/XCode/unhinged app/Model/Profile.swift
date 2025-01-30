@@ -19,6 +19,8 @@ class Profile : Identifiable {
     
     var gender : String? = "male"
     
+    var prompts : [PromptItem]?
+    
     private var userIdentifyingEmail : String?
     
     init(){}
