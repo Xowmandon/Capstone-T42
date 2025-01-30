@@ -15,7 +15,21 @@ final class AppModel : ObservableObject {
     var conversations : [Conversation]
     
     init() {
-        self.prospectiveMatches = [Profile(), Profile(name: "john doe1", imageName: "stockPhoto"), Profile(name: "john doe2", imageName: "stockPhoto")]
+        
+        let test_prompt_choices : [PromptChoice] = [
+            PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
+            PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
+            PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1")
+        ]
+        
+        let test_prompt = PromptItem(question: "Test Prompt", choices: test_prompt_choices, correctChoice: test_prompt_choices[0].id)
+        let test_prompt2 = PromptItem(question: "Test Prompt", choices: test_prompt_choices, correctChoice: test_prompt_choices[2].id)
+        
+        let prompt_profile = Profile(name: "John Doesington", imageName: "stockPhoto")
+        
+        prompt_profile.addPrompts(promptList: [test_prompt, test_prompt2])
+        
+        self.prospectiveMatches = [prompt_profile, Profile(), Profile(name: "john doe1", imageName: "stockPhoto"), Profile(name: "john doe2", imageName: "stockPhoto")]
         self.conversations = []
     }
     

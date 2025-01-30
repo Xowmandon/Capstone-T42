@@ -19,6 +19,10 @@ struct MatchView : View {
     @State private var opacity: Double = 1.0     // For fading in and out
     @State private var shouldAnimateProfileCard: Bool = true
     
+    var currentProfile: Profile? {
+            return appModel.prospectiveMatches.first
+    }
+    
     //TODO: change values with profile instance
     @ViewBuilder
     func ProfileCard(profile: Profile) -> some View {
@@ -32,8 +36,8 @@ struct MatchView : View {
                 Image(profile.imageName)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                     .mask(RoundedRectangle(cornerRadius: 20, style: .continuous))
                 
             }
@@ -51,18 +55,14 @@ struct MatchView : View {
                     
                         Text(profile.name)
                             .font(.system(.largeTitle, weight: .bold))
+                            .shadow(color: .primary,radius: 5)
                             //.offset(x: -2)
                         Spacer()
                         Text("21")
                             .font(.system(.title))
+                            .shadow(color: .primary,radius: 5)
                         
                         
-                    }
-                    
-                    HStack {
-                        Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia")
-                            .frame(maxHeight: 100)
-                        Spacer()
                     }
                     
                 }
@@ -72,8 +72,8 @@ struct MatchView : View {
                 .padding(.vertical, 30)
                 .background{
                     
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(.ultraThinMaterial)
+                    //RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    //    .fill(.ultraThinMaterial)
                     
                 }
                 
@@ -159,6 +159,8 @@ struct MatchView : View {
     @ViewBuilder
     func MainButtons() -> some View {
         
+        let shadowSize : CGFloat = 10.0
+        
         HStack() {
             Spacer()
             
@@ -179,11 +181,12 @@ struct MatchView : View {
                         
                         Circle()
                             .fill(.ultraThickMaterial)
+                            .shadow(radius:shadowSize)
                     }
             }
             
             Spacer()
-            
+            /*
             Button { OpenProfileDetails() } label: {
                 Image(systemName: "heart.text.square.fill")
                     .imageScale(.large)
@@ -195,9 +198,11 @@ struct MatchView : View {
                         
                         Circle()
                             .fill(.ultraThickMaterial)
+                            .shadow(radius:shadowSize)
                         
                     }
             }
+            */
             
             Spacer()
             
@@ -218,6 +223,7 @@ struct MatchView : View {
                         
                         Circle()
                             .fill(.ultraThickMaterial)
+                            .shadow(radius:shadowSize)
                         
                     }
             }
@@ -226,14 +232,6 @@ struct MatchView : View {
             
         }
         .padding()
-        .background{
-            
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(UIColor.separator))
-                .shadow(color: .black.opacity(0.2),radius: 5)
-            
-        }
-        
         
     }
     
@@ -243,25 +241,110 @@ struct MatchView : View {
             
             ZStack {
                 
-                VStack{
+                ScrollView{
                     
-                    ZStack{
+                    //ForEach(appModel.prospectiveMatches.reversed()){ profile in
+                        
+                    ProfileCard(profile: currentProfile!)
+                            .padding(.horizontal)
+                            .opacity(opacity)
+                            .offset(x: offsetX)
+                            .animation(shouldAnimateProfileCard ? .snappy(duration: 0.5) : nil, value: offsetX) // Slide animation
+                            .animation(.easeInOut(duration: 0.5), value: opacity) // Fade animation
+                            .frame(minHeight: 400)
                     
-                        ForEach(appModel.prospectiveMatches.reversed()){ profile in
-                            
-                            ProfileCard(profile: profile)
-                                .padding()
-                                .opacity(opacity)
-                                .offset(x: offsetX)
-                                .animation(shouldAnimateProfileCard ? .snappy(duration: 0.5) : nil, value: offsetX) // Slide animation
-                                .animation(.easeInOut(duration: 0.5), value: opacity) // Fade animation
+                    // Basic Info (Attributes?)
+                    
+                    VStack (spacing: 5){
+                        
+                        
+                        ForEach(0..<2) { _ in
+                            HStack{
+                                
+                                VStack{
+                                    
+                                    HStack {
+                                        Image(systemName: "location")
+                                        Text("Basic Info")
+                                        Spacer()
+                                        
+                                    }
+                                    
+                                    
+                                }
+                                
+                                VStack{
+                                    
+                                    HStack {
+                                        Image(systemName: "location")
+                                        Text("Basic Info")
+                                        Spacer()
+                                        
+                                    }
+                                    
+                                }
+                                
+                                
+                            }
                         }
+                        
+                        
+                    }
+                    .padding()
+                    .frame(maxWidth:.infinity)
+                    .background{
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .foregroundStyle(.regularMaterial)
+                    }
+                    .padding()
+                    
+                    //About Me
+                    
+                    VStack{
+                        
+                        HStack{
                             
+                            Text("About Me")
+                                .font(.title2)
+                                .padding(.top)
+                                .padding(.horizontal)
+                            Spacer()
                             
+                        }
+                        
+                        Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Curabitur euismod, eros at tincidunt sollicitudin, justo neque suscipit nunc, id fringilla odio erat eget sapien. ")
+                            .padding()
+                        
+                        
+                    }
+                    .padding()
+                    .background{
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .foregroundStyle(.regularMaterial)
+                    }
+                    .padding(.horizontal)
+                    
+                    //Image Gallery
+                    
+                    
+                    //Prompts
+                    
+                    ForEach(currentProfile!.prompts ?? []){prompt in
+                        
+                        PromptView(prompt: prompt)
+                            .padding()
+                        
+                        
                     }
                     
+                    
+                }
+                
+                VStack {
+                    Spacer()
+                    
                     MainButtons()
-                        .padding(.horizontal, 20)
+                        .frame(maxWidth: 100)
                     
                 }
                 
@@ -419,7 +502,6 @@ struct MatchView : View {
 #Preview {
     NavigationStack{
         MatchView()
-            .navigationTitle("Find a Match")
             .environmentObject(AppModel())
 
     }

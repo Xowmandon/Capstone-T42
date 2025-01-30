@@ -30,4 +30,8 @@ class Profile : Identifiable {
         self.imageName = imageName
     }
     
+    func addPrompts(promptList : [PromptItem]){
+        self.prompts = promptList
+    }
+    
 }

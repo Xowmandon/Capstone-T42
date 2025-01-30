@@ -79,6 +79,25 @@ struct MessageView : View {
                 }
                 HStack{
                     
+                    Button(action: {
+                        
+                        // assert unity instance
+                        
+                        // prepare game state message
+                        
+                        // Present unity window to windowgroup using Unity framework
+                        
+                        // pass game state to Unity instance
+                        
+                    }, label: {
+                        
+                        Text("Start Game!")
+                        
+                    })
+                    
+                }
+                HStack{
+                    
                     TextField("Send a message", text: $messageText)
                         .textFieldStyle(.roundedBorder)
                         .padding()

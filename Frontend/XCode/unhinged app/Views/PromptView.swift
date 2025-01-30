@@ -18,24 +18,24 @@ struct PromptView : View {
     
     @ViewBuilder func confirmButton() -> some View {
         Button(action: {
-            selectedChoice = nil
+            didConfirmChoice.toggle()
         }) {
             
             HStack {
                 Spacer()
-                Text("Confirm")
+                Text(didConfirmChoice ? "Try Again" : "Confirm")
                     .padding()
                 Spacer()
             }
             .background {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(Color(.systemFill))
+                    .fill(.placeholder.opacity(0.5))
             }
             .padding()
         }
     }
     
-    @ViewBuilder func choiceButton(option: PromptChoice, isSelected: Bool, isCorrect: Bool, showAnswer: Bool) -> some View {
+    @ViewBuilder func choiceButton(option: PromptChoice, isSelected: Bool, isCorrect: Bool, showAnswer: Binding<Bool>) -> some View {
         
         Button(action: {
             
@@ -45,16 +45,24 @@ struct PromptView : View {
            
             // choice row
             HStack {
-                Image(systemName: isSelected ? "circle.fill" : "circle")
-                    .padding()
+                if(showAnswer.wrappedValue == true) {
+                    Image(systemName: isSelected && isCorrect ? "checkmark.square.fill" : "xmark").font(.title)
+                        .padding(.horizontal)
+                } else {
+                    
+                    Image(systemName: isSelected ? "circle.fill" : "circle")
+                        .padding(.horizontal)
+                    
+                }
                 Text(option.choice)
-                    .padding(.trailing)
+                    .padding()
+                    .foregroundStyle(.primary)
                     .clipped()
                 Spacer()
             }
             .background {
                 RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .foregroundStyle(.ultraThickMaterial)
+                    .foregroundStyle(.regularMaterial)
             }
             .padding(.horizontal)
             
@@ -78,7 +86,7 @@ struct PromptView : View {
                         option: option,
                         isSelected: selectedChoice == option.id ? true : false,
                         isCorrect: option.id == prompt.correctChoice ? true : false,
-                        showAnswer: didConfirmChoice
+                        showAnswer: $didConfirmChoice
                     )
                     
                 }
@@ -91,7 +99,7 @@ struct PromptView : View {
             
         }
         .background {
-            RoundedRectangle(cornerRadius: 4, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .foregroundStyle(.regularMaterial)
         }
     }
