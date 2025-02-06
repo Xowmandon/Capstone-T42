@@ -44,11 +44,21 @@
 			);
 			target = DF12F1A12CDD3FB4006A0DC2 /* unhinged appUITests */;
 		};
+		DF8C8CDF2D55481900C85EF7 /* Exceptions for "unhinged app" folder in "unhinged app" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"unhinged-app-Info.plist",
+			);
+			target = DF12F1852CDD3FB3006A0DC2 /* unhinged app */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DF12F1882CDD3FB3006A0DC2 /* unhinged app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DF8C8CDF2D55481900C85EF7 /* Exceptions for "unhinged app" folder in "unhinged app" target */,
+			);
 			path = "unhinged app";
 			sourceTree = "<group>";
 		};
@@ -432,6 +442,7 @@
 				DEVELOPMENT_TEAM = HKCZYLGB4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "unhinged-app-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -445,9 +456,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.harrysho.unhinged-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -464,6 +479,7 @@
 				DEVELOPMENT_TEAM = HKCZYLGB4N;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "unhinged-app-Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -477,9 +493,13 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.harrysho.unhinged-app";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

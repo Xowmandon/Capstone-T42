@@ -16,14 +16,10 @@ struct LoginView: View {
         VStack {
             Spacer()
             Text("Welcome to")
-                .font(Font.custom("PixelifySans-Regular", size: 18))
-            HStack (spacing: 1){
-                Text("Un")
-                    .font(Font.custom("PixelifySans-Bold", size: 64))
-                    .foregroundStyle(.purple)
-                Text("hinged!")
-                    .font(Font.custom("PixelifySans-Bold", size: 64))
-            }
+            Text("test text")
+                .font(Font.custom("PixelifySans", size: 18))
+            Text("UnHinged")
+                .font(.system(.largeTitle, weight: .heavy))
             Spacer()
             
             if (!userIsAuthenticated) {
