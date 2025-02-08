@@ -16,13 +16,9 @@ struct BackButton : View {
             Image(systemName: "chevron.left")
                 .padding()
                 .background{
-                    
-                    Circle()
-                        .fill(.ultraThickMaterial)
-                    
+                    CardBackground(borderColor: Theme.defaultBorderColor, innerColor: Theme.defaultInnerColor)
                 }
         }
-        .padding()
     }
     
 }

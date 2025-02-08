@@ -10,7 +10,7 @@ import Foundation
 struct Conversation : Identifiable {
     
     var id : String = UUID().uuidString
-    var with : Profile = Profile()
+    var recipient: Profile = Profile()
     var messages : [Message] = []
     
     var hasUnreadMessages : Bool = false

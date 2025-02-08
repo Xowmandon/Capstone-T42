@@ -24,6 +24,7 @@ struct PromptView : View {
             HStack {
                 Spacer()
                 Text(didConfirmChoice ? "Try Again" : "Confirm")
+                    .font(Theme.bodyFont)
                     .padding()
                 Spacer()
             }
@@ -46,23 +47,20 @@ struct PromptView : View {
             // choice row
             HStack {
                 if(showAnswer.wrappedValue == true) {
-                    Image(systemName: isSelected && isCorrect ? "checkmark.square.fill" : "xmark").font(.title)
-                        .padding(.horizontal)
+                    Image(systemName: isSelected && isCorrect ? "checkmark.square.fill" : "xmark")
+                        .foregroundStyle(isSelected && isCorrect ? .green : .red)
+                        .font(.headline)
                 } else {
                     
                     Image(systemName: isSelected ? "circle.fill" : "circle")
-                        .padding(.horizontal)
                     
                 }
                 Text(option.choice)
                     .padding()
                     .foregroundStyle(.primary)
                     .clipped()
+                    .font(Theme.bodyFont)
                 Spacer()
-            }
-            .background {
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .foregroundStyle(.regularMaterial)
             }
             .padding(.horizontal)
             
@@ -75,7 +73,7 @@ struct PromptView : View {
             // Prompt
             HStack {
                 Text(prompt.question)
-                    .font(.headline)
+                    .font(Theme.headerFont)
                 Spacer()
             }
             .padding()
@@ -99,8 +97,7 @@ struct PromptView : View {
             
         }
         .background {
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .foregroundStyle(.regularMaterial)
+            CardBackground(borderColor: Theme.shared.cardBorderColor, innerColor: Theme.shared.cardInnerColor)
         }
     }
     

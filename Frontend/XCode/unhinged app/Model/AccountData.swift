@@ -9,7 +9,7 @@ import Foundation
 
 final class AccountData {
     
-    static let shared = AccountData(hasBeenAuthenticated: false, email: "")
+    static let shared = AccountData(hasBeenAuthenticated: false, email: "") // Singleton for client's account
     
     private var hasBeenAuthenticated : Bool = false
     

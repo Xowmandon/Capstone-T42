@@ -37,7 +37,18 @@ struct unhinged_appApp: App {
             
             if (credentialState == .authorized){
                 
+                
+                //Retrieve account information from backend
+                
+                
+                
+                //Login Successful, Present Match View to user
                 success = true
+                
+            } else {
+                
+                //Login Denied
+                success = false
                 
             }
             
@@ -53,7 +64,6 @@ struct unhinged_appApp: App {
                 if userIsAuthenticated {
                     
                     MatchView()
-                        .navigationTitle("Find a Match")
                     
                 } else {
                     

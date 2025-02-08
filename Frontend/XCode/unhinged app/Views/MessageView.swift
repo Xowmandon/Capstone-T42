@@ -125,6 +125,7 @@ struct MessageView : View {
             ToolbarItem(placement: .topBarTrailing){
                 
                 Image(systemName: "ellipsis")
+                    .foregroundStyle(.primary)
                 
             }
             
@@ -136,9 +137,9 @@ struct MessageView : View {
         
         // push message
         
-        APIClient.shared
-        
         messageText = ""
+        
+        //APIClient.shared.sendMesage(text: messageText)
         
     }
     

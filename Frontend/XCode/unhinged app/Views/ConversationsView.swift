@@ -16,35 +16,42 @@ public struct ConversationsView: View {
     @State private var conversations : [Conversation]
     
     init(){
-        self.conversations = [Conversation(), Conversation()]
+        self.conversations = [Conversation(), Conversation(), Conversation()]
     }
     
     @ViewBuilder
     func conversationRow(conversation: Conversation) -> some View {
         
-        NavigationLink(destination: MessageView(profile: conversation.with)){
+        NavigationLink(destination: MessageView(profile: conversation.recipient)){
             
             HStack{
                 
-                Image(conversation.with.imageName)
+                Image(conversation.recipient.imageName)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 50, height: 50)
                     .clipShape(Circle())
                     .shadow(radius: 3)
                 
-                VStack {
+                VStack (spacing: 5){
                     
-                    Text(conversation.with.name)
+                    Text(conversation.recipient.name)
+                        .font(Theme.headerFont)
                         .bold()
                     
                     Text(conversation.messages.last?.content ?? "No Messages")
-                        .font(.footnote)
-                        .padding(.horizontal)
+                        .font(Theme.bodyFont)
+                        .padding(.leading, 5)
                 }
                 .frame(alignment: .topLeading)
+                .padding()
                 
             
+            }
+            .background{
+                
+                CardBackground(borderColor: Theme.defaultBorderColor, innerColor: Theme.defaultInnerColor)
+                
             }
             
         }
@@ -60,8 +67,8 @@ public struct ConversationsView: View {
         }
     }
     
+    // Query database for conversations associated with client account
     private func getConversations() -> [Conversation] {
-        
         
         return []
         

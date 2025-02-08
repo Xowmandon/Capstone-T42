@@ -19,6 +19,8 @@ struct MatchView : View {
     @State private var opacity: Double = 1.0     // For fading in and out
     @State private var shouldAnimateProfileCard: Bool = true
     
+    private var theme : Theme = Theme.shared // TODO: Add theme settings for profile, change style depending on profile data
+    
     var currentProfile: Profile? {
             return appModel.prospectiveMatches.first
     }
@@ -29,6 +31,8 @@ struct MatchView : View {
         
         ZStack {
             
+            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+            
             //Profile Image
             
             GeometryReader { geometry in
@@ -38,10 +42,10 @@ struct MatchView : View {
                     .scaledToFill()
                     .clipped()
                     .frame(width: geometry.size.width, height: geometry.size.height)
-                    .mask(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .mask(Rectangle())
                 
             }
-            .shadow(radius: 10)
+            .padding(5)
             
             VStack {
                 
@@ -54,26 +58,22 @@ struct MatchView : View {
                     HStack(spacing: 20){
                     
                         Text(profile.name)
-                            .font(.system(.largeTitle, weight: .bold))
-                            .shadow(color: .primary,radius: 5)
+                            .font(Theme.titleFont)
+                            //.font(.system(.largeTitle, weight: .bold))
                             //.offset(x: -2)
                         Spacer()
                         Text("21")
-                            .font(.system(.title))
-                            .shadow(color: .primary,radius: 5)
+                            .font(Theme.titleFont)
                         
                         
                     }
                     
                 }
-                .foregroundStyle(.white)
-                .shadow(radius: 5)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 30)
                 .padding(.vertical, 30)
                 .background{
                     
-                    //RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    //    .fill(.ultraThinMaterial)
+                    CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                     
                 }
                 
@@ -243,6 +243,15 @@ struct MatchView : View {
                 
                 ScrollView{
                     
+                    HStack{
+                        
+                        //Client Profile avatar
+                        Circle()
+                            .fill(Color.gray)
+                            .frame(maxHeight: 100)
+                            .padding()
+                    }
+                    
                     //ForEach(appModel.prospectiveMatches.reversed()){ profile in
                         
                     ProfileCard(profile: currentProfile!)
@@ -258,34 +267,16 @@ struct MatchView : View {
                     VStack (spacing: 5){
                         
                         
-                        ForEach(0..<2) { _ in
+                        ForEach(currentProfile!.attributes, id: \.self) { attribute in
+                            
                             HStack{
                                 
-                                VStack{
-                                    
-                                    HStack {
-                                        Image(systemName: "location")
-                                        Text("Basic Info")
-                                        Spacer()
-                                        
-                                    }
-                                    
-                                    
-                                }
-                                
-                                VStack{
-                                    
-                                    HStack {
-                                        Image(systemName: "location")
-                                        Text("Basic Info")
-                                        Spacer()
-                                        
-                                    }
-                                    
-                                }
-                                
+                                Image(systemName: attribute.symbolName)
+                                Text(attribute.customName)
+                                    .font(Theme.bodyFont)
                                 
                             }
+                            
                         }
                         
                         
@@ -293,8 +284,7 @@ struct MatchView : View {
                     .padding()
                     .frame(maxWidth:.infinity)
                     .background{
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .foregroundStyle(.regularMaterial)
+                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                     }
                     .padding()
                     
@@ -304,8 +294,8 @@ struct MatchView : View {
                         
                         HStack{
                             
-                            Text("About Me")
-                                .font(.title2)
+                            Text("About Me!")
+                                .font(Theme.headerFont)
                                 .padding(.top)
                                 .padding(.horizontal)
                             Spacer()
@@ -313,18 +303,18 @@ struct MatchView : View {
                         }
                         
                         Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Curabitur euismod, eros at tincidunt sollicitudin, justo neque suscipit nunc, id fringilla odio erat eget sapien. ")
+                            .font(Theme.bodyFont)
                             .padding()
                         
                         
                     }
                     .padding()
                     .background{
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .foregroundStyle(.regularMaterial)
+                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                     }
                     .padding(.horizontal)
                     
-                    //Image Gallery
+                    //TODO: Image Gallery
                     
                     
                     //Prompts
@@ -341,6 +331,25 @@ struct MatchView : View {
                 }
                 
                 VStack {
+                    
+                    HStack{
+                        
+                        Spacer()
+                        
+                        NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
+                            
+                            Image(systemName: "message.fill")
+                                .padding()
+                                .background{
+                                    
+                                    CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                                }
+                            
+                        }
+                        .padding()
+                        
+                    }
+                    
                     Spacer()
                     
                     MainButtons()
@@ -349,6 +358,7 @@ struct MatchView : View {
                 }
                 
             }
+            /*
             .toolbar{
                 /*ToolbarItem(placement: .topBarLeading){
                     
@@ -398,6 +408,7 @@ struct MatchView : View {
                 }
                 
             }
+            */
         }
         .sheet(isPresented: $showAccountConfigSheet, onDismiss: didDismissAccountConfigSheet) {
             

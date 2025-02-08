@@ -44,21 +44,11 @@
 			);
 			target = DF12F1A12CDD3FB4006A0DC2 /* unhinged appUITests */;
 		};
-		DF8C8CDF2D55481900C85EF7 /* Exceptions for "unhinged app" folder in "unhinged app" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				"unhinged-app-Info.plist",
-			);
-			target = DF12F1852CDD3FB3006A0DC2 /* unhinged app */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DF12F1882CDD3FB3006A0DC2 /* unhinged app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				DF8C8CDF2D55481900C85EF7 /* Exceptions for "unhinged app" folder in "unhinged app" target */,
-			);
 			path = "unhinged app";
 			sourceTree = "<group>";
 		};

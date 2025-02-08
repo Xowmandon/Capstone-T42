@@ -12,7 +12,7 @@ final class AppModel : ObservableObject {
     
     @Published var prospectiveMatches : [Profile]
     
-    var conversations : [Conversation]
+    @Published var conversations : [Conversation]
     
     init() {
         
