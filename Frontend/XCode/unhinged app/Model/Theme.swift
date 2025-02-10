@@ -14,6 +14,7 @@ struct Theme {
     static let titleFont : Font = Font.custom("PixelifySans-Medium", size: 32)
     static let headerFont : Font = Font.custom("PixelifySans-SemiBold", size: 24)
     static let bodyFont : Font = Font.custom("PixelifySans-Regular", size: 18)
+    static let captionFont : Font = Font.custom("PixelifySans-Regular", size: 12)
     static let defaultBorderColor : Color = .gray
     static let defaultInnerColor : Color = .white
     

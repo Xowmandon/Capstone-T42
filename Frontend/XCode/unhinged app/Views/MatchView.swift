@@ -241,26 +241,24 @@ struct MatchView : View {
             
             ZStack {
                 
+                // Profile Content
                 ScrollView{
                     
-                    HStack{
-                        
-                        //Client Profile avatar
-                        Circle()
-                            .fill(Color.gray)
-                            .frame(maxHeight: 100)
-                            .padding()
-                    }
+                    Spacer()
+                    
+                    Text("Let's Match!")
+                        .font(Theme.titleFont)
+                        .opacity(0.7)
                     
                     //ForEach(appModel.prospectiveMatches.reversed()){ profile in
-                        
+                    
                     ProfileCard(profile: currentProfile!)
-                            .padding(.horizontal)
-                            .opacity(opacity)
-                            .offset(x: offsetX)
-                            .animation(shouldAnimateProfileCard ? .snappy(duration: 0.5) : nil, value: offsetX) // Slide animation
-                            .animation(.easeInOut(duration: 0.5), value: opacity) // Fade animation
-                            .frame(minHeight: 400)
+                        .padding(.horizontal)
+                        .opacity(opacity)
+                        .offset(x: offsetX)
+                        .animation(shouldAnimateProfileCard ? .snappy(duration: 0.5) : nil, value: offsetX) // Slide animation
+                        .animation(.easeInOut(duration: 0.5), value: opacity) // Fade animation
+                        .frame(minHeight: 400)
                     
                     // Basic Info (Attributes?)
                     
@@ -330,25 +328,8 @@ struct MatchView : View {
                     
                 }
                 
+                //Overlay
                 VStack {
-                    
-                    HStack{
-                        
-                        Spacer()
-                        
-                        NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
-                            
-                            Image(systemName: "message.fill")
-                                .padding()
-                                .background{
-                                    
-                                    CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                                }
-                            
-                        }
-                        .padding()
-                        
-                    }
                     
                     Spacer()
                     
@@ -358,66 +339,115 @@ struct MatchView : View {
                 }
                 
             }
-            /*
             .toolbar{
-                /*ToolbarItem(placement: .topBarLeading){
+                
+                ToolbarItem(placement: .topBarLeading){
                     
-                    Text("Find a Match")
-                        .font(.title)
-                        .fontWeight(.semibold)
+                    HStack (spacing: 5){
                         
-                    
-                }*/
-                ToolbarItem(placement: .topBarTrailing){
-                    
-                    
-                    Button(action: {showAccountConfigSheet.toggle()}){
+                        //Avatar Placeholder
+                        Circle()
                         
-                        Image(systemName: "gearshape.fill")
-                        
-                    }
-                    
-                }
-                ToolbarItem(placement: .topBarTrailing){
-                    
-                    Button(action: {}){
-                        
-                        Image(systemName: "person.fill")
+                        VStack{
+                            
+                            Text("Welcome back")
+                                .font(Theme.captionFont)
+                                .opacity(0.7)
+                            Text("<Name>")
+                                .font(Theme.headerFont)
+                            
+                        }
                         
                     }
+                    .padding()
+                    .background{
+                        
+                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                        
+                    }
+                    .padding()
+                    .frame(minHeight: 100)
                     
                 }
+                
                 ToolbarItem(placement: .topBarTrailing){
-                    
                     
                     NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
-                        
-                        Image(systemName: "message.fill")
-                        
-                    }
                     
-                    /*
-                    Button(action: {}){
-                        
                         Image(systemName: "message.fill")
-                            
-                        
+                        .padding()
+                        .background{
+                            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                        }
+                    
                     }
-                    */
-                   
+                    .padding()
+                    .frame(minHeight: 100)
+                    
                 }
                 
             }
-            */
-        }
-        .sheet(isPresented: $showAccountConfigSheet, onDismiss: didDismissAccountConfigSheet) {
             
-            AccountConfigSheet()
+            /*
+             
+             HStack{
+             
+             HStack (spacing: 5){
+             
+             //Avatar Placeholder
+             Circle()
+             .frame(maxHeight: 50)
+             
+             VStack{
+             
+             Text("Welcome back")
+             .font(Theme.captionFont)
+             .opacity(0.7)
+             Text("<Name>")
+             .font(Theme.headerFont)
+             
+             }
+             
+             }
+             .padding()
+             .frame(maxHeight: 100)
+             .background{
+             
+             CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+             
+             }
+             .padding()
+             
+             Spacer()
+             
+             NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
+             
+             Image(systemName: "message.fill")
+             .padding()
+             .background{
+             
+             CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+             }
+             
+             }
+             .padding()
+             
+             */
+            /*
+             ToolbarItem(placement: .topBarTrailing){
+             
+             
+             Button(action: {showAccountConfigSheet.toggle()}){
+             
+             Image(systemName: "gearshape.fill")
+             
+             }
+             
+             }
+             */
             
         }
-
     }
-    
     
     //Reject a Match
     
