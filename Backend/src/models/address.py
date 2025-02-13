@@ -29,4 +29,4 @@ class Address(db.Model):
     # -----Relationships-----
     user_address = relationship('User', back_populates='address')
   
-  
+  # Add Extra Validation for Address Information and Location Information for exact coords
