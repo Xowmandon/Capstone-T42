@@ -1,7 +1,7 @@
 # Desc: Match Model for Successful Matches between Users
 # Schema for Deserializing and Serializing
 
-from datetime import datetime
+from datetime import datetime, timezone
 from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship
 
@@ -19,8 +19,9 @@ class Match(db.Model):
     # On Delete of User - Cascade to Remove Associated Matches
     matcher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     matchee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
     
-
+    """"
     # Relationships for matcher and matchee
     # Backref for User to Access All Matches
     matcher = relationship(
@@ -33,9 +34,10 @@ class Match(db.Model):
         foreign_keys=[matchee_id], 
         backref="matches_as_matchee"
     )
+    """
     
     # ---Dimensional Fields---
-    match_date = db.Column(db.DateTime, nullable=False, default = datetime.now)
+    match_date = db.Column(db.DateTime, nullable=False, default = datetime.now(timezone.utc))
     
     # Unique Constraint for matcher and matchee combination
     db.UniqueConstraint('matcher_id', 'matchee_id')
@@ -48,6 +50,27 @@ class Match(db.Model):
             'matchee': User.query.get(self.matchee),
             'match_date': self.match_date
         }
+        
+    @staticmethod
+    def create_match(matcher_id, matchee_id):
+        
+        # Check if Match Already Exists
+        match = Match.query.filter_by(matcher_id=matcher_id, matchee_id=matchee_id).first()
+        if match:
+            return match
+        # Validate matcher and matchee
+        if matcher_id == matchee_id:
+            return None
+        # Validate Each Id is a User
+        if not User.query.get(matcher_id) or not User.query.get(matchee_id):
+            return None
+        
+        # Create Match
+        match = Match(matcher_id=matcher_id, matchee_id=matchee_id)
+        db.session.add(match)
+        db.session.commit()
+        return match
+    
 
     # String representation of a User, Outputting each Field Associated
     def __repr__(self):

@@ -1,6 +1,6 @@
 # Desc: Message Model and Schema for Messages Table
 # Schema for Deserializing and Serializing
-from datetime import datetime
+from datetime import datetime, timezone
 from marshmallow import ValidationError, validates
 
 from marshmallow_sqlalchemy import fields
@@ -48,13 +48,13 @@ class Message(db.Model):
     message_content = db.Column(db.String(MESSAGE_CONTENT_LENGTH), nullable=False)
 
     # TODO: Implement Date, Time, and TimeZone for Messages in the TimeDate Models
-    message_date = db.Column(db.DateTime, nullable=False, default = datetime.now(datetime.utc))
+    message_date = db.Column(db.DateTime, nullable=False, default = datetime.now(timezone.utc))
 
 
     message_read = db.Column(db.Boolean, nullable=False, default=False) #Indicate if Message has been Read
     
     # -----Relationships-----
-    
+    """
     reports = relationship(
         "Report", 
         back_populates="reports_on_message",
@@ -72,6 +72,7 @@ class Message(db.Model):
         foreign_keys=[messagee_id], 
         backref="messages_received"
     )
+    """
 
 # Marshmallow Base Schema for the Message
 class MessageSchema(ma.SQLAlchemyAutoSchema):

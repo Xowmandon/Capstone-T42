@@ -1,7 +1,7 @@
 # Desc: Report Model and Schema for Reports Table
 # Schema for Deserializing and Serializing
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from marshmallow import ValidationError, validates
 from sqlalchemy import Enum
@@ -37,16 +37,17 @@ class Report(db.Model):
     report_reason = db.Column(db.String(REPORT_CONTENT_LENGTH), primary_key=True, nullable=False)
     report_message = db.Column(db.Integer, db.ForeignKey('messages.id'),nullable=True) # Optional
     
-    report_date = db.Column(db.DateTime, nullable=False,default=datetime.now(datetime.utc))
+    report_date = db.Column(db.DateTime, nullable=False,default=datetime.now(timezone.utc))
     
     # Report Status - Enum of Pending, Resolved, Rejected
-    status = db.Column(Enum(ReportStatus), nullable=False, default=ReportStatus.PENDING) # Report Status
+    status = db.Column(ReportStatus, nullable=False, default=ReportStatus.PENDING) # Report Status
     
     #-----Relationships-----
+    """
     reports_as_reporter = relationship("User",  foreign_keys=[reporter], backref="reports_by_user")
     reports_on_reportee = relationship("User",  foreign_keys=[reportee], backref="reports_on_user")
     reports_on_message = relationship("Message", back_populates="reports")
-
+    """
 
 # Marshmallow Schema for the Report
 

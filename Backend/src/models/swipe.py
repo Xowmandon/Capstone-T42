@@ -1,7 +1,7 @@
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 from marshmallow_sqlalchemy import fields
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, deferred
 
 # Desc: Swipe Model for Swipes Table
 # Schema for Deserializing and Serializing
@@ -30,12 +30,13 @@ class Swipe(db.Model):
     swipe_result = db.Column(db.Enum(SwipeResult), nullable=False, default=SwipeResult.PENDING)
     
     # ---Dimensional Fields---
-    swipe_date = db.Column(db.DateTime, nullable=False, default=datetime.now(datetime.utc))
+    swipe_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
     
     
     # ------Relationships------
     
     # Many to One Relationship - Multiples Swipes to One User
+    """
     swiper = relationship(
         "User", 
         foreign_keys=[swiper_id],
@@ -60,7 +61,7 @@ class Swipe(db.Model):
     
     def __repr__(self):
         return f"<Swipe swiper={self.swiper}, swipee={self.swipee}, swipe_result={self.swipe_result}, swipe_date={self.swipe_date}>"
-    """
+    
 
 class SwipeSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -78,31 +79,4 @@ class SwipeSchemaNested(SwipeSchema):
 
     swiper = ma.Nested(UserSchema)
     swipee = ma.Nested(UserSchema)
-    
-class SwipeSchemaOnlyEmails(SwipeSchema):
-    class Meta:
-        model = Swipe
-        load_instance = True
-        include_relationships = True
-        
-    # Nested User Schema for Swiper and Swipee
-    swiper = fields.Nested(UserSchema(only=("email",)))
-    swipee = fields.Nested(UserSchema(only=("email",)))
-    
-    """Example Dictionary Representation of Swipe Object
-    {
-        'swiper': { 'id': self.id,
-                    'name': self.name,
-                    'username': self.username,
-                    'email': self.email
-                },
-        'swipee': { 'id': self.id,
-                    'name': self.name,
-                    'username': self.username,
-                    'email': self.email
-                },
-        'swipe_result': 0,
-        'swipe_date': "2025-01-01
-    }
-    
-    """
+ 
