@@ -1,5 +1,6 @@
 
 from flask import request, jsonify, Blueprint
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
 import logging
@@ -16,96 +17,59 @@ user_bp = Blueprint('user_bp', __name__)
 user_schema = models.user.UserSchema()
 
 # Create a new user in RDS
-# POST /Users/Create
-@user_bp.route('/users', methods=['POST'])
-def post_user():
-    """
-    Summary: Create a new user and add it to the database.
-    
-    Payload: JSON object with the following fields:
-        - name: str, required
-        - email: str, required
-        
-        
-    Returns:
-        str: A message indicating the success or failure of the user creation.
-        Returs standard response codes (see above):
-    """
-
-    
-    try:
-        
-        # Get the data from the request body
-        data = request.get_json()
-
-        # Check if the user already exists - Filter by email
-        existing_user = models.user.User.query.filter_by(email=data.get('email')).first()
-        if existing_user is not None:
-            raise ValidationError("User with this Email already exists.")
-        
-
-        # Extract the values from the data
-        user = user_schema.load(data, partial=True)
-        
-        # Add the new user to the session
-        db.session.add(user)
-        # Commit the changes to the database
-        db.session.commit()
-        
-        return jsonify({"Success":"User created successfully!"}), 201
-    
-    # Validation Error Spawned from Schema
-    except ValidationError as e:
-        return jsonify({"error": "Validation error occurred.", "details": str(e)}), 400
-
-    except SQLAlchemyError as e:
-        
-        # Rollback the session in case of an error, and return the error
-        db.session.rollback()
-        return jsonify({"error": "Database error occurred.", "details": str(e)}), 500
-    
-    except Exception as e:
-        
-        # Unexpected error, return Details back
-        return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
+# POST /users/
+# Admin Protected Route
 
 
 # Get user by Email from DB
 # GET /Users
 # TODO: Test this Route
 @user_bp.route('/users/', methods=['GET'])
+@jwt_required()
 def get_user():
     """
-    Summary: Get a user by Email
+    Summary: Get a user_id by JWT Token. Return the user object.
     
     Parameters:
-        email (str): The Email of the user.
+        Authorization: Bearer <JWT Token>
         
     Returns:
         JSON: The user object.
         
     """
     
-    try:
-        # Get the data from the request body and Parse
-        data = request.get_json()
-        email = data.get('email')
-        print(f"Email: {email}")
+    user_id = get_jwt_identity()
+    
+    user = models.user.User.query.get(user_id)
+    
+    # If the user is not found, return a 404
+    if user is None:
+        return jsonify({"error": "User not found."}), 404
+    
+    return jsonify(user_schema.dump(user)), 200
+
+   
+    
+    #try:
+        ## Get the data from the request body and Parse
+        #data = request.get_json()
+        #email = data.get('email')
+        #print(f"Email: {email}")
         
-        # Get the user by Email from DB
-        user = models.user.User.query.filter_by(email=email).first()
+        ## Get the user by Email from DB
+        #user = models.user.User.query.filter_by(email=email).first()
         
         # If the user is not found, return a 404
-        if user is None:
-            return jsonify({"error": "User not found."}), 404
+        #if user is None:
+            #return jsonify({"error": "User not found."}), 404
         
     # Catch any unexpected errors
-    except Exception as e:
-        return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
+    #except Exception as e:
+        #return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
     
        
     # Return the user as JSON Response with 200 Status Code
-    return jsonify(user_schema.dump(user)), 200
+    #return jsonify(user_schema.dump(user)), 200
 
 
 
@@ -113,30 +77,39 @@ def get_user():
 # PUT /Users
 # TODO: Test this Route
 @user_bp.route('/users', methods=['PUT'])
+@jwt_required()
 def update_user():
     """
     Summary: Update a user by Email.
     
-    Payload: JSON object with the following fields:
-        - email: str, required
-         - ... All other fields are optional
+    Headers:
+        Authorization: Bearer <JWT Token>
         
+    Payload: JSON object with a User object, excluding the Email, ID, is_admin, is_fake.:
+    
     """
     try:
         
-        # Retrieve JSON Payload - User Data
-        user_data = request.get_json()
+        user_id = get_jwt_identity()
+        user = models.user.User.query.get(user_id)
         
-        user_email = user_data.get('email')
-        
-        # Check if the user already exists - Filter by email
-        user = models.user.User.query.filter_by(email=user_email).first()
         if user is None:
-            raise ValidationError("User with this Email does not exist.")
+            return jsonify({"error": "User not found."}), 404
         
-         # Deserialize the JSON Data
-        validated_user_data = user_schema.load(user_data,partial=True)
-
+        # Retrieve User Info from Request
+        # Partially Deserialize the JSON Data and Validate using Schema
+        updated_user_data = request.get_json()
+        
+        # Check if the User Data is None or if Invalid Fields are Present
+        if updated_user_data is None:
+            return jsonify({"error": "No data provided."}), 400
+        
+        invalid_fields = ['email', 'id', 'is_admin', 'is_fake']
+        for field in invalid_fields:
+            if field in updated_user_data:
+                return jsonify({"error": f"Field '{field}' cannot be updated."}), 400
+        
+        validated_user_data = user_schema.load(updated_user_data, partial=True)
         
         # Update User Data with New User Data, Excluding the Email and ID
         # Only Updates Values Sent in payload with Validated Data (Not None)
@@ -150,10 +123,12 @@ def update_user():
         
         # Serialize and return the updated user
         updated_user_data = user_schema.dump(user)
+        
+        
         return jsonify({"success": "User updated successfully.", "user": updated_user_data}), 200
 
 
-
+    # Catch any unexpected errors
     except ValidationError as e:
         return jsonify({"error": "Validation error occurred.", "details": e.messages}), 400
 
@@ -164,56 +139,43 @@ def update_user():
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
     
-    # Update User Data with New User Data
-    # Not Creating a New User, but Updating the Existing User
-    
-    
+
     
 # DELETE User by Email
 # DELETE /Users
 # TODO: Test this Rout
 @user_bp.route('/users', methods=['DELETE'])
+@jwt_required()
 def delete_user():
     """
-    Summary: Delete a user by Email.
+    Summary: Delete/Ban a User, identified by JWT Token.
     
-    Payload: JSON object with the following fields:
-        - email: str, required
+    
+    Parameters:
+        Authorization: Bearer <JWT Token>
+        
         
     Returns:
         str: A message indicating the success or failure of the user deletion.
         Returns standard response codes (see above):
+        
     """
+    
+    user_id = get_jwt_identity()
+    user = models.user.User.query.get(user_id)
+    
+    # If the user is not found, return a 404
+    if user is None:
+        return jsonify({"error": "User not found."}), 404
     
     try:
         
-        # Retrieve JSON Payload - User Data
-        user_data = request.get_json()
-        
-        # Deserialize the JSON Data
-        validated_user_data = user_schema.load(user_data)
-        
-        # Get the user by Email from DB
-        user = models.user.User.query.filter_by(email=validated_user_data['email']).first()
-        
-        # If the user is not found, return a 404
-        if not user:
-            return jsonify({"error": "User not found."}), 404
-        
-        # Delete the user from the session
-        db.session.delete(user)
-        # Commit the changes to the database
-        db.session.commit()
-        
+        user.hard_delete_user()
         return jsonify({"success": "User deleted successfully."}), 200
     
-    except ValidationError as e:
-        return jsonify({"error": "Validation error occurred.", "details": e.messages}), 400
-
     except SQLAlchemyError as e:
         db.session.rollback()
-        return jsonify({"error": "Database error occurred.", "details": str(e)}), 500
-
+        return jsonify({"error": "Database error occurred.", "details": str(e)}), 500   
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
     
