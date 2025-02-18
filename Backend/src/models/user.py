@@ -218,8 +218,8 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
             raise ValidationError("URL must be less than 500 characters.")
         elif len(url) < 1:
             raise ValidationError("URL must be at least 1 character.")
-        elif not validators.url(url):
-            raise ValidationError("Invalid URL. Please enter a valid URL.")
+        #elif not validators.url(url):
+            #raise ValidationError("Invalid URL. Please enter a valid URL.")
         elif profanity.contains_profanity(url):
             profanity.censor(url)
             raise ValidationError("URL contains profanity. Please choose a different URL.")
