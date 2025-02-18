@@ -1,21 +1,14 @@
-from enum import Enum
+
 from datetime import datetime, timezone
 from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship, deferred
-
+import enum
+from sqlalchemy import  CheckConstraint
 # Desc: Swipe Model for Swipes Table
 # Schema for Deserializing and Serializing
 
 from  Backend.src.extensions import db, ma # DB and Marshmallow Instances
 from  Backend.src.models.user import User, UserSchema # User Model
-
-# Enum for Swipe Result
-class SwipeResult(Enum):
-    PENDING = 0
-    ACCEPTED = 1
-    REJECTED = 2
-
-# ...
 
 # Swipe Model for Swipes Table
 # TODO: Implement CASCADE on User Deletion
@@ -27,12 +20,14 @@ class Swipe(db.Model):
     swiper_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
     swipee_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
     
-    swipe_result = db.Column(db.Enum(SwipeResult), nullable=False, default=SwipeResult.PENDING)
+    swipe_result = db.Column(db.String, nullable=False, default='PENDING')
     
     # ---Dimensional Fields---
     swipe_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
     
-    
+    __table_args__ = (
+        CheckConstraint(swipe_result.in_(['PENDING', 'ACCEPTED', 'REJECTED']), name='swipe_result_check'),
+    )
     # ------Relationships------
     
     # Many to One Relationship - Multiples Swipes to One User

@@ -4,7 +4,7 @@
 from datetime import datetime, timezone
 
 from marshmallow import ValidationError, validates
-from sqlalchemy import Enum
+from sqlalchemy import Enum, CheckConstraint
 from sqlalchemy.orm import relationship
 
 from Backend.src.extensions import db, ma # DB and Marshmallow Instances
@@ -25,7 +25,7 @@ class ReportStatus(Enum):
 # Report Model for Reports Table
 class Report(db.Model):
     __tablename__ = 'reports' 
-    
+
     id = db.Column(db.Integer, primary_key=True)
     
     # Foreign Keys - User ID's of Reporter and Reportee
@@ -40,8 +40,12 @@ class Report(db.Model):
     report_date = db.Column(db.DateTime, nullable=False,default=datetime.now(timezone.utc))
     
     # Report Status - Enum of Pending, Resolved, Rejected
-    status = db.Column(ReportStatus, nullable=False, default=ReportStatus.PENDING) # Report Status
+    status = db.Column(db.String, nullable=False, default="PENDING") # Report Status
     
+    # Check Constraint for status, either Pending, Resolved, or Rejected
+    __table_args__ = (
+        CheckConstraint(status.in_(['PENDING', 'RESOLVED', 'REJECTED']), name='report_status_check'),
+    )
     #-----Relationships-----
     """
     reports_as_reporter = relationship("User",  foreign_keys=[reporter], backref="reports_by_user")
