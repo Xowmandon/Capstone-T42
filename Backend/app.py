@@ -4,7 +4,7 @@ from flask import Flask, jsonify,request
 from flask_socketio import SocketIO, emit
 
 from Backend.src.utils import EnvManager, DevDBConfig, TestingConfig
-from Backend.src.extensions import db, ma, bcrypt, jwt #socketio
+from Backend.src.extensions import db, ma, bcrypt, flask_jwt #socketio
 #from Backend.src.middleware import before_request
 
 # Import the Main Routes and Blueprints
@@ -45,16 +45,14 @@ app.register_blueprint(auth_routes.auth_bp)
 db.init_app(app)
 
 # Initialize the JWT Manager with Flask
-jwt.init_app(app)
+flask_jwt.init_app(app)
 bcrypt.init_app(app)
 
 # Initialize the Marshmallow Schema with Flask
 # Must be initialized after the DB
 ma.init_app(app)
 
-# Initialize the JWT Manager with Flask
-bcrypt.init_app(app)
-jwt.init_app(app)
+
 
 #app.register_blueprint(routes_api)
 

@@ -8,7 +8,7 @@ from flask_bcrypt import Bcrypt
 db = SQLAlchemy()
 ma = Marshmallow(app)
 
-jwt = JWTManager()
+flask_jwt = JWTManager()
 bcrypt = Bcrypt()
 
 
