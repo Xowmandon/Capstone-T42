@@ -96,7 +96,7 @@ class APIClient {
             let email: String
         }
         
-        let accountInfo : AccountJSON = AccountJSON(name: account.getProfile()!.name, email: account.getEmail()!)
+        let accountInfo : AccountJSON = AccountJSON(name: account.getProfile().name, email: account.getEmail()!)
         
         let payload = try! JSONEncoder().encode(accountInfo)
         

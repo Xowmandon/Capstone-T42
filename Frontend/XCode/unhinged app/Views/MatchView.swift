@@ -6,8 +6,6 @@
 //
 
 import SwiftUI
-import SwiftData
-
 
 struct MatchView : View {
     
@@ -80,79 +78,6 @@ struct MatchView : View {
                 
             }
         }
-        
-    }
-    
-    @ViewBuilder
-    func AccountConfigSheet() -> some View {
-        
-        VStack {
-            Text("Account Management")
-                .font(.system(.title, weight: .semibold))
-                .padding(.vertical, 40)
-            HStack {
-                Text("Logged in as:")
-                    .padding(20)
-                Spacer()
-            }
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.systemGray6))
-                .frame(height: 80)
-                .clipped()
-                .padding(.horizontal)
-                .overlay {
-                    HStack {
-                        Image("myImage")
-                            .renderingMode(.original)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .mask {
-                                Circle()
-                                    .padding()
-                            }
-                            .padding(.trailing)
-                        Text("User Name")
-                        Spacer()
-                        Image(systemName: "apple.logo")
-                            .imageScale(.large)
-                            .symbolRenderingMode(.monochrome)
-                            .padding(.trailing)
-                            .font(.title)
-                    }
-                    .padding(.horizontal, 20)
-                }
-            Spacer()
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.blue)
-                .frame(height: 80)
-                .clipped()
-                .padding(.horizontal)
-                .overlay {
-                    HStack {
-                        Text("Log out")
-                            .font(.system(.body, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 40)
-                        Spacer()
-                    }
-                }
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.blue)
-                .frame(height: 80)
-                .clipped()
-                .padding(.horizontal)
-                .overlay {
-                    HStack {
-                        Text("Switch User")
-                            .font(.system(.body, weight: .semibold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 40)
-                        Spacer()
-                    }
-                }
-            Spacer()
-        }
-        
         
     }
     
@@ -245,6 +170,7 @@ struct MatchView : View {
                 ScrollView{
                     
                     Spacer()
+                        .frame(minHeight: 60)
                     
                     Text("Let's Match!")
                         .font(Theme.titleFont)
@@ -331,142 +257,60 @@ struct MatchView : View {
                 //Overlay
                 VStack {
                     
-                    Spacer()
+                    //Navigation Buttons
                     
+                    HStack{
+                        Button(action: {showAccountConfigSheet.toggle()}){
+                            HStack (spacing: 5){
+                                
+                                //Avatar
+                                Circle()
+                                VStack{
+                                    Text("<Name>")
+                                        .font(Theme.bodyFont)
+                                }
+                            }
+                            .padding()
+                            .background{
+                                CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                            }
+                        }
+                        Spacer()
+                        NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
+                            Image(systemName: "message.fill")
+                            .padding()
+                            .background{
+                                CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 50)
+                    Spacer()
                     MainButtons()
                         .frame(maxWidth: 100)
-                    
                 }
-                
+                .padding()
+
             }
-            .toolbar{
-                
-                ToolbarItem(placement: .topBarLeading){
-                    
-                    HStack (spacing: 5){
-                        
-                        //Avatar Placeholder
-                        Circle()
-                        
-                        VStack{
-                            
-                            Text("Welcome back")
-                                .font(Theme.captionFont)
-                                .opacity(0.7)
-                            Text("<Name>")
-                                .font(Theme.headerFont)
-                            
-                        }
-                        
-                    }
-                    .padding()
-                    .background{
-                        
-                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                        
-                    }
-                    .padding()
-                    .frame(minHeight: 100)
-                    
-                }
-                
-                ToolbarItem(placement: .topBarTrailing){
-                    
-                    NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
-                    
-                        Image(systemName: "message.fill")
-                        .padding()
-                        .background{
-                            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                        }
-                    
-                    }
-                    .padding()
-                    .frame(minHeight: 100)
-                    
-                }
-                
-            }
-            
-            /*
-             
-             HStack{
-             
-             HStack (spacing: 5){
-             
-             //Avatar Placeholder
-             Circle()
-             .frame(maxHeight: 50)
-             
-             VStack{
-             
-             Text("Welcome back")
-             .font(Theme.captionFont)
-             .opacity(0.7)
-             Text("<Name>")
-             .font(Theme.headerFont)
-             
-             }
-             
-             }
-             .padding()
-             .frame(maxHeight: 100)
-             .background{
-             
-             CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-             
-             }
-             .padding()
-             
-             Spacer()
-             
-             NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
-             
-             Image(systemName: "message.fill")
-             .padding()
-             .background{
-             
-             CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-             }
-             
-             }
-             .padding()
-             
-             */
-            /*
-             ToolbarItem(placement: .topBarTrailing){
-             
-             
-             Button(action: {showAccountConfigSheet.toggle()}){
-             
-             Image(systemName: "gearshape.fill")
-             
-             }
-             
-             }
-             */
-            
+        }
+        .sheet(isPresented: $showAccountConfigSheet){
+            AccountConfigSheet()
         }
     }
     
     //Reject a Match
-    
     func Pass(){
         
         //Left swipe animation
         withAnimation(){
-            
             offsetX = -UIScreen.main.bounds.width // Slide to the right
             opacity = 0
-            
         }
         
         //Add profile to user's disliked list
         
         //Refresh match prospects
-        
         refreshMatches()
-        
     }
     
     //Accept a Match
@@ -500,43 +344,21 @@ struct MatchView : View {
             offsetX = 0
             
             withAnimation (Animation.snappy(duration: 1)) {
-                
                 shouldAnimateProfileCard = true
                 opacity = 1
-                
-                if !appModel.prospectiveMatches.isEmpty{
-                 
+                if !appModel.prospectiveMatches.isEmpty {
                     appModel.prospectiveMatches.removeFirst()
-                    
                 }
-                
             }
-            
-            
         }
-        
         
         //API.getMatches
         appModel.prospectiveMatches.append(Profile())
-        
-        
-    }
-    
-    //Look at possible Match's profile
-    func OpenProfileDetails(){
-        
-        //Get Profile data
-        
-        //Pass to view
-        
-        //Push details view onto nav stack
-        
     }
 
     func didDismissAccountConfigSheet(){
         
     }
-    
     
 }
 

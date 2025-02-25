@@ -17,6 +17,7 @@ struct Message : Identifiable {
     var kind : Kind = Kind.text
     var id : String = UUID().uuidString
     var content : String = "Hello world"
+    var sentFromClient : Bool = false
     
     //private var gameState : GameState?
     

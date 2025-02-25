@@ -17,9 +17,9 @@ final class AccountData {
     
     private var email : String
     
-    private var profile : Profile? 
+    private var profile : Profile
     
-    init(hasBeenAuthenticated: Bool, userID: String? = nil, email: String, profile: Profile? = nil) {
+    init(hasBeenAuthenticated: Bool, userID: String? = nil, email: String, profile: Profile = Profile()) {
         self.hasBeenAuthenticated = hasBeenAuthenticated
         self.userID = userID
         self.email = email
@@ -46,11 +46,11 @@ final class AccountData {
         self.email = newEmail
     }
 
-    func setProfile(_ newProfile: Profile?) {
+    func setProfile(_ newProfile: Profile) {
         self.profile = newProfile
     }
     
-    func getProfile() -> Profile? {
+    func getProfile() -> Profile {
         return self.profile
     }
     

@@ -44,11 +44,31 @@
 			);
 			target = DF12F1A12CDD3FB4006A0DC2 /* unhinged appUITests */;
 		};
+		DF8C8CF02D6835B800C85EF7 /* Exceptions for "unhinged app" folder in "unhinged appTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Views/AccountConfigSheet.swift,
+				Views/ProfileCard.swift,
+			);
+			target = DF12F1972CDD3FB4006A0DC2 /* unhinged appTests */;
+		};
+		DF8C8CF12D6835B800C85EF7 /* Exceptions for "unhinged app" folder in "unhinged appUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Views/AccountConfigSheet.swift,
+				Views/ProfileCard.swift,
+			);
+			target = DF12F1A12CDD3FB4006A0DC2 /* unhinged appUITests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DF12F1882CDD3FB3006A0DC2 /* unhinged app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				DF8C8CF02D6835B800C85EF7 /* Exceptions for "unhinged app" folder in "unhinged appTests" target */,
+				DF8C8CF12D6835B800C85EF7 /* Exceptions for "unhinged app" folder in "unhinged appUITests" target */,
+			);
 			path = "unhinged app";
 			sourceTree = "<group>";
 		};

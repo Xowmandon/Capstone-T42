@@ -32,6 +32,7 @@ public struct ConversationsView: View {
                     .frame(width: 50, height: 50)
                     .clipShape(Circle())
                     .shadow(radius: 3)
+                    .padding()
                 
                 VStack (spacing: 5){
                     
@@ -44,8 +45,7 @@ public struct ConversationsView: View {
                         .padding(.leading, 5)
                 }
                 .frame(alignment: .topLeading)
-                .padding()
-                
+                .padding()   
             
             }
             .background{
