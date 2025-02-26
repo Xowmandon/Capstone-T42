@@ -23,7 +23,6 @@ class Profile : Identifiable {
     
     var prompts : [PromptItem]?
     
-    
     private var userIdentifyingEmail : String?
     
     init(){}

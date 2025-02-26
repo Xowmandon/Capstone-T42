@@ -10,17 +10,31 @@ import SwiftUI
 
 struct BuildProfileView: View {
     
+    //TODO: confirm changes upon dismiss
+    
     var profile : Profile = AccountData.shared.getProfile()
     var theme : Theme = Theme.shared
+    var editButtonImage : String = "pencil.circle.fill"
     
-    @State private var showAddObjectSheet : Bool = false
+    @State var showAddObjectSheet : Bool = false
+    @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
+    @State var showEditProfileCardSheet : Bool = false // TODO: Image Picker
+    @State var showAttributeCreatorSheet : Bool = false  //TODO: Attribute builder
     
+    @State var name : String
+    @State var biography : String
+    
+    @FocusState private var isEditing: Bool
+    
+    init(){
+        _name = State(initialValue: (profile.name))
+        _biography = State(initialValue: profile.biography ?? "No Bio written yet")
+    }
     public var body: some View {
         ZStack {
             
             // Profile Content
             ScrollView{
-                
                 
                 Text("My Profile")
                     .font(Theme.titleFont)
@@ -28,7 +42,6 @@ struct BuildProfileView: View {
                 //Avatar Customization
                 Text("Avatar")
                     .font(Theme.headerFont)
-                    
                 Circle()
                     .foregroundStyle(Color.blue)
                     .frame(maxWidth: 100)
@@ -37,37 +50,35 @@ struct BuildProfileView: View {
                             .font(.system(.title))
                             .frame(minWidth: 100, minHeight: 100, alignment: .topTrailing)
                     }
-                
-                
-                ProfileCard(profile: profile)
-                    .padding(.horizontal)
-                    .frame(minHeight: 400)
+            
+                ZStack(alignment: .topTrailing) {
+                    ProfileCard(profile: profile)
+                        .padding(.horizontal)
+                        .frame(minHeight: 400)
+                    
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.system(.title))
+                }
                 
                 // Basic Info (Attributes?)
                 
-                VStack (spacing: 5){
-                    
-                    
-                    ForEach(profile.attributes, id: \.self) { attribute in
-                        
-                        HStack{
-                            
-                            Image(systemName: attribute.symbolName)
-                            Text(attribute.customName)
-                                .font(Theme.bodyFont)
-                            
+                ZStack(alignment:.topTrailing) {
+                    VStack (spacing: 5){
+                        ForEach(profile.attributes, id: \.self) { attribute in
+                            HStack{
+                                Image(systemName: attribute.symbolName)
+                                Text(attribute.customName)
+                                    .font(Theme.bodyFont)
+                            }
                         }
-                        
                     }
-                    
-                    
+                    .padding()
+                    .frame(maxWidth:.infinity)
+                    .background{
+                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                    }
+                    .padding()
                 }
-                .padding()
-                .frame(maxWidth:.infinity)
-                .background{
-                    CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                }
-                .padding()
                 
                 //About Me
                 
@@ -82,12 +93,19 @@ struct BuildProfileView: View {
                         Spacer()
                         
                     }
-                    
-                    Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Curabitur euismod, eros at tincidunt sollicitudin, justo neque suscipit nunc, id fringilla odio erat eget sapien. ")
+                
+                    TextEditor(text:$biography)
                         .font(Theme.bodyFont)
                         .padding()
-                    
-                    
+                        .focused($isEditing)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") {
+                                    isEditing = false // Dismiss keyboard
+                                }
+                            }
+                        }
                 }
                 .padding()
                 .background{
@@ -96,31 +114,19 @@ struct BuildProfileView: View {
                 .padding(.horizontal)
                 
                 //TODO: Image Gallery
-                
-                
                 //Prompts
-                
                 ForEach(profile.prompts ?? []){prompt in
-                    
                     PromptView(prompt: prompt)
                         .padding()
-                    
-                    
                 }
-                
-                
             }
             
             //Overlay
             VStack {
-                
                 HStack{
-                    
                     BackButton()
                     Spacer()
-                    
                 }
-                
                 Spacer()
                 Button(action: {showAddObjectSheet.toggle()}){
                     Image(systemName: "plus")
@@ -130,7 +136,6 @@ struct BuildProfileView: View {
                         .font(.system(.title, weight: .black))
                         .padding()
                         .background{
-                            
                             Circle()
                                 .fill(.ultraThickMaterial)
                                 .shadow(radius: 5)
@@ -139,8 +144,8 @@ struct BuildProfileView: View {
             }
         }
         .navigationBarBackButtonHidden()
+        //Add Object Sheet
         .sheet(isPresented: $showAddObjectSheet){
-            
             VStack {
                 Text("Customize Your Profile")
                     .font(.headline)
@@ -233,9 +238,7 @@ struct BuildProfileView: View {
     }
     
     func saveProfile() {
-        
         AccountData.shared.setProfile(self.profile)
-        
     }
 }
 

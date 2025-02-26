@@ -9,6 +9,18 @@ import Foundation
 
 class PromptItem : Identifiable {
     
+    static let examplePromptChoices : [PromptChoice] = [PromptChoice(choice: "Duck"),
+                                                        PromptChoice(choice: "Duck"),
+                                                        PromptChoice(choice: "Goose")]
+        
+    static let examplePrompt : PromptItem = PromptItem(
+        
+        question: "Two Truths and a Lie",
+        choices: examplePromptChoices,
+        correctChoice: examplePromptChoices.last!.id
+    
+    )
+    
     let id: UUID
     let question: String
     let choices: [PromptChoice]
@@ -25,8 +37,8 @@ class PromptItem : Identifiable {
 
 struct PromptChoice : Identifiable {
     
-    var id: UUID
-    var isSelected: Bool
+    var id: UUID = UUID()
+    var isSelected: Bool = false
     let choice: String
     
 }
