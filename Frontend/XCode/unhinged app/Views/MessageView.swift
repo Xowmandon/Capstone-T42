@@ -13,7 +13,7 @@ import SwiftUI
 struct MessageView : View {
     let profile : Profile
     //@EnvironmentObject var appModel : AppModel
-    @State private var messages : [Message] = [Message(), Message(), Message(sentFromClient: true)]
+    @State private var messages : [Message]
     @State private var messageText : String = ""
     @State private var showOptionsSheet : Bool = false
     @State private var showGameSheet : Bool = false
@@ -22,8 +22,7 @@ struct MessageView : View {
     
     init(profile: Profile){
         self.profile = profile
-        self.messages = []
-        self.messages = fetchMessages()
+        _messages = State(initialValue: MessageView.fetchMessages())
     }
     
     @ViewBuilder
@@ -150,9 +149,7 @@ struct MessageView : View {
             
         }
         .sheet(isPresented: $showGameSheet){
-            
             VStack{
-                
                 Text("Select a Game!")
                     .font(Theme.titleFont)
                 
@@ -171,13 +168,8 @@ struct MessageView : View {
                     .background{
                         CardBackground()
                     }
-                    
                 }
-                
-                
             }
-            
-            
         }
     }
     private func sendMesage() {
@@ -185,10 +177,10 @@ struct MessageView : View {
         messageText = ""
         //APIClient.shared.sendMesage(text: messageText)
     }
-    private func fetchMessages() -> [Message]{
+    private static func fetchMessages() -> [Message]{
         //
         APIClient.shared
-        return [Message(), Message(), Message()]
+        return [Message(), Message(), Message(sentFromClient: true)]
     }
 }
 

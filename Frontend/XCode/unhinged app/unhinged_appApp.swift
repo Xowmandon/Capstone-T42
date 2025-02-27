@@ -26,8 +26,6 @@ struct unhinged_appApp: App {
         
         userIsAuthenticated = getAuthenticationStatus(account: self.account)
         
-        APIClient.shared.test_post_user()
-        
     }
     
     func getAuthenticationStatus(account: AccountData) -> Bool {

@@ -35,7 +35,7 @@ struct AccountConfigSheet : View {
                     }
                 }
                 
-                //MatchMaking Preferences
+                //Match Making Preferences
                 NavigationLink(destination: MatchPreferencesView()){
                     HStack{
                         Image(systemName: "slider.horizontal.2.square")
@@ -62,6 +62,7 @@ struct AccountConfigSheet : View {
                 }
                 Spacer()
             }
+            .frame(alignment: .leading)
         }
         .navigationBarBackButtonHidden()
     }

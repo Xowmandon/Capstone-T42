@@ -244,14 +244,12 @@ struct MatchView : View {
                     //Prompts
                     
                     ForEach(currentProfile!.prompts ?? []){prompt in
-                        
                         PromptView(prompt: prompt)
                             .padding()
-                        
-                        
                     }
-                    
-                    
+                    //Main buttons spacing
+                    Spacer()
+                        .padding(.vertical, 60)
                 }
                 
                 //Overlay

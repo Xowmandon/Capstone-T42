@@ -10,7 +10,6 @@ import Foundation
 class APIClient {
     
     //establish connection with database
-    
     static let shared = APIClient()
     private static let connection : URLSession = URLSession.shared //URLSession(configuration: URLSessionConfiguration.default)
     
@@ -31,129 +30,114 @@ class APIClient {
          */
      
     }
-    
     enum TaskType {
-        
-    case get
-    case post
-        
+        case get
+        case post
     }
-    
-    
-    private func apiTask(type: TaskType, endpoint: String, payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) -> Bool {
-        
+
+    private func apiTask(type: TaskType, endpoint: String, payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) {
+        // Construct the URL
         guard let url = URL(string: "https://cowbird-expert-exactly.ngrok-free.app/\(endpoint)") else {
-            
             completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
-            
-            return false
-            
-        }
-        
-        if type == .get {
-            APIClient.connection.dataTask(with: url) { data, response, error in
-                
-                completion(.success(data!))
-                
-            }
-        } else if type == .post {
-            
-            var request = URLRequest(url: url)
-            
-            request.httpMethod = "POST"
-            request.httpBody = payload
-            
-            APIClient.connection.uploadTask(with: request, from: payload!).resume()
-            
-            
-            completion(.success(Data()))
-            
-        }
-        
-        return true
-        
-    }
-     
-     //check if account associated with ID exists
-    func assertAccountExistence(userEmailID: String) -> Bool {
-        
-        print("asserting account existence")
-       
-        apiTask(type: .get, endpoint: "", payload: nil){ data in
-            
-            
-        
-        }
-        
-        return false
-       
-    }
-    
-    func createAccount(account: AccountData) {
-        
-        struct AccountJSON: Codable {
-            let name: String
-            let email: String
-        }
-        
-        let accountInfo : AccountJSON = AccountJSON(name: account.getProfile().name, email: account.getEmail()!)
-        
-        let payload = try! JSONEncoder().encode(accountInfo)
-        
-        print("pushing JSON payload")
-        print(payload)
-        
-        apiTask(type: .post, endpoint: "users", payload: payload){data in}
-        
-        
-    }
-    
-    func test_post_user() {
-        
-        // Define the payload
-        let payload: [String: Any] = [
-            "email": "HarryPotter@2hogwarts.com",
-            "name": "Harry Potter",
-            "username": "hp123"
-        ]
-
-        // Convert the payload to JSON data
-        guard let jsonData = try? JSONSerialization.data(withJSONObject: payload) else {
-            print("Error: Unable to encode JSON payload.")
             return
         }
 
-        // Create the URL
-        guard let url = URL(string: "https://cowbird-expert-exactly.ngrok-free.app/users") else {
-            print("Error: Invalid URL.")
-            return
-        }
-
-        // Create a URLRequest and set its properties
+        // Create the request
         var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = jsonData
+        request.httpMethod = type == .get ? "GET" : "POST"
+        
+        // Set headers and body for POST requests
+        if type == .post {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = payload
+        }
 
-        // Create a data task to send the request
+        // Create the data task
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
+            // Handle errors
             if let error = error {
-                print("Error: \(error.localizedDescription)")
+                completion(.failure(error))
                 return
             }
 
-            if let response = response as? HTTPURLResponse {
-                print("Response Status Code: \(response.statusCode)")
+            // Check for a valid HTTP response
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(NSError(domain: "Invalid Response", code: 0, userInfo: nil)))
+                return
+            }
+            print("Response String: \(httpResponse)")
+
+            // Check for a successful status code (e.g., 200-299)
+            guard (200...299).contains(httpResponse.statusCode) else {
+                completion(.failure(NSError(domain: "Server Error", code: httpResponse.statusCode, userInfo: nil)))
+                return
             }
 
-            if let data = data, let responseBody = String(data: data, encoding: .utf8) {
-                print("Response Body: \(responseBody)")
+            // Handle the response data
+            if let data = data {
+                completion(.success(data))
+            } else {
+                completion(.failure(NSError(domain: "No Data", code: 0, userInfo: nil)))
             }
         }
 
         // Start the task
         task.resume()
+        
+        
     }
+    
+    //send identity token
+    
+    func sendIdentityToken(token: String) {
+        print("Sending identity token")
+        let body : [String : String] = ["auth_method": "apple",
+                    "identity_token": token]
+        guard let payload = try? JSONEncoder().encode(body) else {
+            print("failed to encode payload")
+            return
+        }
+        
+        apiTask(type: .post, endpoint: "signup", payload: payload){result in
+            switch result {
+                case .success(let data):
+                    do {
+                        let dataString = try JSONDecoder().decode(String.self, from: data)
+                        
+                        
+                    } catch {
+                        print("Failed to decode JSON: \(error.localizedDescription)")
+                    }
+                case .failure(let error):
+                    print("Error: \(error.localizedDescription)")
+                }
+        }
+    }
+     
+     //check if account associated with ID exists
+    func assertAccountExistence(userEmailID: String) -> Bool {
+        print("asserting account existence")
+        apiTask(type: .get, endpoint: "", payload: nil){ data in
+            
+        }
+        return false
+    }
+    
+    /*
+    func createAccount(account: AccountData) {
+        struct AccountJSON: Codable {
+            let name: String
+            let email: String
+        }
+        let accountInfo : AccountJSON = AccountJSON(name: account.getProfile().name, email: account.getEmail()!)
+        let payload = try! JSONEncoder().encode(accountInfo)
+        print("pushing JSON payload")
+        print(payload)
+        apiTask(type: .post, endpoint: "users", payload: payload){data in
+            
+        }
+    }
+    */
     
     /*
     // Get list of possible profiles to match

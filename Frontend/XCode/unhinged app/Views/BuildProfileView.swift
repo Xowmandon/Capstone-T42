@@ -11,6 +11,7 @@ import SwiftUI
 struct BuildProfileView: View {
     
     //TODO: confirm changes upon dismiss
+    //TODO: use .overlay for edit button
     
     var profile : Profile = AccountData.shared.getProfile()
     var theme : Theme = Theme.shared
@@ -23,12 +24,17 @@ struct BuildProfileView: View {
     
     @State var name : String
     @State var biography : String
+    @State var attributes : [Attribute]
+    var prompts : [PromptItem]
     
     @FocusState private var isEditing: Bool
     
     init(){
+        //Initialize variables with existing profile data
         _name = State(initialValue: (profile.name))
         _biography = State(initialValue: profile.biography ?? "No Bio written yet")
+        _attributes = State(initialValue: profile.attributes)
+        prompts = []
     }
     public var body: some View {
         ZStack {
@@ -80,20 +86,15 @@ struct BuildProfileView: View {
                     .padding()
                 }
                 
-                //About Me
-                
+                // Biography
                 VStack{
-                    
                     HStack{
-                        
                         Text("About Me!")
                             .font(Theme.headerFont)
                             .padding(.top)
                             .padding(.horizontal)
                         Spacer()
-                        
                     }
-                
                     TextEditor(text:$biography)
                         .font(Theme.bodyFont)
                         .padding()
@@ -119,6 +120,8 @@ struct BuildProfileView: View {
                     PromptView(prompt: prompt)
                         .padding()
                 }
+                Spacer()
+                    .padding(.vertical, 60)
             }
             
             //Overlay
@@ -233,6 +236,10 @@ struct BuildProfileView: View {
                         }
                 }
             }
+            
+        }
+        //Profile Card Sheet
+        .sheet(isPresented: $showEditProfileCardSheet){
             
         }
     }

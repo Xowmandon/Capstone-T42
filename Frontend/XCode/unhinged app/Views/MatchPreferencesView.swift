@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MatchPreferencesView: View {
     @Environment(\.presentationMode) var presentationMode
-    @State private var orientation: String = "Portrait"
+    @State private var orientation: String = ""
     @State private var minAge: Double = 18
     @State private var maxAge: Double = 50
     @State private var preferredGame: String = ""
@@ -17,10 +17,15 @@ struct MatchPreferencesView: View {
     @State private var location: String = "New York"
 
     let games : [GameObject] = GameObject.gameList
-    let orientations = ["Portrait", "Landscape"]
+    let orientations = ["Straight","Gay","Bisexual","Other"]
 
     var body: some View {
         VStack {
+            HStack{
+                BackButton()
+                    .padding()
+                Spacer()
+            }
             Text("Matching Preferences")
                 .font(Theme.headerFont)
                 .padding(.bottom, 20)
@@ -48,14 +53,14 @@ struct MatchPreferencesView: View {
                         Slider(value: $minAge, in: 18...100, step: 1)
                             .accentColor(.blue)
                         Text("Min Age: \(Int(minAge))")
-                            .font(Theme.bodyFont)
+                            //.font(Theme.bodyFont)
                     }
                     .frame(width: 200)
                     VStack {
                         Slider(value: $maxAge, in: 18...100, step: 1)
                             .accentColor(.blue)
                         Text("Max Age: \(Int(maxAge))")
-                            .font(Theme.bodyFont)
+                            //.font(Theme.bodyFont)
                     }
                     .frame(width: 200)
                 }
@@ -84,7 +89,7 @@ struct MatchPreferencesView: View {
                         Slider(value: $minHeight, in: 100...250, step: 1)
                             .accentColor(.green)
                         Text("Min Height: \(Int(minHeight)) cm")
-                            .font(Theme.bodyFont)
+                            //.font(Theme.bodyFont)
                     }
                     .frame(width: 200)
                 }
@@ -117,11 +122,13 @@ struct MatchPreferencesView: View {
             }
         }
         .padding()
+        .navigationBarBackButtonHidden()
     }
     
     func saveMatchPreferences() {
         
-        
+        //Add settings to preferences struct
+        //Push preferences to AccountData Singleton
         
         
     }
