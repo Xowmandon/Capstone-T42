@@ -11,7 +11,7 @@ from  Backend.src.extensions import db # Import the DB Instance
 import  Backend.src.models as models # Import the Models and Schemas
 #from  Backend.src.routes import app # Blueprint
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
-
+from flask_socketio import emit
 # Blueprint for the Swipe Routes
 swipe_bp = Blueprint('swipe_bp', __name__)
 
