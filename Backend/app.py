@@ -12,6 +12,9 @@ from Backend.src.routes import user_routes, match_routes, swipe_routes, message_
 from Backend.src.routes import aggregate_routes # Utils Routes
 from Backend.src.routes import auth_routes # Auth Routes
 
+from Backend.src.sockets.chat import ChatNamespace
+from Backend.src.sockets.swiping import SwipeNamespace
+
 envMan = EnvManager()
 PASS_SECRET_KEY = envMan.load_env_var("PASS_SECRET_KEY")
 logger = logging.getLogger(__name__)
@@ -54,6 +57,11 @@ ma.init_app(app)
 
 
 socketio = SocketIO(app)
+
+
+# Register the chat namespace
+socketio.on_namespace(ChatNamespace("/chat"))
+socketio.on_namespace(ChatNamespace("/swipe"))
 
 #app.register_blueprint(routes_api)
 
@@ -117,7 +125,7 @@ if __name__ == '__main__':
     #logger.info('Started')
     
     # Run the Flask App with HTTP Support
-    socketio.run(app, debug=True, port=3000)
+    socketio.run(app, debug=True, port=3001)
     
      # Run the Flask App with WebSocket support
    # socketio.run(app, host='0.0.0.0', port=3000)
