@@ -4,7 +4,7 @@ from flask import Flask, jsonify,request
 from flask_socketio import SocketIO, emit
 
 from Backend.src.utils import EnvManager, DevDBConfig, TestingConfig
-from Backend.src.extensions import db, ma, bcrypt, flask_jwt #socketio
+from Backend.src.extensions import db, ma, bcrypt, flask_jwt
 #from Backend.src.middleware import before_request
 
 # Import the Main Routes and Blueprints
@@ -53,6 +53,7 @@ bcrypt.init_app(app)
 ma.init_app(app)
 
 
+socketio = SocketIO(app)
 
 #app.register_blueprint(routes_api)
 
@@ -107,6 +108,7 @@ if __name__ == '__main__':
 
     # Create DB Tables
     with app.app_context():
+        db.drop_all()
         db.create_all()
     
     # Set up Logging
@@ -115,7 +117,7 @@ if __name__ == '__main__':
     #logger.info('Started')
     
     # Run the Flask App with HTTP Support
-    app.run(host='0.0.0.0', port=3000)
+    socketio.run(app, debug=True, port=3000)
     
      # Run the Flask App with WebSocket support
    # socketio.run(app, host='0.0.0.0', port=3000)
