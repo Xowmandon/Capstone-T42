@@ -57,10 +57,6 @@ class Swipe(db.Model):
     def __repr__(self):
         return f"<Swipe swiper={self.swiper}, swipee={self.swipee}, swipe_result={self.swipe_result}, swipe_date={self.swipe_date}>"
     
-    
-    @staticmethod
-    def create_swipe(swiper,swipee,swipe_result):
-        pass
 
 class SwipeSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
@@ -79,3 +75,33 @@ class SwipeSchemaNested(SwipeSchema):
     swiper = ma.Nested(UserSchema)
     swipee = ma.Nested(UserSchema)
  
+ 
+class SwipeProcessor():
+    
+    def process_new_swipe(swiper_id, swipee_id, new_swipe_result):
+        
+        # Check if Swipe Exists for the two Users
+        # Meaning, There is a record Where Swipee equals Current Swiper, and Vice Versa
+        swiper_swipe = Swipe.query.filter_by(swiper_id=swipee_id, swipee_id=swiper_id).first()
+        swipee_swipe = Swipe.query.filter_by(swiper_id=swiper_id, swipee_id=swipee_id).first()
+
+        # Swipe Exits - Good to Compare and Check for New Match
+        swipe_record = swiper_swipe if swiper_swipe else swipee_swipe
+
+        # If swipe does not exist, create a new swipe instance
+        if swipe_record is None:
+            new_swipe = Swipe(swiper_id=swiper_id, swipee_id=swipee_id, swipe_result=new_swipe_result)
+            db.session.add(new_swipe)
+            db.session.commit()
+            print(f"New swipe created - Swiper: {new_swipe.swiper_id}, Swipee: {new_swipe.swipee_id}, Result: {new_swipe.swipe_result}")
+            return new_swipe
+
+        # If Given Swipe_Result is Rejected, set Stored Swipe Record as Rejected, Pass
+        elif new_swipe_result == "REJECTED":
+            swipe_record.swipe_result = "REJECTED"
+
+        # If Both Stored Swipe and New is PENDING, Turn to Accepted, Indicating Successful Match
+        elif swipe_record.swipe_result == "PENDING" and new_swipe_result == "PENDING":
+            swipe_record.swipe_result = "ACCEPTED"
+
+        return swipe_record

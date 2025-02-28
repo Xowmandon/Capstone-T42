@@ -9,8 +9,13 @@ from sqlalchemy.orm import relationship
 from marshmallow import validates, ValidationError
 from better_profanity import profanity # Profanity Filter
 
-from  Backend.src.extensions import db, ma, bcrypt # Import the Database and Marshmallow - SQLAlchemy and Marshmallow --> Flask
- 
+# Import the Database and Marshmallow - SQLAlchemy and Marshmallow --> Flask
+from  Backend.src.extensions import db, ma, bcrypt
+
+from Backend.src.models.photo import UserPhoto # User Photo Model # Keep This Before User Model and Helper
+
+# Last Import - Avoid Circular Imports
+from Backend.src.models.model_helpers import UserModelHelper 
  
 # TODO: User Model Needs Normalization - Separate Tables for User Information and Bio
 
@@ -37,8 +42,12 @@ class User(db.Model):
     gender = db.Column(db.String(10), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     
+    # BROKEN / BUG Caused Circular DB DROP Constraints
     # Makes Reference to One Photo in Photos Table as Main Profile Picture
-    profile_picture = db.Column(db.String(100), db.ForeignKey('photos.id'), nullable=True) # Profile Picture - URL to Image
+    #profile_picture_id = db.Column(db.Integer, 
+                                  #db.ForeignKey('user_photos.id',ondelete='CASCADE'),name='fk_user_profile_picture"',
+                                   #nullable=True,
+                                   #) # Profile Picture - URL to Image
 
     bio = db.Column(db.String(500), nullable=True) # Bio - Description of User
 
@@ -123,13 +132,21 @@ class User(db.Model):
     """
     
     # Combined matches (user is either the matcher or matchee)
-    @property
-    def matches(self):
+    @staticmethod
+    def get_matches(self):
         """
         Combines matches where the user is the matcher or the matchee.
         """
-        return self.matches_as_matcher.union(self.matches_as_matchee)
+        helper = UserModelHelper(self.id)
+        return helper.get_user_matches()
     
+    @staticmethod
+    def get_match_ids(self):
+        """
+        Combines matches where the user is the matcher or the matchee.
+        """
+        helper = UserModelHelper(self.id)
+        return helper.get_user_matches_ids()
     
     @staticmethod
     def create_user(email=None, password=None, apple_sub=None):
