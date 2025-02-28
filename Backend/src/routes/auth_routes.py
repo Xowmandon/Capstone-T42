@@ -32,6 +32,15 @@ def verify_token():
 
     return jsonify({"user_id": user.id, "email": user.email, "auth_provider": user.auth_provider}), 200
 
+def verify_token_helper():
+    
+    current_user_id = get_jwt_identity()
+    user = models.User.query.get(current_user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    return user.user_id
+
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     """Unified signup route
@@ -41,17 +50,29 @@ def signup():
     POST /signup HTTP/1.1
     Host: __BASE_URL__
     Content-Type: application/json
+
+    This route handles user sign up using either email/password or Apple Sign-In.
+    The request should be a POST request to the '/signup' endpoint.
+    The request body should be in JSON format and include the following fields:
+
     
     {
         "auth_method": <email/apple>, # Required
-        "email": "", # Required  
+        "identity_token": "<apple_identity_token>", # Required for Apple Sign-In
+        "email":, # Required  for email signup
         "password": "<your_password>" # Required for email signup
     }
     
+    Returns:
+        The response will be a JSON object with the following structure:
+        - If the authentication method is 'email', the response will be the result of the 'handle_email_signup' function.
+        - If the authentication method is 'apple', the response will be the result of the 'handle_apple_signup' function.
+        - If the authentication method is invalid, the response will be a JSON object with an 'error' field and a 400 status code.
     """
     
     data = request.json
     auth_method = data.get("auth_method")
+    auth_method = auth_method.lower()
 
     if auth_method == "email":
         return handle_email_signup(data.get("email"), data.get("password"))
@@ -115,8 +136,8 @@ def handle_apple_signup(identity_token):
     else:
         user = models.User.create_user(email=email, apple_sub=apple_sub)
 
-    token = create_access_token(identity=user.id)
-    return jsonify({"message": "Signup successful", "token": token}), 201
+    token = create_access_token(identity=str(user.id))
+    return jsonify({"message": "Signup successful", "token": str(token)}), 201
 
 
 
@@ -129,7 +150,7 @@ def handle_email_login(email, password):
     if not user_id:
         return jsonify({"error": "Invalid email or password"}), 401
 
-    token = create_access_token(identity=user_id)
+    token = create_access_token(identity=str(user_id))
     return jsonify({"message": "Login successful", "token": token}), 200
 
 def handle_apple_login(identity_token):
