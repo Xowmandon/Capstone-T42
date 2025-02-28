@@ -6,6 +6,7 @@ from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship
 
 from Backend.src.extensions import db, ma # DB and Marshmallow Instances
+from Backend.src.models.model_helpers import MatchModelHelper
 from Backend.src.models.user import User, UserSchema # User Model
 from Backend.src.models.swipe import Swipe # Swipe Model
 
@@ -71,7 +72,16 @@ class Match(db.Model):
         db.session.commit()
         return match
     
-
+    @staticmethod 
+    # Get Messages between two users, with optional limit and offset
+    def get_messages(self, limit=10, page=1, get_all_messages=False):
+        """
+        Get messages between two users in a match.
+        """
+        helper = MatchModelHelper(self.id)
+        return helper.get_messages(limit=limit, page=page, get_all_messages=get_all_messages)
+    
+    
     # String representation of a User, Outputting each Field Associated
     def __repr__(self):
         return f"<Match matcher={self.matcher}, matchee={self.matchee}, match_date={self.match_date}>"
