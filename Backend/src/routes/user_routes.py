@@ -71,7 +71,26 @@ def get_user():
     # Return the user as JSON Response with 200 Status Code
     #return jsonify(user_schema.dump(user)), 200
 
-
+# Init User with Profile Creation Data
+@user_bp.route('/users/init', methods=['POST'])
+@jwt_required()
+def init_profile():
+    """
+    Summary: Initialize a User Profile with Profile Creation Data.
+    
+    Parameters:
+        Authorization
+    
+    Payload: JSON object with a User object, excluding the Email, ID, is_admin, is_fake.:
+        
+    """
+    auth_user_id = get_jwt_identity()
+    auth_user = models.user.User.query.get(auth_user_id)
+    if auth_user is None:
+        return jsonify({"error": "User not found."}), 404
+    
+    required_fields = ['age', 'dating_preferences', 'gender', 'location', 'profile_picture']
+    
 
 # UPDATE User by Email
 # PUT /Users
