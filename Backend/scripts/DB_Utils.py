@@ -22,13 +22,15 @@ def create_all_tables():
 # Drop all tables in the database
 def drop_all_tables():
     with app.app_context():
-        db.drop_all()
         # Validate If Admin wants to drop all tables
-        if input("Are you sure you want to drop all tables? (y/n): ").strip().lower() == 'y':
-            db.drop_all()
-            print("All tables dropped successfully.")
-        else:
-            print("Operation cancelled.")
+    
+        # Reflect the existing database tables
+        db.metadata.reflect(bind=db.engine)
+
+        # Drop all tables in the correct order
+        db.metadata.drop_all(bind=db.engine)
+
+        db.drop_all()
 
 # Hash the key using SHA-256
 def hash_key(key):

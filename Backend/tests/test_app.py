@@ -21,7 +21,7 @@ from  Backend.src.models.match import Match, MatchSchema
 from  Backend.src.models.swipe import Swipe, SwipeSchema
 from  Backend.src.models.message import Message, MessageSchema
 from Backend.src.models.datingPreference import DatingPreference, DatingPreferenceSchema
-
+from Backend.src.utils import EnvManager
 
 from Backend.scripts.gen_fake import GenFake
 
@@ -54,12 +54,23 @@ class AppTest(TestCase):
             db.session.remove()
             #db.drop_all()
 
+    def test_apple_signup(self):
+        EnvMan = EnvManager()
+        payload = {
+            'auth_method': 'apple',  
+            'identity_token': EnvMan.load_env_var('SAMPLE_IDENTITY_TOKEN'),
+        }
+        
+        response = self.client.post('/signup', json=payload)
+
+
     # Creates Fake User - Correctly Adds User to DB
     # Uses External Request to Create User
     def test_create_user_external(self):
         # Create a fake user object
         user = {
-            'name': 'John Doe',
+            'name': 'John',
+            'auth_method': 'apple',
             'username': 'johndoe',
             'email': GenFake().fake.email(), # Prevent Collision with Generated Emails
             'age': 25,
@@ -73,10 +84,12 @@ class AppTest(TestCase):
         # Send a POST request to the create user endpoint
         response = self.client.post('/users', json=user_schema.dump(user))
         
-        
+        # Print the response data
         print(f"RESPONSE DATA: {response.data}")
         print(f"RESPONSE STATUS CODE: {response.status_code}")
         print(f"RESPONSE JSON: {response.json}")
+        
+        
         # Assert that the response status code is 201 (Created)
         self.assertEqual(response.status_code, 201)
        

@@ -1,27 +1,46 @@
+"""
+
+Flask Extensions Module
+Author: Joshua Ferguson
+
+
+This module initializes and provides extensions for the Flask application.
+
+Extensions:
+- db: SQLAlchemy instance for database management.
+- ma: Marshmallow instance for object serialization/deserialization.
+- flask_jwt: JWTManager for handling JSON Web Tokens.
+- bcrypt: Bcrypt instance for password hashing.
+- redis_client: Redis client for caching and data storage.
+- s3: Boto3 S3 resource for interacting with Amazon S3.
+
+"""
+
 from flask import app
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
-from flask_socketio import SocketIO
+from flask_jwt_extended import JWTManager
+from flask_bcrypt import Bcrypt
+import redis
+import boto3
+
+# ------Flask Extensions (Init with/without App Instance)-----
+
+db = SQLAlchemy() # Postgres Client
+ma = Marshmallow(app) # JSON Serialization/Deserilization of Models
+flask_jwt = JWTManager() # JwtManager for Protected Resources
+bcrypt = Bcrypt() # Generating Password Hashes
 
 
-db = SQLAlchemy()
-ma = Marshmallow(app)
+# -----External Services-----
 
+# Redis for Swipe Pool and Caching Frequently Reads
+redis_client = redis.Redis(
+    host='localhost',  # TODO use environment variables
+    port=6379,
+    decode_responses=True
+)
 
-# Initialize SocketIO TODO
-#socketio = SocketIO(app, cors_allowed_origins="*")
+# S3 Bucket Service for Media/Photo Storage & Retrieval
+s3 = boto3.resource('s3') 
 
-URL = "https://cowbird-expert-exactly.ngrok-free.app"
-
-
-# TODO - TODO: Consider Using FlaskMarshmallow for Serialization/Deserialization
-# - Can also Include Validation and Error Handling Easier than Manual Methods like to_dict
-
-#----If Flask-Marshmallow is  Not Used, Add the Following Code----
-# TODO: ADD def to_dict for Each Model to Serialize to JSON
-# TODO: ADD def from_dict for Each Model to Deserialize from JSON
-
-# TODO: ADD def to_csv for Each Model to Serialize to CSV
-# TODO: ADD def from_csv for Each Model to Deserialize from CSV
-
-#------------------------------------------------------------

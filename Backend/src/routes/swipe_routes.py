@@ -10,7 +10,7 @@ import logging
 from  Backend.src.extensions import db # Import the DB Instance
 import  Backend.src.models as models # Import the Models and Schemas
 #from  Backend.src.routes import app # Blueprint
-
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 # Blueprint for the Swipe Routes
 swipe_bp = Blueprint('swipe_bp', __name__)
@@ -18,12 +18,16 @@ swipe_bp = Blueprint('swipe_bp', __name__)
 
 swipe_schema = models.swipe.SwipeSchema()
 
+# -----Swipe Routes-----
+    
+
 # Post A Swipe Event to the Database - Swipe Right or Left
 # POST /Users/Swipes 
 # 0 - Pending (Swiper Swiped Right, Swipee Hasn't Swiped Back Yet), 
 # 1 - Accepted (Both Swiped Right),
 # 2 - Rejected (Swiper Swipped Right, Swipee Swiped Left)
 @swipe_bp.route('/users/swipes', methods=['POST'])
+@jwt_required()
 def create_swipe():
     """
     Summary: Create a new swipe event or Update and add it to the database.
@@ -32,70 +36,35 @@ def create_swipe():
     
     
     Payload: JSON object with the following fields:
-        - swiper_email, str, required
-        - swipee_email, stry, required
+        - swipee_id, stry, required
         - swipe_result: int, required
-        - swipe_date: str, required
-        
+
     Returns:
         str: A message indicating the success or failure of the swipe creation.
         Returns standard response codes (see above):
     """
+
+    swiper_id = get_jwt_identity()
+    swipee_id = request.get_json().get('swipee_id')
+    swipe_result = request.get_json().get('swipe_result')
     
-    try:
-        
-        # Get the data from the request body
-        data = request.get_json()
+    if swiper_id is None or swipee_id is None:
+        return jsonify({"error": "One or more users not found."}), 404
     
-        swiper = db.session.query(models.user.User).filter(models.user.User.email == data.get('swiper_email')).first()
-        swipee = db.session.query(models.user.User).filter(models.user.User.email == data.get('swipee_email')).first()
-        
-        if swiper is None or swipee is None:
-            return jsonify({"error": "One or more users not found."}), 404
-        
-        # Check if the swipe already exists bidirectionally - Filter by email
-        swiper_swipe = models.swipe.Swipe.query.filter_by(swiper=swiper, swipee=swipee).first()
-        swipee_swipe = models.swipe.Swipe.query.filter_by(swiper=swipee, swipee=swiper).first()
-        
-        if swiper_swipe is not None:
-            
-            new_result = data.get('swipe_result')
-            if new_result == 1 or new_result == models.swipe.SwipeResult.ACCEPTED: 
-                # Successful Match Made
-                return
-                
-            
-            
-            #swipe.swipe_date = data.get('swipe_date') 
-        else:
-            swipe = models.swipe.Swipe(
-                swiper=swiper, 
-                swipee=swipee, 
-                swipe_result=data.get('swipe_result'), 
-                swipe_date=data.get('swipe_date')
-            )
-        
-           
-       
-        # Add the new swipe to the session
-        db.session.add(swipe)
-        # Commit the changes to the database
-        db.session.commit()
-        
-        # Log the success and return the message
-        #logging.info(f"Swipe created successfully! - {swipe}")
-        return "Swipe created successfully!", 201
+    processed_swipe = models.swipe.SwipeProcessor.process_new_swipe(swiper_id, swipee_id, swipe_result)
     
-    except SQLAlchemyError as e:
+    if processed_swipe.swipe_result == "ACCEPTED":
+        # Create New Match, Push to DB, and Emit MSG Back to Client
+        print(f"New Match Detected from Swipe - {str(processed_swipe)}")
         
-        # Rollback the session in case of an error, and return the error
-        db.session.rollback()
-        return jsonify({"error": "Database error occurred.", "details": str(e)}), 500
-    
-    except Exception as e:
-        
-        # Unexpected error, return Details back
-        return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
+        new_match = models.match.Match().create_match(matcher_id=swiper_id,matchee_id=swipee_id)
+
+        if new_match is not None:
+            # Emit Successful Match to Client, with Swipee ID and Match ID
+            emit('successful_match', {'swipee_id': swipee_id, 'match_id': new_match.id})
+    # Log the success and return the message
+    #logging.info(f"Swipe created successfully! - {swipe}")
+    return "Swipe created successfully!", 201
     
     
     

@@ -2,6 +2,7 @@
 from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
+from flask_jwt_extended import  jwt_required
 import logging
 
 from Backend.src.extensions import db # Import the DB Instance
@@ -15,10 +16,9 @@ match_schema = models.match.MatchSchema()
 
 #-----Match Routes-----
 
-
 # Get all matches for a user
 # GET /Users/Matches/{email}
-@match_bp.route('/users//matches', methods=['GET'])
+@match_bp.route('/users/matches', methods=['GET'])
 def get_matches():
     """
     Summary: Get all matches for a user by ID.
@@ -50,7 +50,6 @@ def post_match():
     Payload: JSON object with the following fields:
         - matcher: int, required
         - matchee: int, required
-        - match_date: str, required
         
     Returns:
     

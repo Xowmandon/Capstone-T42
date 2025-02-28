@@ -3,15 +3,22 @@ import logging
 from flask import Flask, jsonify,request
 from flask_socketio import SocketIO, emit
 
-from Backend.src.utils import EnvManager, DevDBConfig, TestDBConfig
-from Backend.src.extensions import db, ma #socketio
+from Backend.src.utils import EnvManager, DevDBConfig, TestingConfig
+from Backend.src.extensions import db, ma, bcrypt, flask_jwt
 #from Backend.src.middleware import before_request
 
 # Import the Main Routes and Blueprints
-from Backend.src.routes import user_routes, match_routes, swipe_routes, message_routes
+from Backend.src.routes import user_routes, match_routes, swipe_routes, message_routes # Main Routes
 from Backend.src.routes import aggregate_routes # Utils Routes
+from Backend.src.routes import auth_routes # Auth Routes
 
+from Backend.src.sockets.chat import ChatNamespace
+from Backend.src.sockets.swiping import SwipeNamespace
+
+envMan = EnvManager()
+PASS_SECRET_KEY = envMan.load_env_var("PASS_SECRET_KEY")
 logger = logging.getLogger(__name__)
+
 
 # Init Flask App
 app = Flask("UnHinged-API")
@@ -20,7 +27,12 @@ app = Flask("UnHinged-API")
 #socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Load the DB Configurations, (Host, Port, Database Name), etc
-app.config.from_object(TestDBConfig)
+app.config.from_object(TestingConfig)
+
+# Load the JWT Secret Key
+#app.config["JWT_SECRET_KEY"] = PASS_SECRET_KEY  # JWT secret key
+
+
 
 # Register the Main Route Blueprints
 app.register_blueprint(user_routes.user_bp)
@@ -30,13 +42,26 @@ app.register_blueprint(message_routes.message_bp)
 
 # Register the Utility Route Blueprints
 app.register_blueprint(aggregate_routes.aggregate_bp)
+app.register_blueprint(auth_routes.auth_bp)
 
 # Initialize the DB with Flask
 db.init_app(app)
 
+# Initialize the JWT Manager with Flask
+flask_jwt.init_app(app)
+bcrypt.init_app(app)
+
 # Initialize the Marshmallow Schema with Flask
 # Must be initialized after the DB
 ma.init_app(app)
+
+
+socketio = SocketIO(app)
+
+
+# Register the chat namespace
+socketio.on_namespace(ChatNamespace("/chat"))
+socketio.on_namespace(ChatNamespace("/swipe"))
 
 #app.register_blueprint(routes_api)
 
@@ -88,10 +113,10 @@ def after_request(response):
 
 # Main Entry Point for the API Application
 if __name__ == '__main__':
-    # TODO - Test the Flask App on EC2 Instance
-    
+
     # Create DB Tables
     with app.app_context():
+        db.drop_all()
         db.create_all()
     
     # Set up Logging
@@ -100,7 +125,7 @@ if __name__ == '__main__':
     #logger.info('Started')
     
     # Run the Flask App with HTTP Support
-    app.run(host='0.0.0.0', port=3000)
+    socketio.run(app, debug=True, port=3001)
     
      # Run the Flask App with WebSocket support
    # socketio.run(app, host='0.0.0.0', port=3000)

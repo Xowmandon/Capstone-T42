@@ -8,8 +8,12 @@ from sqlalchemy import or_, and_, asc
 from marshmallow import ValidationError
 
 from Backend.src.extensions import db # socketio # Import the DB Instance
+from Backend.src.models.model_helpers import MatchModelHelper
 import Backend.src.models as models# Import the Models and Schemas
 from Backend.src.models import message
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import Backend.src.routes.route_helpers as route_helpers
+
 
 #from Backend.src.sockets import get_private_chat_room
 
@@ -19,10 +23,29 @@ message_bp = Blueprint('message_bp', __name__)
 message_bp_schema = models.message.MessageSchema()
 
 # Schemas for Message Resource
-message_schema = models.message.MessageSchema()
-message_schema_filtered = models.message.MessageSchemaOnlyEmails(only = ('messager', 'messagee', 'message_content'))
+#message_schema = models.message.MessageSchema(only = ('messager', 'message_content', 'message_date'))
+
+
+def save_message(message):
+    
+    #match_id = message.match_id
+    #match = models.match.Match.query.get(match_id)
+    #messager = message.messager
+    #message_content = message.message_content
+    #message_date = message.message_date
+    
+    # Extract the values from the data
+    message = message_bp_schema.load(message)
+    
+    # Add the new message to the session
+    db.session.add(message)
+    # Commit the changes to the database
+    db.session.commit()
+
+    return message
 
 @message_bp.route('/users/messages', methods=['POST'])
+@jwt_required()
 def post_message():
     """ 
     Summary: Create a new message and add it to the database.
@@ -37,22 +60,26 @@ def post_message():
     
     try:
         
+        messager_id = get_jwt_identity()
+        
         data = request.get_json()
         
-        # Get the data from the request body
-        user1_email = data.get('messager_email')
-        user2_email = data.get('messagee_email')
+        match_id = data.get('match_id')
+        message_content = data.get('message_content')
+        #message_date = data.get('message_date') # TODO: Add the message date to the message schema
         
-        # Get the Users ID's from DB
-        user1 = models.user.User.query.filter_by(email=user1_email).first()
-        user2 = models.user.User.query.filter_by(email=user2_email).first()
+        # Validate Match Exists
+        match = models.match.Match.query.get(match_id)
+        if not match:
+            return jsonify({"error": "Match not found in database."}), 404
         
-        new_message = {
-            "messager": user1.id,
-            "messagee": user2.id,
-            "message_content": data.get('message_content'),
-            "message_date": data.get('message_date')
-        }
+        # Validate Users Exist
+        messager = models.user.User.query.get(messager_id)
+        if not messager:
+            return jsonify({"error": "Messager not found in database."}), 404
+        
+        # Add Messager ID to the Data to be Loaded into Schema
+        data['messager_id'] = messager_id
         
         # Extract the values from the data
         message = message_bp_schema.load(data)
@@ -84,100 +111,81 @@ def post_message():
         return jsonify({"error": "Database error occurred.", "details": str(e)}), 400
 
 
-
 @message_bp.route('/users/messages/conversation', methods=['GET'])
+@jwt_required()
 def get_conversation():
-    
-    """Summary: Get all messages between two users, ordered by DateTime.
-    
-    Payload:
-    
+    """ 
+    Summary: Get all messages between two users, ordered by DateTime.
+
+    URL Params:
         ---Required---
-        messager_email (string): The Email of the user sending the message.
-        messagee_email (string): The Email of the user receiving the message.
+        match_id (string): The ID of the match.
         
+
         ---Optional---
-        limit (int): The number of messages to return.
-        offset (int): The number of messages to skip.
+        limit (int): The number of messages to return per page.
+        page (int): The page number for pagination.
+        all_messages (bool): If True, returns all messages between users.
+
+    Request Headers:
+        Authorization: JWT Token for the requesting user (Needs to Be Apart of the Match)
 
     Returns:
-        List[dict]: A list of messages between two users, ordered by DateTime., 200
+        JSON response with message details and pagination metadata.
     """
-        
-    data = request.get_json()
-    
-    # Check if required parameters are missing
-    if 'messager_email' not in data or 'messagee_email' not in data:
-        return jsonify({"error": "Required parameters missing."}), 400
-    
-    # Get the User Emails from the Request
-    user1_email = data.get('messager_email')
-    user2_email = data.get('messagee_email')
-    
-    # Get the optional limit and offset values
-    limit = data.get('limit')
-    offset = data.get('offset')
-    get_all_messages = data.get('get_all_messages')
-    
-    # Get the Users ID's from DB
-    user1 = models.user.User.query.filter_by(email=user1_email).first()
-    user2 = models.user.User.query.filter_by(email=user2_email).first()
-    
-    # Check if user1 or user2 is not found
-    if not user1 or not user2:
-        return jsonify({"error": "User not found in DB."}), 404
-    
-    # List of Messages Instances between two users, Retrieved from DB
-    conversation = get_messages_between_users(user1.id, user2.id, limit, offset)
-    
-    # Filter the Shared Messages - Only Return User Emails and Message Content
-    # According to the MessageSchemaOnlyEmails Schema and Only Filter
-    normalized_conversation = [message_schema_filtered.dump(msg)for msg in conversation]
-    
-    for message in normalized_conversation:
-        logging.info(f"Common Message: {message}")
-    
-    # Return the messages
-    return jsonify(normalized_conversation), 200
-    
-    
-#-------- Helper Functions --------#    
-#----------------------------------#
-#----------------------------------#
-   
-# Get Messages between two users, with optional limit and offset
-def get_messages_between_users(user1_id, user2_id, limit=10, offset=0, get_all_messages=False):
-    
-    # SQL Filter to get Messages between two users
-    # where User1 is the Messager AND User2 is the Messagee, OR Vice Versa
-    conversation_filter = or_(
-                and_(message.Message.messager.has(id=user1_id), message.Message.messagee.has(id=user2_id)),
-                and_(message.Message.messager.has(id=user2_id), message.Message.messagee.has(id=user1_id))
-            )
-    
-    # Query, Filter, Order and Paginate the Messages between two users
-    # Order by DateTime, Oldest to Newest
-    # Offset and Limit the Results (Optionally)
-    conversation = (
-        db.session.query(models.message.Message)
-        .filter(
-            conversation_filter
-        )
-        .order_by(models.message.Message.message_date.asc())  # Order messages by timestamp
-        .offset(offset)  # Support pagination, start at offset when returning results   # Return limited results
-    )
-    
-    # Return all messages if all_messages is True
-    if not get_all_messages:
-        return conversation.limit(limit)
-    
-    return conversation.all()
 
-    # ----Alternative Method---
-    #user1_messages = set(user1.sent_messages)
-    #user2_received_messages = set(user2.received_messages)
-            
-    #common_messages = user1_messages.intersection(user2_received_messages)
-            
+    # Validate Required Parameters
+    if "match_id" not in request.args:
+        return jsonify({"error": "Required parameter 'match_id' not found in request."}), 400
+
+    # Extract Parameters, with Defaults
+    match_id = request.args.get("match_id", type=int)
+    page = request.args.get("page", type=int, default=1)
+    limit = request.args.get("limit", type=int, default=10)
+    get_all = request.args.get("all_messages", type=lambda x: x.lower() == "true", default=False)
+
+    # Get Match from Database
+    match = models.match.Match.query.get(match_id)
+
+    # Check if Match Exists
+    if not match:
+        return jsonify({"error": "Match not found in database."}), 404
     
- 
+    # Make sure the  Requesting user is part of the match
+    user_id = get_jwt_identity()    
+    user = models.user.User.query.get(user_id)
+    user_in_match = (user.id == match.user1_id or user.id == match.user2_id)
+    if not user or not user_in_match:
+        return jsonify({"error": "User not found in Match."}), 404
+    
+    # Get Messages
+    
+    conversation_data = MatchModelHelper().get_messages_in_match(match, limit, page, get_all)
+
+    # Extract only relevant messages
+    messages_list = [message_bp_schema.dump(msg) for msg in conversation_data["messages"]]
+
+    # Log Retrieved Messages - TODO
+    #for message in messages_list:
+        #logging.info(f"Message: {message} -")
+        
+    # Construct the Response, Base Message Return
+    message_return = {
+        "match_id": match_id,
+        "messages": messages_list,
+        "total_messages": conversation_data["total_messages"],
+    }
+
+    # Add Pagination Metadata if not getting all messages
+    if not get_all:
+        message_return["pagination"] = {
+            "total_pages": conversation_data["total_pages"],
+            "current_page": conversation_data["current_page"],
+            "has_next": conversation_data["has_next"],
+            "has_prev": conversation_data["has_prev"]
+        }
+
+        
+    return jsonify({
+        message_return
+    }), 200

@@ -16,7 +16,7 @@ class Address(db.Model):
     id = db.Column(db.Integer, primary_key=True) # Primary Key
   
     # Foreign Keys - User ID Associated with Address    
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
     
     # Location Information - Street Table, which Links to City, State, and Country
     
@@ -29,4 +29,4 @@ class Address(db.Model):
     # -----Relationships-----
     user_address = relationship('User', back_populates='address')
   
-  
+  # Add Extra Validation for Address Information and Location Information for exact coords

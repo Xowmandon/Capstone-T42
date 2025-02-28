@@ -1,0 +1,47 @@
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: ${LOCAL_DB_USER}
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD}
+      POSTGRES_DB: ${LOCAL_DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${LOCAL_DB_PORT}:5432"
+
+  web:
+    build: .
+    command: flask run --host=0.0.0.0
+    volumes:
+      - .:/app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      FLASK_ENV: development
+      DATABASE_URL: ${LOCAL_DATABASE_URL}
+      SECRET_KEY: ${PASS_SECRET_KEY}
+    env_file:
+      - .env
+
+  ngrok:
+    image: ngrok/ngrok:ngrok
+    command: 
+      - "http"
+      - "web:5000"
+      - "--hostname=${NGROK_HOSTNAME}"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    depends_on:
+      - web
+    restart: no
+    ports:
+      # Expose ngrok web interface, you can access it via http://localhost:3000
+      - ${NGROK_PORT}:${NGROK_PORT}  
+
+
+volumes:
+  postgres_data:

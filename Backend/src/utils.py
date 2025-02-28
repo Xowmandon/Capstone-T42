@@ -50,7 +50,7 @@ class DevDBConfig(BaseConfig):
 
 # Test Configuration DB
 # Config Options for Local Testing - Uses Local Postgres DB
-class TestDBConfig(BaseConfig):
+class TestingConfig(BaseConfig):
     SQLALCHEMY_DATABASE_URI = URL.create(
         "postgresql",
         username="postgres",
@@ -59,5 +59,6 @@ class TestDBConfig(BaseConfig):
         port=5432,
         database="test_unhinged_db",
     )
+    JWT_SECRET_KEY = EnvManager().load_env_var('PASS_SECRET_KEY')
     #SQLALCHEMY_ECHO = True
 
