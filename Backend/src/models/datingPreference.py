@@ -22,7 +22,7 @@ class DatingPreference(db.Model):
     
     # Reference to Users Table
     # On Delete Cascade to Remove Dating Preference if User is Deleted
-    user = db.Column(db.Integer, db.ForeignKey('users.id',ondelete="CASCADE"), unique=True,nullable=False)
+    user = db.Column(db.String(64), db.ForeignKey('users.id',ondelete="CASCADE"), unique=True,nullable=False)
     
     
     # String representation of a Dating Preference, Outputting each Field Associated

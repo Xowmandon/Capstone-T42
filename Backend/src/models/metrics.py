@@ -22,7 +22,7 @@ class ActivityMetric(db.Model):
         
     # Foreign Keys - User To Track Activity Metrics
     # On Delete of User - Cascade to Remove Associated Activity Metrics
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
         
     # Activity Metrics
     # TODO: Implement Aggregation of Metrics from Associated Tables - Automatically 
@@ -60,7 +60,7 @@ class GameMetric(db.Model):
             
     # Foreign Keys - User To Track Game Metrics
     # TODO - Ensure Unique Constraint is Enforced/Works Correctly
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), unique=True, nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey('users.id'), unique=True, nullable=False)
             
     # ---Dimensional Fields---
             

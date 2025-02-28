@@ -17,8 +17,8 @@ class Swipe(db.Model):
     
     # Foreign Keys - User ID's of Swiper and Swipee
     # On Delete of User - Cascade to Remove Associated Swipes
-    swiper_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
-    swipee_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
+    swiper_id = db.Column(db.String(64), db.ForeignKey('users.id'), primary_key=True, nullable=False)
+    swipee_id = db.Column(db.String(64), db.ForeignKey('users.id'), primary_key=True, nullable=False)
     
     swipe_result = db.Column(db.String, nullable=False, default='PENDING')
     
@@ -57,6 +57,10 @@ class Swipe(db.Model):
     def __repr__(self):
         return f"<Swipe swiper={self.swiper}, swipee={self.swipee}, swipe_result={self.swipe_result}, swipe_date={self.swipe_date}>"
     
+    
+    @staticmethod
+    def create_swipe(swiper,swipee,swipe_result):
+        pass
 
 class SwipeSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

@@ -39,10 +39,12 @@ class Message(db.Model):
     # Supplementary ID for Messages
     id = db.Column(db.Integer, primary_key=True)
     
+    
     # Foreign Keys - User ID's  of Sender and Receiver
     # On Delete of User - Cascade to Remove Associated Messages
-    messager_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    messagee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    messager_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
+    #messagee_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
+    match_id = db.Column(db.Integer, db.ForeignKey('matches.id'), nullable=False)
 
     # Message Content as String
     message_content = db.Column(db.String(MESSAGE_CONTENT_LENGTH), nullable=False)
@@ -97,7 +99,7 @@ class MessageSchemaNested(MessageSchema):
        
     # Nested User Schema for Messager and Messagee
     messager = fields.Nested(UserSchema)
-    messagee = fields.Nested(UserSchema)
+    #messagee = fields.Nested(UserSchema)
     
     
 # Nested Message Schema for Messagee and Messager with Only Emails
@@ -109,4 +111,4 @@ class MessageSchemaOnlyEmails(MessageSchema):
         
     # Nested User Schema for Messager and Messagee
     messager = fields.Nested(UserSchema(only=("email",)))
-    messagee = fields.Nested(UserSchema(only=("email",)))
+    #messagee = fields.Nested(UserSchema(only=("email",)))

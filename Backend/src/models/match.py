@@ -17,8 +17,8 @@ class Match(db.Model):
     
     # Foreign Keys - User ID's in the Successful Match
     # On Delete of User - Cascade to Remove Associated Matches
-    matcher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    matchee_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    matcher_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
+    matchee_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.now)
     
     """"

@@ -30,8 +30,8 @@ class Report(db.Model):
     
     # Foreign Keys - User ID's of Reporter and Reportee
     # On Delete of User - Cascade to Remove Associated Reports
-    reporter = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True, nullable=False)
-    reportee = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True,  nullable=False)
+    reporter = db.Column(db.String(64), db.ForeignKey('users.id'), primary_key=True, nullable=False)
+    reportee = db.Column(db.String(64), db.ForeignKey('users.id'), primary_key=True,  nullable=False)
     
     # Report Reason and Associated Message
     report_reason = db.Column(db.String(REPORT_CONTENT_LENGTH), primary_key=True, nullable=False)
