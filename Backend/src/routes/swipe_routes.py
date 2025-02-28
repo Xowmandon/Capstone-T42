@@ -10,7 +10,7 @@ import logging
 from  Backend.src.extensions import db # Import the DB Instance
 import  Backend.src.models as models # Import the Models and Schemas
 #from  Backend.src.routes import app # Blueprint
-
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 # Blueprint for the Swipe Routes
 swipe_bp = Blueprint('swipe_bp', __name__)
@@ -24,6 +24,7 @@ swipe_schema = models.swipe.SwipeSchema()
 # 1 - Accepted (Both Swiped Right),
 # 2 - Rejected (Swiper Swipped Right, Swipee Swiped Left)
 @swipe_bp.route('/users/swipes', methods=['POST'])
+@jwt_required()
 def create_swipe():
     """
     Summary: Create a new swipe event or Update and add it to the database.
@@ -32,8 +33,7 @@ def create_swipe():
     
     
     Payload: JSON object with the following fields:
-        - swiper_email, str, required
-        - swipee_email, stry, required
+        - swipee_id, stry, required
         - swipe_result: int, required
         - swipe_date: str, required
         
