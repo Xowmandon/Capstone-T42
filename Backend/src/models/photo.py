@@ -1,12 +1,9 @@
 from datetime import datetime, timezone
 from marshmallow import ValidationError, validates
-from Backend.src.validators import ImageValidator
-from Backend.src.validators import ImageValidator
+from Backend.src.validators.image_val import ImageValidator
 
 
 from Backend.src.extensions import db, ma # DB and Marshmallow Instances
-from Backend.src.validators.image_val import ImageValidator # Custom Validators
-
 
 class UserPhoto(db.Model):
     __tablename__ = 'user_photos' # Define the table name
@@ -17,8 +14,8 @@ class UserPhoto(db.Model):
     url = db.Column(db.String, nullable=False, unique=True)  # unique constraint
     
     # Foreign Keys - User ID's  of Owner
-    user_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
-    is_main_photo = db.Column(db.Boolean, nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey('users.id'),name="fk_user_photo_owner", nullable=True)
+    is_main_photo = db.Column(db.Boolean, nullable=False,default=False)
 
     # TODO: Implement Date, Time, and TimeZone for Messages in the TimeDate Models
     upload_date = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
