@@ -10,12 +10,12 @@ from flask_testing import TestCase
 from unittest.mock import patch
 
 from Backend.app import app
-from  Backend.src.extensions import db, ma, URL
+from  Backend.src.extensions import db, ma
 
 from  Backend.src.utils import TestDBConfig
 import Backend.src.models as models
 from Backend.scripts.gen_fake import GenFake
-
+from Backend.src.utils import EnvManager
 user_schema = models.user.UserSchema()
 
 class TestGetConversationRoute(TestCase):
@@ -54,8 +54,9 @@ class TestGetConversationRoute(TestCase):
 
 def test_get_conversation():
     
+    EnvMan = EnvManager()
     # Define the API URL
-    url = URL + "/users/messages/conversation"
+    url = EnvManager.load_env_var("NGROK_HOSTNAME") + "/users/messages/conversation"
     
     with app.app_context():
         
