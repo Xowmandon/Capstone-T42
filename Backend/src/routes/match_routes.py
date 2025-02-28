@@ -16,7 +16,6 @@ match_schema = models.match.MatchSchema()
 
 #-----Match Routes-----
 
-
 # Get all matches for a user
 # GET /Users/Matches/{email}
 @match_bp.route('/users/matches', methods=['GET'])
@@ -51,7 +50,6 @@ def post_match():
     Payload: JSON object with the following fields:
         - matcher: int, required
         - matchee: int, required
-        - match_date: str, required
         
     Returns:
     
