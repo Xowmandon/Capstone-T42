@@ -1,5 +1,8 @@
+# Author: Joshua Ferguson
+
 import uuid
 import jwt
+import json
 import requests
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -10,7 +13,7 @@ from datetime import datetime
 
 from Backend.src.extensions import db, bcrypt # Import the DB Instance
 import Backend.src.models as models # Import the Models and Schemas
-
+from Backend.src.utils import EnvManager
 # Apple API Keys
 APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys"
 
@@ -37,8 +40,9 @@ class AppleAuthService:
             return None
 
         try:
-            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(key)
-            return jwt.decode(identity_token, public_key, algorithms=["RS256"], audience="com.yourapp.bundleid")
+            public_key = jwt.algorithms.RSAAlgorithm.from_jwk(json.dumps(key))
+            audience_link = EnvManager().load_env_var("APPLE_AUDIENCE")
+            return jwt.decode(identity_token, public_key, algorithms=["RS256"], audience=audience_link)
         except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
             return None
 
