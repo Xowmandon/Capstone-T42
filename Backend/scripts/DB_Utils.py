@@ -30,6 +30,7 @@ def drop_all_tables():
         # Drop all tables in the correct order
         db.metadata.drop_all(bind=db.engine)
 
+        db.drop_all()
 
 # Hash the key using SHA-256
 def hash_key(key):
