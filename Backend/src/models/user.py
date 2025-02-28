@@ -18,7 +18,7 @@ class User(db.Model):
     __tablename__ = 'users' # Define the table name
     
     # Fields of Users, data types provided - May need to change
-    id = db.Column(db.String(36), primary_key=True) # Primary Key
+    id = db.Column(db.String(64), primary_key=True) # Primary Key
 
     username = db.Column(db.String(50), nullable=True)
     password_hash = db.Column(db.String(128), nullable=True)  # Store hashed password (email users only)   # TODO: Hash + Salt Password
@@ -26,7 +26,7 @@ class User(db.Model):
     # Unique Constraint on Email
     email = db.Column(db.String(100), unique=True, nullable=False)
     
-    auth_provider = db.Column(db.String, nullable=False)  # "apple" or "email"
+    auth_provider = db.Column(db.String(36), nullable=False)  # "apple" or "email"
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     
@@ -37,7 +37,9 @@ class User(db.Model):
     gender = db.Column(db.String(10), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     
-    #profile_picture = db.Column(db.String(500), nullable=True) # Profile Picture - URL to Image
+    # Makes Reference to One Photo in Photos Table as Main Profile Picture
+    profile_picture = db.Column(db.String(100), db.ForeignKey('photos.id'), nullable=True) # Profile Picture - URL to Image
+
     bio = db.Column(db.String(500), nullable=True) # Bio - Description of User
 
     # Location Information
