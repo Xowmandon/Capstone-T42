@@ -7,27 +7,11 @@ from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship
 
 from Backend.src.extensions import db, ma # DB and Marshmallow Instances
-from Backend.src.models.user import UserSchema # User Model
 from Backend.src.validators.text_val import TextValidator # Custom Validators
- 
-# Example JSON Response for querying a Message
 
-#   {
-#    "id": 1,
-#    "messager": {
-#        "id": 2,
-#        "username": "john_doe"
-#         ...,
-#    },
-#    "messagee": {
-#        "id": 3,
-#        "username": "jane_smith",
-#         ...,
-#    },
-#    "message": "Hello, how are you?",
-#    "message_date": "2022-01-01 12:00:00",
-#    "message_read": false
-#   }
+#from Backend.src.models.user import user_schema  # Causing Circular Import
+#from Backend.src.models.user import UserSchema # User Model # Causing Circular Import
+
 
 MESSAGE_CONTENT_LENGTH = 500
 
@@ -96,19 +80,10 @@ class MessageSchemaNested(MessageSchema):
         load_instance = True
         include_relationships = True
 
-       
+
     # Nested User Schema for Messager and Messagee
-    messager = fields.Nested(UserSchema)
+   # messager = fields.Nested(user_schema)
     #messagee = fields.Nested(UserSchema)
     
     
 # Nested Message Schema for Messagee and Messager with Only Emails
-class MessageSchemaOnlyEmails(MessageSchema):
-    class Meta:
-        model = Message
-        load_instance = True
-        include_relationships = True
-        
-    # Nested User Schema for Messager and Messagee
-    messager = fields.Nested(UserSchema(only=("email",)))
-    #messagee = fields.Nested(UserSchema(only=("email",)))
