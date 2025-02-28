@@ -1,14 +1,11 @@
 # Author: Joshua Ferguson
 
-import uuid
+
 import jwt
 import json
 import requests
-from flask import Flask, request, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
-from flask_bcrypt import Bcrypt
-from datetime import datetime
+from flask_jwt_extended import  decode_token, JWTManager
+
 
 
 from Backend.src.extensions import db, bcrypt # Import the DB Instance
@@ -18,6 +15,23 @@ from Backend.src.utils import EnvManager
 APPLE_KEYS_URL = "https://appleid.apple.com/auth/keys"
 
 # TODO: Move Signup & Login Handlers from auth_routes.py to Auth Classes in Services
+
+def get_user_from_token(token):
+    """
+    Retrieves the user associated with the given token.
+    
+    Args:
+        token (str): The token to decode and retrieve the user from.
+    
+    Returns:
+        User: The user associated with the token.
+        None: If the token is invalid or the user does not exist.
+    """
+    decoded_token = decode_token(token)
+    user_id = decoded_token.get('sub')
+    user = models.User.query.get(user_id)
+    
+    return user
 
 # Apple Authentication Service
 class AppleAuthService:

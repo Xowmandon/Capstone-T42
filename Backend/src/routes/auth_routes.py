@@ -1,12 +1,10 @@
 from flask import request, jsonify, Blueprint
-from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 from Backend.src.extensions import db # Import the DB Instance
 import Backend.src.models as models # Import the Models and Schemas
 
 from Backend.src.services.auth_service import EmailAuthService, AppleAuthService
-
 
 auth_bp = Blueprint('auth_bp', __name__)
 
@@ -32,14 +30,6 @@ def verify_token():
 
     return jsonify({"user_id": user.id, "email": user.email, "auth_provider": user.auth_provider}), 200
 
-def verify_token_helper():
-    
-    current_user_id = get_jwt_identity()
-    user = models.User.query.get(current_user_id)
-    if not user:
-        return jsonify({"error": "User not found"}), 404
-
-    return user.user_id
 
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
