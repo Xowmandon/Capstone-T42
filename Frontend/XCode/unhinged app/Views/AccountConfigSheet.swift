@@ -27,7 +27,7 @@ struct AccountConfigSheet : View {
                         //Avatar
                         Circle()
                             .frame(maxHeight: 100)
-                        Text("My Profile")
+                        Text("\(AccountData.shared.profile.name)'s Profile")
                     }
                     .padding()
                     .background{

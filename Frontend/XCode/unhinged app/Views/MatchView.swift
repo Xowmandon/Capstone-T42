@@ -28,33 +28,24 @@ struct MatchView : View {
     func ProfileCard(profile: Profile) -> some View {
         
         ZStack {
-            
-            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-            
             //Profile Image
-            
-            GeometryReader { geometry in
-                
-                Image(profile.imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .clipped()
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .mask(Rectangle())
-                
-            }
-            .padding(5)
-            
-            VStack {
-                
-                Spacer()
+            VStack (spacing: 0) {
+                GeometryReader { geometry in
+                    Image(profile.imageName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .mask(Rectangle())
+                        .clipped()
+                }
+                .padding(5)
+                .background{
+                    CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                }
                 
                 //Profile Information
-                
                 VStack {
-                    
                     HStack(spacing: 20){
-                    
                         Text(profile.name)
                             .font(Theme.titleFont)
                             //.font(.system(.largeTitle, weight: .bold))
@@ -62,23 +53,15 @@ struct MatchView : View {
                         Spacer()
                         Text("21")
                             .font(Theme.titleFont)
-                        
-                        
                     }
-                    
                 }
                 .padding(.horizontal, 30)
                 .padding(.vertical, 30)
                 .background{
-                    
                     CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                    
                 }
-                
-                
             }
         }
-        
     }
     
     @ViewBuilder
@@ -170,7 +153,7 @@ struct MatchView : View {
                 ScrollView{
                     
                     Spacer()
-                        .frame(minHeight: 60)
+                        .frame(minHeight: 80)
                     
                     Text("Let's Match!")
                         .font(Theme.titleFont)
@@ -180,10 +163,6 @@ struct MatchView : View {
                     
                     ProfileCard(profile: currentProfile!)
                         .padding(.horizontal)
-                        .opacity(opacity)
-                        .offset(x: offsetX)
-                        .animation(shouldAnimateProfileCard ? .snappy(duration: 0.5) : nil, value: offsetX) // Slide animation
-                        .animation(.easeInOut(duration: 0.5), value: opacity) // Fade animation
                         .frame(minHeight: 400)
                     
                     // Basic Info (Attributes?)
@@ -251,6 +230,10 @@ struct MatchView : View {
                     Spacer()
                         .padding(.vertical, 60)
                 }
+                .animation(shouldAnimateProfileCard ? .snappy(duration: 0.5) : nil, value: offsetX) // Slide animation
+                .animation(.easeInOut(duration: 0.5), value: opacity) // Fade animation
+                .opacity(opacity)
+                .offset(x: offsetX)
                 
                 //Overlay
                 VStack {
@@ -264,7 +247,7 @@ struct MatchView : View {
                                 //Avatar
                                 Circle()
                                 VStack{
-                                    Text("<Name>")
+                                    Text("\(AccountData.shared.profile.name)")
                                         .font(Theme.bodyFont)
                                 }
                             }
@@ -290,10 +273,15 @@ struct MatchView : View {
                 .padding()
 
             }
+            
         }
         .sheet(isPresented: $showAccountConfigSheet){
             AccountConfigSheet()
         }
+        .onAppear(){
+            refreshMatches()
+        }
+        
     }
     
     //Reject a Match
@@ -351,6 +339,7 @@ struct MatchView : View {
         }
         
         //API.getMatches
+        appModel.prospectiveMatches.append(AccountData.shared.profile)
         appModel.prospectiveMatches.append(Profile())
     }
 

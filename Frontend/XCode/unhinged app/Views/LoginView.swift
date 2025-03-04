@@ -91,19 +91,20 @@ struct LoginView: View {
             let authorizationCode = credentials.authorizationCode // Short-lived token for backend use
         
             print("Got Credentials:")
-            print(credentialEmail, credentialFirstName, credentialLastName, identityToken, authorizationCode)
+            print(userIdentifier, credentialEmail, credentialFirstName, credentialLastName, identityToken as Any, authorizationCode as Any)
             
             // Set account information
+            AccountData.shared.setUserID(userIdentifier)
             AccountData.shared.setEmail(credentialEmail)
             let accountProfile = Profile(name: "\(credentialFirstName) \(credentialLastName)", imageName: "stockPhoto")
             AccountData.shared.setProfile(accountProfile)
             print("Set Account information:")
-            print(AccountData.shared.getUserID(), AccountData.shared.getEmail(), AccountData.shared.getProfile().name)
+            print(AccountData.shared.getUserID() as Any, AccountData.shared.getEmail() as Any, AccountData.shared.getProfile().name)
             
             //Send identity token to backend server
             let identityTokenString = String(data: identityToken!, encoding: .utf8)
-            print("Identity Token String: \(identityTokenString)")
-            APIClient.shared.sendIdentityToken(token: identityTokenString!)
+            ///print("Identity Token String: \(String(describing: identityTokenString))")
+            APIClient.shared.sendIdentityToken(token: identityTokenString!) //Saves JWTToken to keychain
             
             //Ensure account exists in DB
             let accountExists : Bool = APIClient.shared.assertAccountExistence(userEmailID: credentialEmail)
@@ -113,8 +114,35 @@ struct LoginView: View {
             } else {
                 //APIClient.shared.createAccount(account: AccountData.shared)
             }
+            
+            //Save basic profile information to DB
+            
+            //Assert Apple Credential State
+            
+            let provider = ASAuthorizationAppleIDProvider()
+            
+            provider.getCredentialState(forUserID: userIdentifier){
+                credentialState, error in
+                
+                switch credentialState {
+                case .authorized:
+                    print("Credential state is authorized")
+                case .revoked:
+                    print("Credential state is revoked")
+                case .notFound:
+                    print("Credential state is not found")
+                case .transferred:
+                    print("Credential state transferred")
+                @unknown default:
+                    fatalError()
+                }
+            }
+            
             //Present Main View
             userIsAuthenticated = true
+            
+            //TODO: present profile creation view upon first account creation
+            
             break
         case .failure(let error):
                 print("Authentication unsuccessful")
@@ -125,78 +153,6 @@ struct LoginView: View {
     }
 }
 
-/*
- import SwiftUI
- import AuthenticationServices
-
- struct LoginView: View {
-     @State private var userIsAuthenticated = false
-     @State private var showErrorAlert = false
-     @State private var errorMessage = ""
-
-     var body: some View {
-         VStack {
-             if !userIsAuthenticated {
-                 SignInWithAppleButton(.signIn, onRequest: { request in
-                     request.requestedScopes = [.email, .fullName]
-                 }, onCompletion: handleAppleSignIn)
-                 .frame(width: 200, height: 60)
-                 .mask(RoundedRectangle(cornerRadius: 10, style: .continuous))
-             } else {
-                 Text("Welcome!")
-             }
-         }
-         .alert(isPresented: $showErrorAlert) {
-             Alert(title: Text("Error"), message: Text(errorMessage), dismissButton: .default(Text("OK")))
-         }
-     }
-
-     private func handleAppleSignIn(result: Result<ASAuthorization, Error>) {
-         switch result {
-         case .success(let auth):
-             guard let credentials = auth.credential as? ASAuthorizationAppleIDCredential else { return }
-             guard let credentialEmail = credentials.email else {
-                 print("Email is nil")
-                 return
-             }
-
-             let credentialFirstName = credentials.fullName?.givenName
-             let credentialLastName = credentials.fullName?.familyName
-
-             AccountData.shared.setEmail(credentialEmail)
-             let accountProfile = Profile(name: (credentialFirstName ?? "nil"), imageName: "stockPhoto")
-             AccountData.shared.setProfile(accountProfile)
-
-             APIClient.shared.assertAccountExistence(userEmailID: credentialEmail) { accountExists in
-                 DispatchQueue.main.async {
-                     if accountExists {
-                         AccountData.shared.authenticate()
-                     } else {
-                         APIClient.shared.createAccount(account: AccountData.shared) { success in
-                             if success {
-                                 AccountData.shared.authenticate()
-                             }
-                         }
-                     }
-                     userIsAuthenticated = true
-                 }
-             }
-
-         case .failure(let error):
-             print("Authentication failed: \(error.localizedDescription)")
-             DispatchQueue.main.async {
-                 self.showErrorAlert = true
-                 self.errorMessage = error.localizedDescription
-             }
-         }
-     }
- }
- 
- 
- */
-
 #Preview {
-    
     LoginView(userIsAuthenticated: .constant(false))
-    
 }

@@ -6,10 +6,6 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXBuildFile section */
-		DFC4C6392D7004DA00B9B4B0 /* unhinged-app-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = DFC4C6382D7004DA00B9B4B0 /* unhinged-app-Info.plist */; };
-/* End PBXBuildFile section */
-
 /* Begin PBXContainerItemProxy section */
 		DF12F1992CDD3FB4006A0DC2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -267,7 +263,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DFC4C6392D7004DA00B9B4B0 /* unhinged-app-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

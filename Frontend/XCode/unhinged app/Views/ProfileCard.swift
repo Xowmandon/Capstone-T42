@@ -11,7 +11,10 @@ struct ProfileCard : View {
     
     //let editable : Bool
     
-    let profile : Profile
+    //let profile : Profile
+    let profileImage : Image
+    let name : String
+    let age : Int
     let theme : Theme = Theme.shared
     var body: some View {
         ZStack {
@@ -19,7 +22,7 @@ struct ProfileCard : View {
             
             //Profile Image
             GeometryReader { geometry in
-                Image(profile.imageName)
+                profileImage
                     .resizable()
                     .scaledToFill()
                     .clipped()
@@ -41,12 +44,12 @@ struct ProfileCard : View {
                 //Profile Information
                 VStack {
                     HStack(spacing: 20){
-                        Text(profile.name)
+                        Text(self.name)
                             .font(Theme.bodyFont)
                         //.font(.system(.largeTitle, weight: .bold))
                         //.offset(x: -2)
                         Spacer()
-                        Text("21")
+                        Text("\(age)")
                             .font(Theme.bodyFont)
                     }
                 }

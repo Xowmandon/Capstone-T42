@@ -11,15 +11,15 @@ final class AccountData {
     
     static let shared = AccountData(hasBeenAuthenticated: false, email: "") // Singleton for client's account
     
+    var profile : Profile
+    
     private var hasBeenAuthenticated : Bool = false
     
     private var userID : String?
     
     private var email : String
     
-    private var profile : Profile
-    
-    init(hasBeenAuthenticated: Bool, userID: String? = nil, email: String, profile: Profile = Profile()) {
+    init(hasBeenAuthenticated: Bool, userID: String? = nil, email: String , profile: Profile = Profile()) {
         self.hasBeenAuthenticated = hasBeenAuthenticated
         self.userID = userID
         self.email = email
@@ -45,7 +45,7 @@ final class AccountData {
     func setEmail(_ newEmail: String) {
         self.email = newEmail
     }
-
+    
     func setProfile(_ newProfile: Profile) {
         self.profile = newProfile
     }
@@ -53,6 +53,5 @@ final class AccountData {
     func getProfile() -> Profile {
         return self.profile
     }
-    
     
 }

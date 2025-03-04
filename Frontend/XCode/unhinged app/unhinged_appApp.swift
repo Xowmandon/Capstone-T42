@@ -47,7 +47,6 @@ struct unhinged_appApp: App {
                 
                 //Login Denied
                 success = false
-                
             }
             
         }

@@ -16,6 +16,14 @@ final class AppModel : ObservableObject {
     
     init() {
         
+        self.prospectiveMatches = AppModel.getMatches()
+        self.conversations = []
+        
+    }
+    
+    static func getMatches() -> [Profile] {
+        
+        //Fetch
         let test_prompt_choices : [PromptChoice] = [
             PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
             PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
@@ -29,8 +37,9 @@ final class AppModel : ObservableObject {
         
         prompt_profile.addPrompts(promptList: [test_prompt, test_prompt2])
         
-        self.prospectiveMatches = [prompt_profile, Profile(), Profile(name: "john doe1", imageName: "stockPhoto"), Profile(name: "john doe2", imageName: "stockPhoto")]
-        self.conversations = []
+        let matches = [prompt_profile, Profile(), Profile(name: "john doe1", imageName: "stockPhoto"), Profile(name: "john doe2", imageName: "stockPhoto")]
+        
+        return matches
     }
     
 }

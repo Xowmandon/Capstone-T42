@@ -11,31 +11,17 @@ class APIClient {
     
     //establish connection with database
     static let shared = APIClient()
-    private static let connection : URLSession = URLSession.shared //URLSession(configuration: URLSessionConfiguration.default)
-    
-    private init() {
-        
-        /*
-        connectWithAPI(endpoint: "http//unhinged-api.com"){result in
-            
-            switch result {
-            case .success(let data):
-                break
-            case .failure(let error):
-                print(error)
-                break
-            }
-            
-        }
-         */
-     
-    }
+    private init() {}
     enum TaskType {
         case get
         case post
     }
+    enum TaskError : Error{
+        case failedToSaveToken
+    }
 
-    private func apiTask(type: TaskType, endpoint: String, payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) {
+    private func apiTask(type: TaskType, endpoint: String, hasHeader:Bool, headerValue: String?  = "", headerField: String? = "",  payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) {
+        
         // Construct the URL
         guard let url = URL(string: "https://cowbird-expert-exactly.ngrok-free.app/\(endpoint)") else {
             completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
@@ -45,6 +31,9 @@ class APIClient {
         // Create the request
         var request = URLRequest(url: url)
         request.httpMethod = type == .get ? "GET" : "POST"
+        if (hasHeader){
+            request.setValue(headerValue ?? "", forHTTPHeaderField: headerField ?? "")
+        }
         
         // Set headers and body for POST requests
         if type == .post {
@@ -88,7 +77,10 @@ class APIClient {
     }
     
     //send identity token
-    
+    struct IdentityTokenResponse : Codable {
+        let message : String
+        let token : String
+    }
     func sendIdentityToken(token: String) {
         print("Sending identity token")
         let body : [String : String] = ["auth_method": "apple",
@@ -97,13 +89,18 @@ class APIClient {
             print("failed to encode payload")
             return
         }
-        
-        apiTask(type: .post, endpoint: "signup", payload: payload){result in
+        apiTask(type: .post, endpoint: "signup", hasHeader: false, payload: payload){result in
             switch result {
                 case .success(let data):
                     do {
-                        let dataString = try JSONDecoder().decode(String.self, from: data)
-                        
+                        let tokenResponse : IdentityTokenResponse = try JSONDecoder().decode(IdentityTokenResponse.self, from: data)
+                        let success = KeychainHelper.save(key: "JWTToken", value: tokenResponse.token)
+                        if success {
+                            print("Successfully saved token")
+                            self.verifyJWTToken()
+                        } else {
+                            print("Failed to save token")
+                        }
                         
                     } catch {
                         print("Failed to decode JSON: \(error.localizedDescription)")
@@ -113,11 +110,30 @@ class APIClient {
                 }
         }
     }
+    //verify JWT Token
+    func verifyJWTToken(){
+        let token : String = KeychainHelper.load(key: "JWTToken")!
+        apiTask(type: .get, endpoint: "verify_token", hasHeader: true, headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: nil){result in
+            switch result {
+            case .success(let data):
+                do {
+                    let response : [String:String] = try JSONDecoder().decode([String:String].self, from: data)
+                    print(response)
+                } catch {
+                    print("Failed to decode JSON: \(error.localizedDescription)")
+                }
+                print("Verified Token Success")
+            case .failure(let error):
+                print("Verify Token Failed: \(error)")
+            }
+            
+        }
+    }
      
      //check if account associated with ID exists
     func assertAccountExistence(userEmailID: String) -> Bool {
         print("asserting account existence")
-        apiTask(type: .get, endpoint: "", payload: nil){ data in
+        apiTask(type: .get, endpoint: "",hasHeader: false, payload: nil){ data in
             
         }
         return false

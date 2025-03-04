@@ -10,8 +10,8 @@ import Foundation
 struct Attribute : Identifiable, Hashable {
     
     var id : UUID = UUID()
-    let customName : String
-    let symbolName : String
+    var customName : String
+    var symbolName : String
     
     init(customName : String, symbolName : String) {
         self.customName = customName

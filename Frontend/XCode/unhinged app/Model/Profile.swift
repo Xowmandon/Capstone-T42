@@ -9,6 +9,8 @@ import Foundation
 
 class Profile : Identifiable {
     
+    static let clientProfile : Profile = Profile()
+    
     var ID : UUID = UUID()
     
     var name : String = "John Doe"
