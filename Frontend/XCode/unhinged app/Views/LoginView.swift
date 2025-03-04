@@ -9,9 +9,9 @@ import SwiftUI
 import AuthenticationServices
 
 struct LoginView: View {
-    
-    @State private var showErrorAlert = false
     @Binding var userIsAuthenticated : Bool
+    @State private var showErrorAlert = false
+    @State private var errorMessage : String = ""
     
     var body: some View {
         VStack {
@@ -34,6 +34,13 @@ struct LoginView: View {
                 })
                 .frame(width: 200, height: 60)
                 .mask(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .accessibilityIdentifier("Sign in with Apple")
+            } else {
+                Button(action: {
+                    userIsAuthenticated.toggle()
+                }) {
+                    Text("Start Matching!")
+                }
             }
             /*
             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -64,6 +71,15 @@ struct LoginView: View {
                 }
              */
             Spacer()
+        }
+        .alert(isPresented: $showErrorAlert) {
+            // Define the alert
+            Alert(
+                title: Text("Authentication Error"),
+                message: Text(errorMessage),
+                primaryButton: .default(Text("OK")),
+                secondaryButton: .cancel()
+            )
         }
         .frame(maxWidth: .infinity)
         .clipped()
@@ -145,10 +161,10 @@ struct LoginView: View {
             
             break
         case .failure(let error):
-                print("Authentication unsuccessful")
-                print(error)
-                showErrorAlert = true
-                break
+            print("Authentication unsuccessful")
+            errorMessage = "Authentication Error: \(error)"
+            showErrorAlert = true
+            break
         }
     }
 }

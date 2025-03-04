@@ -1,0 +1,29 @@
+{
+  "configurations" : [
+    {
+      "id" : "F35289F3-518B-4D0A-A3A8-8D7277613423",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "skippedTests" : [
+        "unhinged_appUITests\/testLaunchPerformance()",
+        "unhinged_appUITestsLaunchTests"
+      ],
+      "target" : {
+        "containerPath" : "container:unhinged app.xcodeproj",
+        "identifier" : "DF12F1A12CDD3FB4006A0DC2",
+        "name" : "unhinged appUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

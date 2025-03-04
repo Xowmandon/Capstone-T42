@@ -6,12 +6,13 @@
 //
 
 import Testing
+import XCTest
 @testable import unhinged_app
 
 struct unhinged_appTests {
 
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+    @Test func apiTest() async throws {
+        //XCTAssertNoThrow(try APIClient.shared.verifyJWTToken())
     }
 
 }

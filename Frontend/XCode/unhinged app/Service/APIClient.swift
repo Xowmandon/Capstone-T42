@@ -97,7 +97,7 @@ class APIClient {
                         let success = KeychainHelper.save(key: "JWTToken", value: tokenResponse.token)
                         if success {
                             print("Successfully saved token")
-                            self.verifyJWTToken()
+                            try self.verifyJWTToken()
                         } else {
                             print("Failed to save token")
                         }
@@ -111,8 +111,9 @@ class APIClient {
         }
     }
     //verify JWT Token
-    func verifyJWTToken(){
+    func verifyJWTToken() throws {
         let token : String = KeychainHelper.load(key: "JWTToken")!
+        print(token as String)
         apiTask(type: .get, endpoint: "verify_token", hasHeader: true, headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: nil){result in
             switch result {
             case .success(let data):

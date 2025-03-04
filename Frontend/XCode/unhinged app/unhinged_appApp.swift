@@ -13,18 +13,16 @@ struct unhinged_appApp: App {
     
     @StateObject var appModel : AppModel = AppModel()
     
-    // TODO: Store user ID from ASAuthorization
+    //TODO: get token from keychain and do auth check
     // TODO: Make LoginView the root View and add authentication check
     
     private var account : AccountData = AccountData.shared
-    
-    @State private var userIsAuthenticated : Bool = false
+    //@State private var userIsAuthenticated : Bool = false
     
     init(){
         
+        //self.appModel.userIsAuthenticated = getAuthenticationStatus(account: self.account)
         self.account = AccountData(hasBeenAuthenticated: false, email: "")
-        
-        userIsAuthenticated = getAuthenticationStatus(account: self.account)
         
     }
     
@@ -58,13 +56,13 @@ struct unhinged_appApp: App {
         
         WindowGroup {
             NavigationStack{
-                if userIsAuthenticated {
+                if appModel.userIsAuthenticated {
                     
                     MatchView()
                     
                 } else {
                     
-                    LoginView(userIsAuthenticated: $userIsAuthenticated)
+                    LoginView(userIsAuthenticated: $appModel.userIsAuthenticated)
                     
                 }
             }

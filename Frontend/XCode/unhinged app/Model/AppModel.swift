@@ -10,8 +10,9 @@ import SwiftUI
 
 final class AppModel : ObservableObject {
     
-    @Published var prospectiveMatches : [Profile]
+    @Published var userIsAuthenticated : Bool = false
     
+    @Published var prospectiveMatches : [Profile]
     @Published var conversations : [Conversation]
     
     init() {

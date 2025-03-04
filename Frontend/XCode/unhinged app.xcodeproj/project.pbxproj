@@ -27,6 +27,7 @@
 		DF12F1862CDD3FB3006A0DC2 /* unhinged app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "unhinged app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF12F1982CDD3FB4006A0DC2 /* unhinged appTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "unhinged appTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DF12F1A22CDD3FB4006A0DC2 /* unhinged appUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "unhinged appUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DF893D292D76E7DA0056A180 /* unhinged appUITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = "unhinged appUITests.xctestplan"; sourceTree = "<group>"; };
 		DFC4C6382D7004DA00B9B4B0 /* unhinged-app-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "unhinged-app-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -48,16 +49,62 @@
 		DF8C8CF02D6835B800C85EF7 /* Exceptions for "unhinged app" folder in "unhinged appTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Model/AccountData.swift,
+				Model/AppModel.swift,
+				Model/Attribute.swift,
+				Model/Conversation.swift,
+				Model/GameObject.swift,
+				Model/Message.swift,
+				Model/Profile.swift,
+				Model/PromptItem.swift,
+				Model/Theme.swift,
+				Service/APIClient.swift,
+				Service/KeychainHelper.swift,
+				unhinged_appApp.swift,
 				Views/AccountConfigSheet.swift,
+				Views/BackButton.swift,
+				Views/BuildProfileView.swift,
+				Views/CardBackground.swift,
+				Views/ConversationsView.swift,
+				Views/LoginView.swift,
+				Views/MatchPreferencesView.swift,
+				Views/MatchView.swift,
+				Views/MessageView.swift,
 				Views/ProfileCard.swift,
+				Views/ProfileConfigView.swift,
+				Views/ProfileDetailsView.swift,
+				Views/PromptView.swift,
 			);
 			target = DF12F1972CDD3FB4006A0DC2 /* unhinged appTests */;
 		};
 		DF8C8CF12D6835B800C85EF7 /* Exceptions for "unhinged app" folder in "unhinged appUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				Model/AccountData.swift,
+				Model/AppModel.swift,
+				Model/Attribute.swift,
+				Model/Conversation.swift,
+				Model/GameObject.swift,
+				Model/Message.swift,
+				Model/Profile.swift,
+				Model/PromptItem.swift,
+				Model/Theme.swift,
+				Service/APIClient.swift,
+				Service/KeychainHelper.swift,
+				unhinged_appApp.swift,
 				Views/AccountConfigSheet.swift,
+				Views/BackButton.swift,
+				Views/BuildProfileView.swift,
+				Views/CardBackground.swift,
+				Views/ConversationsView.swift,
+				Views/LoginView.swift,
+				Views/MatchPreferencesView.swift,
+				Views/MatchView.swift,
+				Views/MessageView.swift,
 				Views/ProfileCard.swift,
+				Views/ProfileConfigView.swift,
+				Views/ProfileDetailsView.swift,
+				Views/PromptView.swift,
 			);
 			target = DF12F1A12CDD3FB4006A0DC2 /* unhinged appUITests */;
 		};
@@ -117,6 +164,7 @@
 		DF12F17D2CDD3FB2006A0DC2 = {
 			isa = PBXGroup;
 			children = (
+				DF893D292D76E7DA0056A180 /* unhinged appUITests.xctestplan */,
 				DF12F1882CDD3FB3006A0DC2 /* unhinged app */,
 				DF71C02B2CF58D9100D65A60 /* unhinged appTests */,
 				DF12F1A52CDD3FB4006A0DC2 /* unhinged appUITests */,
@@ -568,9 +616,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.harrysho.unhinged-appUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = "unhinged app";
 			};
 			name = Debug;
@@ -584,9 +636,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.harrysho.unhinged-appUITests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_TARGET_NAME = "unhinged app";
 			};
 			name = Release;

@@ -213,20 +213,16 @@ struct BuildProfileView: View {
                         .font(Theme.bodyFont)
                         .padding()
                         .focused($isEditingBiography)
-                        .toolbar {
-                            ToolbarItemGroup(placement: .keyboard) {
-                                Spacer()
-                                Button("Done") {
-                                    isEditingBiography = false // Dismiss keyboard
-                                }
-                            }
-                        }
+                        
                 }
                 .padding()
                 .background{
                     CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                 }
                 .padding(.horizontal)
+                .onAppear {
+                    biography = profile.biography ?? ""
+                }
                 
                 //TODO: Image Gallery
                 //Prompts
@@ -261,60 +257,47 @@ struct BuildProfileView: View {
             }
         }
         .navigationBarBackButtonHidden()
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    isEditingBiography = false // Dismiss keyboard
+                }
+            }
+        }
         //Add Object Sheet
         .sheet(isPresented: $showAddObjectSheet){
             VStack {
                 Text("Customize Your Profile")
-                    .font(.headline)
+                    .font(Theme.headerFont)
                     .padding()
                 VStack {
                     HStack {
+                        Text("Add A Prompt")
+                            .font(Theme.headerFont)
+                            .padding()
+                        Spacer()
                         Image(systemName: "plus.app")
                             .imageScale(.large)
                             .symbolRenderingMode(.hierarchical)
                             .padding()
-                        Text("Add A Prompt")
-                            .padding()
-                            .font(.system(.title3, weight: .medium))
-                        Spacer()
                     }
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(Color(.secondarySystemBackground))
-                        .frame(maxWidth: .infinity, maxHeight: 200)
-                        .clipped()
-                        .padding(20)
-                        .overlay {
-                            VStack {
-                                Text("What is my favorite food?")
-                                    .font(.headline)
-                                    .foregroundStyle(.primary)
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(.orange)
-                                    .frame(width: 100, height: 40)
-                                    .clipped()
-                                    .overlay {
-                                        Text("Carrot")
-                                    }
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                    .fill(.pink)
-                                    .frame(width: 100, height: 40)
-                                    .clipped()
-                                    .overlay {
-                                        Text("Cake")
-                                    }
-                            }
-                        }
+                    Text("Keep your matches guessing with a custom prompt - be creative!")
+                        .font(Theme.bodyFont)
+                        .padding()
+                    PromptView(prompt: PromptItem.examplePrompt)
+                        .padding()
                 }
                 VStack {
                     HStack {
-                        Image(systemName: "plus.app")
-                            .imageScale(.large)
-                            .symbolRenderingMode(.hierarchical)
-                            .padding()
                         Text("Add A Photo")
                             .padding()
                             .font(.system(.title3, weight: .medium))
                         Spacer()
+                        Image(systemName: "plus.app")
+                            .imageScale(.large)
+                            .symbolRenderingMode(.hierarchical)
+                            .padding()
                     }
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
                         .fill(Color(.secondarySystemBackground))
