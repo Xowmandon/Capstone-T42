@@ -26,12 +26,10 @@ app = Flask("UnHinged-API")
 # Initialize SocketIO TODO
 #socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Load the DB Configurations, (Host, Port, Database Name), etc
+# Load the Config for Flask App
+# - DB Configurations, (Host, Port, Database Name), etc
+# - JWT_HEADER_NAME, JWT_HEADER_TYPE, and JWT_SECRET_KEY
 app.config.from_object(TestingConfig)
-
-# Load the JWT Secret Key
-#app.config["JWT_SECRET_KEY"] = PASS_SECRET_KEY  # JWT secret key
-
 
 
 # Register the Main Route Blueprints
@@ -55,9 +53,8 @@ bcrypt.init_app(app)
 # Must be initialized after the DB
 ma.init_app(app)
 
-
+# Socket Io Init with App - Needs to Be Defined in App.py
 socketio = SocketIO(app)
-
 
 # Register the chat namespace
 socketio.on_namespace(ChatNamespace("/chat"))
@@ -70,7 +67,7 @@ with app.app_context():
 
 @app.route('/')
 def home():
-    return jsonify({"message": "Welcome to UnHinged API!"})
+    return jsonify({"message": "Welcome to the UnHinged API!"}), 200
 
 """
 @app.before_request

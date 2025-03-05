@@ -15,6 +15,9 @@ class EnvManager:
     def load_env_var(self, var_name):
         return os.getenv(var_name)
     
+    def write_env_var(self, var_name, var_value):
+        os.environ[var_name] = var_value
+    
     # Utility Function to Decrypt and Load the .env File - Now Decrypted
     def load_encrypted_env(self, passphrase):
         gpg = gnupg.GPG()
@@ -32,7 +35,9 @@ class EnvManager:
 class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
-
+    
+    JWT_SECRET_KEY = EnvManager().load_env_var('PASS_SECRET_KEY')
+    
     def __repr__(self):
         return f"Config({self.SQLALCHEMY_DATABASE_URI})"
 
@@ -60,5 +65,14 @@ class TestingConfig(BaseConfig):
         database="test_unhinged_db",
     )
     JWT_SECRET_KEY = EnvManager().load_env_var('PASS_SECRET_KEY')
-    #SQLALCHEMY_ECHO = True
+    
+    JWT_HEADER_NAME = "X-Authorization"  # Use X-Authorization instead of Authorization
+    JWT_HEADER_TYPE = "Bearer"  # Ensure it still expects "Bearer <token>"
+    
+    # Set the JWT Access and Refresh Tokens to Never Expire
+    
+    # TODO Implement Token Expiry for Production
+    JWT_ACCESS_TOKEN_EXPIRES = False # Set to False for Testing
+    JWT_REFRESH_TOKEN_EXPIRES = False
+
 
