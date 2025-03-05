@@ -67,17 +67,25 @@ struct MatchView : View {
     @ViewBuilder
     func MainButtons() -> some View {
         
-        let shadowSize : CGFloat = 10.0
-        
-        HStack() {
-            Spacer()
-            
-            
+        HStack(spacing: 30) {
             Button {
                 
                 Pass()
                 
             } label: {
+                Image("X_Button")
+                    .padding(5)
+                    .background{
+                        CardBackground(borderColor: .gray, innerColor: .red)
+                            .offset(y:2)
+                        /*
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(.red)
+                            .shadow(radius:shadowSize)
+                            .offset(y:2)
+                         */
+                    }
+                /*
                 Image(systemName: "xmark")
                     .imageScale(.large)
                     .symbolRenderingMode(.monochrome)
@@ -91,35 +99,24 @@ struct MatchView : View {
                             .fill(.ultraThickMaterial)
                             .shadow(radius:shadowSize)
                     }
+                 */
             }
-            
-            Spacer()
-            /*
-            Button { OpenProfileDetails() } label: {
-                Image(systemName: "heart.text.square.fill")
-                    .imageScale(.large)
-                    .symbolRenderingMode(.monochrome)
-                    .font(.system(.title, weight: .black))
-                    .foregroundStyle(.yellow)
-                    .padding()
-                    .background{
-                        
-                        Circle()
-                            .fill(.ultraThickMaterial)
-                            .shadow(radius:shadowSize)
-                        
-                    }
-            }
-            */
-            
-            Spacer()
-            
             Button {
-                
                 Match()
-                
-                
             } label: {
+                Image("Heart")
+                    .padding(5)
+                    .background{
+                        CardBackground(borderColor: .gray, innerColor: .green)
+                            .offset(y:2)
+                        /*
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(.green)
+                            .shadow(radius:shadowSize)
+                            .offset(y:2)
+                         */
+                    }
+                /*
                 Image(systemName: "heart.fill")
                     .imageScale(.large)
                     .symbolRenderingMode(.monochrome)
@@ -127,20 +124,43 @@ struct MatchView : View {
                     .foregroundStyle(.green)
                     .padding()
                     .background{
-                        
-                        
                         Circle()
                             .fill(.ultraThickMaterial)
                             .shadow(radius:shadowSize)
-                        
                     }
+                 */
             }
-            
-            Spacer()
-            
+        }
+    }
+    
+    @ViewBuilder
+    func AttributeRow(attribute: Attribute) -> some View {
+        HStack{
+            Image(systemName: attribute.symbolName)
+            Text(attribute.customName)
+                .font(Theme.bodyFont)
+        }
+    }
+    
+    @ViewBuilder
+    func AboutMeSection(bio: String) -> some View {
+        VStack{
+            HStack{
+                Text("About Me!")
+                    .font(Theme.headerFont)
+                    .padding(.top)
+                    .padding(.horizontal)
+                Spacer()
+            }
+            Text("\(bio)")
+                .font(Theme.bodyFont)
+                .padding()
         }
         .padding()
-        
+        .background{
+            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+        }
+        .padding(.horizontal)
     }
     
     var body: some View {
@@ -148,7 +168,6 @@ struct MatchView : View {
         NavigationStack {
             
             ZStack {
-                
                 // Profile Content
                 ScrollView{
                     
@@ -168,21 +187,9 @@ struct MatchView : View {
                     // Basic Info (Attributes?)
                     
                     VStack (spacing: 5){
-                        
-                        
                         ForEach(currentProfile!.attributes, id: \.self) { attribute in
-                            
-                            HStack{
-                                
-                                Image(systemName: attribute.symbolName)
-                                Text(attribute.customName)
-                                    .font(Theme.bodyFont)
-                                
-                            }
-                            
+                            AttributeRow(attribute:attribute)
                         }
-                        
-                        
                     }
                     .padding()
                     .frame(maxWidth:.infinity)
@@ -193,29 +200,7 @@ struct MatchView : View {
                     
                     //About Me
                     
-                    VStack{
-                        
-                        HStack{
-                            
-                            Text("About Me!")
-                                .font(Theme.headerFont)
-                                .padding(.top)
-                                .padding(.horizontal)
-                            Spacer()
-                            
-                        }
-                        
-                        Text("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Curabitur euismod, eros at tincidunt sollicitudin, justo neque suscipit nunc, id fringilla odio erat eget sapien. ")
-                            .font(Theme.bodyFont)
-                            .padding()
-                        
-                        
-                    }
-                    .padding()
-                    .background{
-                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                    }
-                    .padding(.horizontal)
+                    AboutMeSection(bio: currentProfile?.biography ?? "No bio provided")
                     
                     //TODO: Image Gallery
                     
@@ -239,17 +224,14 @@ struct MatchView : View {
                 VStack {
                     
                     //Navigation Buttons
-                    
                     HStack{
                         Button(action: {showAccountConfigSheet.toggle()}){
                             HStack (spacing: 5){
                                 
                                 //Avatar
                                 Circle()
-                                VStack{
-                                    Text("\(AccountData.shared.profile.name)")
-                                        .font(Theme.bodyFont)
-                                }
+                                Text("\(AccountData.shared.profile.name)")
+                                    .font(Theme.bodyFont)
                             }
                             .padding()
                             .background{
@@ -258,11 +240,14 @@ struct MatchView : View {
                         }
                         Spacer()
                         NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
-                            Image(systemName: "message.fill")
-                            .padding()
-                            .background{
-                                CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                            }
+                            Image("Speech_bubble")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 50, maxHeight: 50)
+                                .clipped()
+                                .background{
+                                    CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                                }
                         }
                     }
                     .frame(maxHeight: 50)
@@ -271,9 +256,7 @@ struct MatchView : View {
                         .frame(maxWidth: 100)
                 }
                 .padding()
-
             }
-            
         }
         .sheet(isPresented: $showAccountConfigSheet){
             AccountConfigSheet()
