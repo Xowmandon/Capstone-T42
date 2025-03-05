@@ -35,10 +35,7 @@ swipe_schema = models.swipe.SwipeSchema()
 
 message_schema = models.message.MessageSchema()
 message_schema_nested = models.message.MessageSchemaNested()
-message_schema_filtered = models.message.MessageSchemaOnlyEmails(only=(
-    'messager', 
-    'messagee', 
-    'message_content'))
+
 
 class GenFake():
     
