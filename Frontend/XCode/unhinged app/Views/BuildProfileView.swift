@@ -14,7 +14,7 @@ struct BuildProfileView: View {
     //TODO: confirm changes upon dismiss
     //TODO: use .overlay for edit button
     
-    var profile : Profile = AccountData.shared.getProfile()
+    @State var profile : Profile
     var theme : Theme = Theme.shared
     var editButtonImage : String = "pencil.circle.fill"
     
@@ -23,111 +23,17 @@ struct BuildProfileView: View {
     @State var showEditProfileCardSheet : Bool = false // TODO: Image Picker
     @State var showAttributeCreatorSheet : Bool = false  //TODO: Attribute builder
     
-    class ImageAttachment: ObservableObject, Identifiable {
-        
-        /// Statuses that indicate the app's progress in loading a selected photo.
-        enum Status {
-            /// A status indicating that the app has requested a photo.
-            case loading
-            
-            /// A status indicating that the app has loaded a photo.
-            case finished(Image)
-            
-            /// A status indicating that the photo has failed to load.
-            case failed(Error)
-            
-            /// Determines whether the photo has failed to load.
-            var isFailed: Bool {
-                return switch self {
-                case .failed: true
-                default: false
-                }
-            }
-        }
-        
-        /// An error that indicates why a photo has failed to load.
-        enum LoadingError: Error {
-            case contentTypeNotSupported
-        }
-        
-        /// A reference to a selected photo in the picker.
-        private let pickerItem: PhotosPickerItem
-        
-        /// A load progress for the photo.
-        @Published var imageStatus: Status?
-        
-        /// A textual description for the photo.
-        @Published var imageDescription: String = ""
-        
-        /// An identifier for the photo.
-        nonisolated var id: String {
-            pickerItem.identifier
-        }
-        
-        /// Creates an image attachment for the given picker item.
-        init(_ pickerItem: PhotosPickerItem) {
-            self.pickerItem = pickerItem
-        }
-        
-        /// Loads the photo that the picker item features.
-        func loadImage() async {
-            guard imageStatus == nil || imageStatus?.isFailed == true else {
-                return
-            }
-            imageStatus = .loading
-            do {
-                if let data = try await pickerItem.loadTransferable(type: Data.self),
-                   let uiImage = UIImage(data: data) {
-                    imageStatus = .finished(Image(uiImage: uiImage))
-                } else {
-                    throw LoadingError.contentTypeNotSupported
-                }
-            } catch {
-                imageStatus = .failed(error)
-            }
-        }
-    }
-    
-    @State var imageSelection : PhotosPickerItem? {
-        
-        didSet {
-            
-            imageSelection!.loadTransferable(type: Image.self) { result in
-                
-                DispatchQueue.main.async {
-                            guard imageSelection == self.imageSelection else { return }
-                            switch result {
-                            case .success(let image?):
-                                // Handle the success case with the image.
-                                profileImage = image
-                            case .success(nil):
-                                // Handle the success case with an empty value.
-                                profileImage = Image("person.fill")
-                            case .failure(let error):
-                                // Handle the failure case with the provided error.
-                                print(error)
-                            }
-                }
-                
-            }
-            
-        }
-        
-    }
-    
-    /// An array of image attachments for the picker's selected photos.
-    //@State var attachment : ImageAttachment
-    private var attachmentByIdentifier = [String: ImageAttachment]()
-    
-    @State var profileImage : Image = Image("person.fill")
+    @State var biographyText : String = ""
+    @State var profileImageItem : PhotosPickerItem?
+    @State var profileImage : Image = Image(systemName: "person.fill")
+    /*
     
     @State var name : String
-    @State var biography : String
     @State var attributes : [Attribute]
     var prompts : [PromptItem]
-    
+    */
     @FocusState private var isEditingBiography: Bool
-    
+    /*
     init(){
         //Initialize variables with existing profile data
         _name = State(initialValue: (profile.name))
@@ -135,6 +41,7 @@ struct BuildProfileView: View {
         _attributes = State(initialValue: profile.attributes)
         prompts = []
     }
+     */
     public var body: some View {
         ZStack {
             
@@ -157,11 +64,11 @@ struct BuildProfileView: View {
                     }
             
                 ZStack(alignment: .topTrailing) {
-                    ProfileCard(profileImage: profileImage, name: "aa", age: 2)
+                    ProfileCard(profileImage: profileImage, name: "\(profile.name)", age: 2)
                         .padding(.horizontal)
                         .frame(minHeight: 400)
                     
-                    PhotosPicker(selection: $imageSelection,
+                    PhotosPicker(selection: $profileImageItem,
                                  matching: .images,
                                  photoLibrary: .shared()) {
                         Image(systemName: "pencil.circle.fill")
@@ -209,10 +116,14 @@ struct BuildProfileView: View {
                         })
                         
                     }
-                    TextEditor(text:$biography)
+                    TextEditor(text:$biographyText)
+                        .focused($isEditingBiography)
                         .font(Theme.bodyFont)
                         .padding()
-                        .focused($isEditingBiography)
+                        .frame(minHeight: 10)
+                        .onAppear{
+                            biographyText = profile.biography ?? "Create a Biography..."
+                        }
                         
                 }
                 .padding()
@@ -220,9 +131,7 @@ struct BuildProfileView: View {
                     CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                 }
                 .padding(.horizontal)
-                .onAppear {
-                    biography = profile.biography ?? ""
-                }
+                
                 
                 //TODO: Image Gallery
                 //Prompts
@@ -241,27 +150,41 @@ struct BuildProfileView: View {
                     Spacer()
                 }
                 Spacer()
-                Button(action: {showAddObjectSheet.toggle()}){
-                    Image(systemName: "plus")
-                        .imageScale(.large)
-                        .symbolRenderingMode(.monochrome)
-                        .foregroundStyle(.green)
-                        .font(.system(.title, weight: .black))
-                        .padding()
-                        .background{
-                            Circle()
-                                .fill(.ultraThickMaterial)
-                                .shadow(radius: 5)
-                        }
+                if !isEditingBiography {
+                    Button(action: {showAddObjectSheet.toggle()}){
+                        Image(systemName: "plus")
+                            .imageScale(.large)
+                            .symbolRenderingMode(.monochrome)
+                            .foregroundStyle(.green)
+                            .font(.system(.title, weight: .black))
+                            .padding()
+                            .background{
+                                Circle()
+                                    .fill(.ultraThickMaterial)
+                                    .shadow(radius: 5)
+                            }
+                    }
                 }
             }
         }
         .navigationBarBackButtonHidden()
+        .onChange(of: profileImageItem) {
+                    Task {
+                        if let imgData = try? await profileImageItem?.loadTransferable(type: Data.self) {
+                            let uiImg = UIImage(data: imgData)
+                            profileImage = Image(uiImage: uiImg!)
+                        } else {
+                            print("Failed")
+                        }
+                    }
+                }
         .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    isEditingBiography = false // Dismiss keyboard
+            ToolbarItem(placement: .keyboard) {
+                HStack{
+                    Spacer()
+                    Button("Done") {
+                        isEditingBiography = false // Dismiss keyboard
+                    }
                 }
             }
         }
@@ -358,6 +281,7 @@ private extension PhotosPickerItem {
 
 #Preview{
     
-    BuildProfileView()
+    let profile = AccountData.shared.profile
+    BuildProfileView(profile: profile)
     
 }

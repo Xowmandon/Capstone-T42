@@ -21,7 +21,7 @@ struct AccountConfigSheet : View {
                 .padding(.top)
                 
                 //Build Profile
-                NavigationLink(destination: BuildProfileView()) {
+                NavigationLink(destination: BuildProfileView(profile: AccountData.shared.profile)) {
                     HStack{
                         
                         //Avatar

@@ -199,7 +199,6 @@ struct MatchView : View {
                     .padding()
                     
                     //About Me
-                    
                     AboutMeSection(bio: currentProfile?.biography ?? "No bio provided")
                     
                     //TODO: Image Gallery
@@ -243,14 +242,13 @@ struct MatchView : View {
                             Image("Speech_bubble")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(maxWidth: 50, maxHeight: 50)
-                                .clipped()
+                                .offset(x:-1, y: 2)
                                 .background{
                                     CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                                 }
                         }
                     }
-                    .frame(maxHeight: 50)
+                    .frame(maxHeight: 60)
                     Spacer()
                     MainButtons()
                         .frame(maxWidth: 100)
@@ -262,7 +260,7 @@ struct MatchView : View {
             AccountConfigSheet()
         }
         .onAppear(){
-            refreshMatches()
+            //refreshMatches()
         }
         
     }
