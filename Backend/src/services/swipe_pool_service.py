@@ -7,14 +7,26 @@ TODO - Testing and Validating Swipe Pool Generation and Cache
 
 import json, asyncio
 from flask_sqlalchemy import SQLAlchemy
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity, JWTManager
+from sqlalchemy.orm import joinedload
+from sqlalchemy import and_, exists, not_
+
 
 from Backend.src.extensions import db, redis_client # Import the DB Instance
 from Backend.src.models.user import User
 from Backend.src.models.swipe import Swipe
+from Backend.src.models.datingPreference import DatingPreference  
 from datetime import datetime, timedelta
 
 SWIPE_POOL_ENSURED_SIZE = 100
+# TODO Add Pagination (Page and Page_Size) to Swipe Pool Generation
+# TODO Develop Match Scoring Algorithm for Swipe Pool Generation
+    # - Location Proximity
+    # - Age Proximity
+    # - Last Active
+    # - Interests
+    # - Profile Completeness
+    # - Profile Picture
+# END TODO
 
 class SwipePoolService:
     """
@@ -49,42 +61,62 @@ class SwipePoolService:
         Returns:
             list: A list of potential matches for the user.
         """
-        user = User.query.get(user_id)
-        if not user:
+        current_user = User.query.get(user_id)
+        if not current_user:
             return []
+         
+        # Get current user's dating preferences
+        current_user_preferences = DatingPreference.query.get(user_id)
+        if not current_user_preferences:
+            return []  # If user has no preferences set, return empty list
         
         active_date = datetime.now() - timedelta(weeks=2)
         
-        # Raw, Basic Potential Matchmaking, filtered over Minimal Discriminants
-        # Each Potential Also Has Dating Preferences matching Current User (Age, Location, Etc)
-        potential_matches = User.query.filter(
-            User.id != user_id, # Cannot Swipe on Themselves
-            
-            # TODO - Change to Dating Preferences Class - Ensure Matched User Schema 
-            User.gender == user.interested_in, # Potential and Current User are interested in each other's Gender
-            User.interested_in == user.gender,
-            
-            User.age >= user.min_age, # Current User is within Age Range of Potential
-            User.age <= user.max_age,
-            User.min_age <= user.age,  # Potential Match is within Age Range of Current User
-            User.max_age >= user.age,
-            
-            User.state == user.state, # Same State
-            User.city == user.city, # Cities Match
-            
-            User.last_active >= active_date # Ensure User has been Active in the Last Two Weeks From Current Date
-            
-        ).order_by(db.func.random()).limit(limit).all()
+        #----- Raw, Basic Potential Matchmaking, filtered over Minimal Discriminants-----
         
-        for potentials, idx in enumerate(potential_matches):
-            swiper_swipe_exists = Swipe.query.filter_by(swiper_id=user_id, swipee_id=potentials.id).first()
-            swipee_swipe_exists = Swipe.query.filter_by(swiper_id=potentials.id, swipee_id=user_id).first()
-            
-            if swiper_swipe_exists or (swipee_swipe_exists and swipee_swipe_exists.swipe_result == "REJECTED"):
-                potential_matches.pop(idx)
+        # Check if a user has already been swiped on
+        current_user_already_swiped_exists = exists().where(
+            and_(Swipe.swiper_id == user_id, Swipe.swipee_id == User.id)
+        )
 
+        # Check if a user has rejected the current user
+        current_user_rejected_exists = exists().where(
+            and_(Swipe.swiper_id == User.id, Swipe.swipee_id == user_id, Swipe.swipe_result == "REJECTED")
+        )
+
+        # Base query for potential matches
+        # filter Only Users in the Same City and State, and Active in the Last Two Weeks
+        # Exclude users the current user has swiped on and users who rejected the current user
+        base_query = User.query.filter(
+            User.id != user_id,
+            User.state_code == current_user.state_code,  # Same City and State
+            User.city == current_user.city,
+            User.last_active >= active_date, # Active in the Last Two Weeks
+            not_(current_user_already_swiped_exists),  # Exclude users the current user has swiped on
+            not_(current_user_rejected_exists)  # Exclude users who rejected the current user
+        )
+
+        # Filtered Query for potnetial matches with Additional Dating Preferences
+        filtered_query = base_query.join(DatingPreference, DatingPreference.user_id == User.id).filter(
+            current_user_preferences.interested_in == User.gender,  # Gender interest
+            DatingPreference.interested_in == current_user.gender,  
+            current_user_preferences.age_preference_lower <= User.age, # Age preference Validations
+            current_user_preferences.age_preference_upper >= User.age,  
+            DatingPreference.age_preference_lower <= current_user.age,  
+            DatingPreference.age_preference_upper >= current_user.age
+        )
+
+        #  Fetch Results from Filtered Query with Limit and Eager Load JOINS
+        potential_matches = filtered_query.options(
+            joinedload(User.dating_preferences) # Eager load the dating preferences to Avoid N+1 Queries
+            ).limit(limit).all()
+
+        # Serialize and Return List of Potential Matches  (Users)
         return User.users_schema.dump(potential_matches)
-    
+
+
+
+
     async def cache_swipe_pool(self, user_id, swipe_pool):
         """
         Caches the pre-computed potential swipes in Redis.
