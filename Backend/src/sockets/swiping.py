@@ -8,7 +8,7 @@ import  Backend.src.models as models
 from Backend.src.services.auth_service import get_user_from_token
 # Listen for Swipe Events, Emits Back Successful Match Message if Swipe is accepted
 
-# TODO: Handle Emit and Buffering of Successful Matches for Offline Users
+# TODO: #4 Handle Emit and Buffering/Caching of Successful Matches for Offline Users
 # TODO: Implement Redis Pub/Sub for Offline User Successful Match 
 
 

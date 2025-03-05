@@ -31,7 +31,7 @@ from Backend.src.sockets.socket_helpers import auth_connecting_user, gen_match_r
 from Backend.src.extensions import redis_client
 
 
-# TODO: Handle Emit and Buffering of Messages  for Offline Users
+# TODO: #5 Handle Emit and Buffering of Messages  for Offline Users
 # TODO: Implement Redis Pub/Sub for Offline User Messages
 
 class ChatNamespace(Namespace):
