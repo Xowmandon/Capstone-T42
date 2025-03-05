@@ -8,6 +8,10 @@ import  Backend.src.models as models
 from Backend.src.services.auth_service import get_user_from_token
 # Listen for Swipe Events, Emits Back Successful Match Message if Swipe is accepted
 
+# TODO: Handle Emit and Buffering of Successful Matches for Offline Users
+# TODO: Implement Redis Pub/Sub for Offline User Successful Match 
+
+
 class SwipeNamespace(Namespace):
     def __init__(self, namespace=None):
         super().__init__(namespace)
