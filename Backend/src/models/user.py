@@ -35,8 +35,6 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     
-    
-    
     # General User Information
     name = db.Column(db.String(100), nullable=True)
     gender = db.Column(db.String(10), nullable=True)
@@ -52,85 +50,14 @@ class User(db.Model):
     bio = db.Column(db.String(500), nullable=True) # Bio - Description of User
 
     # Location Information
-    #latitude = db.Column(db.Float, nullable=True)
-    #longitude = db.Column(db.Float, nullable=True)
+    state_code = db.Column(db.String(10), nullable=True)
+    city = db.Column(db.String(100), nullable=True)
+    country_code = db.Column(db.String(10), nullable=True)
     
     # Flag to Indicate Fake User, Default is False - Internal Use
     is_fake = db.Column(db.Boolean, nullable=True, default=False)
     is_admin = db.Column(db.Boolean, nullable=True, default=False)
 
-
-    """
-    
-    
-    #------------Relationships--------------
-    dating_preference = relationship('DatingPreference', back_populates='user_dating_preference', uselist=False)
-    address = relationship('Address', back_populates='user_address', lazy="select", uselist=False) 
-    game_metrics = relationship('GameMetric', back_populates='user_game_metrics',lazy="select", uselist=False)
-    activity_metrics = relationship('ActivityMetric', back_populates='user_activity_metrics',lazy="select", uselist=False)
-    
-    # Swipes, Matches, and Messages - One to Many Relationships - User Can Have Many Swipes, Matches, and Messages    
-    swipes_as_swiper = relationship(
-        "Swipe",
-        foreign_keys= Swipe.swiper_id,
-        back_populates="swiper",
-        lazy="dynamic"
-    )
-    
-    swipes_as_swipee = relationship(
-        "Swipe",
-        foreign_keys="Swipe.swipee_id",
-        back_populates="swipee",
-        lazy="dynamic"
-    )
-    
-    # Matches where the user is the matcher
-    matches_as_matcher = relationship(
-        "Match",
-        foreign_keys="Match.matcher_id",
-        back_populates="matcher",
-        lazy="dynamic"
-    )
-
-    # Matches where the user is the matchee
-    matches_as_matchee = relationship(
-        "Match",
-        foreign_keys="Match.matchee_id",
-        back_populates="matchee",
-        lazy="dynamic"
-    )
-    
-    # Messages
-    messages_sent = relationship(
-        "Message",
-        foreign_keys="Message.messager_id",
-        back_populates="messager",
-        lazy="dynamic"
-    )
-    
-    messages_received = relationship(
-        "Message",
-        foreign_keys="Message.messagee_id",
-        back_populates="messagee",
-        lazy="dynamic"
-    )
-    
-    
-    # Reports 
-    reports_received = relationship(
-        "Report",
-        foreign_keys="Report.reportee_id",
-        back_populates="reportee",
-        lazy="dynamic"
-    )
-    reports_sent = relationship(
-        "Report",
-        foreign_keys="Report.reporter_id",
-        back_populates="reporter",
-        lazy="dynamic"
-    )
-    """
-    
     # Combined matches (user is either the matcher or matchee)
     @staticmethod
     def get_matches(self):
@@ -149,7 +76,7 @@ class User(db.Model):
         return helper.get_user_matches_ids()
     
     @staticmethod
-    def create_user(email=None, password=None, apple_sub=None):
+    def create_user(name=None,email=None, password=None, apple_sub=None):
         """Create a user with either Apple `sub` or email/password."""
         if apple_sub:
             user_id = apple_sub
@@ -160,7 +87,7 @@ class User(db.Model):
             auth_provider = "email"
             password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
 
-        user = User(id=user_id, email=email, password_hash=password_hash, auth_provider=auth_provider)
+        user = User(id=user_id, email=email, password_hash=password_hash, auth_provider=auth_provider,name=name)
         db.session.add(user)
         db.session.commit()
         return user
@@ -189,7 +116,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
     # Validate the Age Field - Must be Greater than 18
     @validates("age")
     def validate_age(self, value):
-        if value < 18:
+        if value and value < 18:
             raise ValidationError("Age must be greater than 18.")
 
     # Validate Email Field - Must Contain an @ Symbol
@@ -201,7 +128,9 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         
     @validates("username")
     def validate_username(self, value):
-        if len(value) > 50:
+        if value is None:
+            return
+        elif len(value) > 50:
             raise ValidationError("Username must be less than 50 characters.")
         elif len(value) < 1:
             raise ValidationError("Username must be at least 1 character.")
@@ -226,6 +155,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
             profanity.censor(text)
             raise ValidationError("Bio contains profanity. Please choose a different bio.")
     
+    """
     @validates("profile_picture")
     def validate_profile_picture(self, url):
         
@@ -242,4 +172,4 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         elif profanity.contains_profanity(url):
             profanity.censor(url)
             raise ValidationError("URL contains profanity. Please choose a different URL.")
-    
+    """
