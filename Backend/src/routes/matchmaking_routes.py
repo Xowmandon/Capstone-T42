@@ -25,7 +25,7 @@ async def get_swipe_pool():
     pool_service = SwipePoolService()
 
     # Await for Pool_Service to get the Swipe_Pool, with optional limit
-    users_swipe_pool = await pool_service.get_swipe_pool(limit=req_limit)
+    users_swipe_pool = await pool_service.get_swipe_pool(user_id=user_id,limit=req_limit)
 
     # Return List of Users that are Recommended to Swipe On
     return jsonify(users_swipe_pool)
