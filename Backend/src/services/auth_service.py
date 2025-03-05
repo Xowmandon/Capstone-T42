@@ -4,7 +4,7 @@
 import jwt
 import json
 import requests
-from flask_jwt_extended import  decode_token, JWTManager
+from flask_jwt_extended import  create_access_token, create_refresh_token, decode_token, JWTManager
 
 
 
@@ -32,6 +32,32 @@ def get_user_from_token(token):
     user = models.User.query.get(user_id)
     
     return user
+
+
+def byte_to_str_decode_token(token):
+    """Decode a token if it's bytes."""
+    if isinstance(token, bytes):
+        return token.decode("utf-8")
+    return token
+
+def gen_access_token(user_id):
+    """Generate an access token for a user."""
+    access_token = create_access_token(identity=str(user_id))
+    return byte_to_str_decode_token(access_token)
+
+def gen_refresh_token(user_id):
+    """Generate a refresh token for a user."""
+    refresh_token = create_refresh_token(identity=str(user_id))
+    return byte_to_str_decode_token(refresh_token)
+
+class AppleUser:
+    """
+    Represents a user authenticated with Apple Sign-In.
+    """
+    
+    def __init__(self, user_id, email):
+        self.user_id = user_id
+        self.email = email
 
 # Apple Authentication Service
 class AppleAuthService:
@@ -64,9 +90,9 @@ class AppleAuthService:
         """Authenticate using Apple identity token."""
         user_data = self.verify_apple_identity_token(identity_token)
         if not user_data:
-            return None, None
-
-        return user_data["sub"], user_data.get("email")
+            return None
+        new_apple_user = AppleUser(user_id=user_data["sub"],email= user_data.get("email"))
+        return new_apple_user
 
 # Email Authentication Service
 class EmailAuthService:

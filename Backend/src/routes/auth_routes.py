@@ -1,14 +1,14 @@
 from flask import request, jsonify, Blueprint
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
 
 from Backend.src.extensions import db # Import the DB Instance
 import Backend.src.models as models # Import the Models and Schemas
 
-from Backend.src.services.auth_service import EmailAuthService, AppleAuthService
+from Backend.src.services.auth_service import EmailAuthService, AppleAuthService, gen_access_token, gen_refresh_token
 
 auth_bp = Blueprint('auth_bp', __name__)
 
-@auth_bp.route("/verify_token", methods=["POST"])
+@auth_bp.route("/verify_token", methods=["GET"])
 @jwt_required()
 def verify_token():
     """
@@ -16,12 +16,18 @@ def verify_token():
 
     POST /verify_token HTTP/1.1
     Host: __BASE_URL__
-    Authorization: Bearer <your_jwt_token>
+    X-Authorization: Bearer <your_Refresh_jwt_token>
     Content-Type: application/json
-
+    
+    
+    Return JSON:
+    
     {
-        "token": "<your_jwt_token>"
+        "user_id": <user_id>,
+        "email": "<user_email>",
+        "auth_provider": "<auth_provider 
     }
+
     """
     current_user_id = get_jwt_identity()
     user = models.User.query.get(current_user_id)
@@ -86,7 +92,6 @@ def login():
         return jsonify({"error": "Invalid authentication method"}), 400
 
 
-
 # ** Signup Handlers **
 def handle_email_signup(email, password):
     """Handles email/password signup."""
@@ -98,7 +103,8 @@ def handle_email_signup(email, password):
         return jsonify({"error": "Email already in use"}), 409
 
     user = models.User.create_user(email=email, password=password)
-    token = create_access_token(identity=user.id)
+    token = gen_access_token(str(user.id))
+    
     return jsonify({"message": "Signup successful", "token": token}), 201
 
 def handle_apple_signup(identity_token):
@@ -107,14 +113,17 @@ def handle_apple_signup(identity_token):
         return jsonify({"error": "Apple identity token required"}), 400
 
     auth_service = AppleAuthService()
-    apple_sub, email = auth_service.authenticate(identity_token)
-
-    if not apple_sub:
+    apple_user = auth_service.authenticate(identity_token)
+    if apple_user is None:
         return jsonify({"error": "Invalid Apple identity token"}), 401
-
-    # Check if Apple user already exists
-    existing_user = models.User.query.filter_by(email=email).first()
     
+    apple_sub = apple_user.user_id
+    email = apple_user.email
+
+    # Check if Apple user already exists by Apple id
+    existing_user = models.User.query.filter_by(id=apple_sub).first()
+    
+    # TODO: Check if user exists by email, if so, link Apple sub to existing user
     # Linking Apple sub to existing user
     # Update Apple sub if user exists, else create a new user
     if existing_user:
@@ -124,10 +133,13 @@ def handle_apple_signup(identity_token):
             db.session.commit()
         user = existing_user
     else:
+        # Create New User if one does not exists, export name, email, and apple_sub as user.id
         user = models.User.create_user(email=email, apple_sub=apple_sub)
 
-    token = create_access_token(identity=str(user.id))
-    return jsonify({"message": "Signup successful", "token": str(token)}), 201
+    # Create Unique JWT associated/encoded to user.id
+    token = gen_access_token(str(user.id))
+
+    return jsonify({"message": "Signup successful", "token": token}), 201
 
 
 
@@ -149,8 +161,9 @@ def handle_apple_login(identity_token):
         return jsonify({"error": "Apple identity token required"}), 400
 
     auth_service = AppleAuthService()
-    apple_sub, _ = auth_service.authenticate(identity_token)
-
+    apple_user = auth_service.authenticate(identity_token)
+    apple_sub = apple_user.user_id
+    
     if not apple_sub:
         return jsonify({"error": "Invalid Apple identity token"}), 401
 
@@ -158,5 +171,5 @@ def handle_apple_login(identity_token):
     if not user:
         return jsonify({"error": "User not found, please sign up first"}), 404
 
-    token = create_access_token(identity=user.id)
+    token = gen_access_token(str(user.id))    
     return jsonify({"message": "Login successful", "token": token}), 200

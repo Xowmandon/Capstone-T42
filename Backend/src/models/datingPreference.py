@@ -14,7 +14,7 @@ class DatingPreference(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=True) # Primary Key
     
     # Sexual Orientation, Could Change to Reference Gender Table (interested_in)
-    sexual_orientation = db.Column(db.String(50), nullable=False)
+    interested_in = db.Column(db.String(50), nullable=False)
     
     # Age Preference - Lower and Upper Bound
     age_preference_lower = db.Column(db.Integer, nullable=False)

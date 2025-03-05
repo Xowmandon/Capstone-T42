@@ -39,26 +39,6 @@ class Message(db.Model):
 
     message_read = db.Column(db.Boolean, nullable=False, default=False) #Indicate if Message has been Read
     
-    # -----Relationships-----
-    """
-    reports = relationship(
-        "Report", 
-        back_populates="reports_on_message",
-        lazy="dynamic"
-    )
-
-    # Many to One Relationship - Multiples Swipes to One User
-    messager = relationship(
-        "User",  
-        foreign_keys=[messager_id], 
-        backref="messages_sent"
-    )
-    messagee = relationship(
-        "User",  
-        foreign_keys=[messagee_id], 
-        backref="messages_received"
-    )
-    """
 
 # Marshmallow Base Schema for the Message
 class MessageSchema(ma.SQLAlchemyAutoSchema):
