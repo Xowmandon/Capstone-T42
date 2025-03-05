@@ -31,7 +31,7 @@ def get_user():
     Summary: Get a user_id by JWT Token. Return the user object.
     
     Parameters:
-        Authorization: Bearer <JWT Token>
+        X-Authorization: Bearer <JWT Token>
         
     Returns:
         JSON: The user object.
@@ -47,29 +47,6 @@ def get_user():
         return jsonify({"error": "User not found."}), 404
     
     return jsonify(user_schema.dump(user)), 200
-
-   
-    
-    #try:
-        ## Get the data from the request body and Parse
-        #data = request.get_json()
-        #email = data.get('email')
-        #print(f"Email: {email}")
-        
-        ## Get the user by Email from DB
-        #user = models.user.User.query.filter_by(email=email).first()
-        
-        # If the user is not found, return a 404
-        #if user is None:
-            #return jsonify({"error": "User not found."}), 404
-        
-    # Catch any unexpected errors
-    #except Exception as e:
-        #return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
-    
-       
-    # Return the user as JSON Response with 200 Status Code
-    #return jsonify(user_schema.dump(user)), 200
 
 # Init User with Profile Creation Data
 @user_bp.route('/users/init', methods=['POST'])
@@ -91,6 +68,45 @@ def init_profile():
     
     required_fields = ['age', 'dating_preferences', 'gender', 'location', 'profile_picture']
     
+    
+    # Update User Data with New User Data from Request
+    auth_user.age = request.json.get('age')
+    auth_user.dating_preferences = request.json.get('dating_preferences')
+    auth_user.gender = request.json.get('gender')
+    
+    
+    #auth_user.location = request.json.get('profile_picture')
+
+@user_bp.route('/users/profile_picture', methods=['POST'])
+@jwt_required()
+def upload_profile_picture():
+    """
+    Summary: Upload a Profile Picture for a User.
+    
+    Header Parameters:
+        X-Authorization: Bearer <JWT Token>
+        
+    Sent Payload:
+        - profile_picture: BLOB, required
+        - is_main_photo: bool, optional, default=False
+    
+    Return Payload:
+        JSON: 
+        - A message indicating the success or failure of the profile picture upload.
+        - S3 Stored URL of the Profile Picture    
+    """
+    
+    pass
+
+def get_profile_pictures():
+    """
+    Summary: Get the Profile Picture for a User.
+    
+    Header Parameters:
+        X-Authorization: Bearer
+    """
+    pass    
+
 
 # UPDATE User by Email
 # PUT /Users
