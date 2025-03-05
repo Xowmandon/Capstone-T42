@@ -1,3 +1,118 @@
+# Gitignore file for VsCode, macOS, Swift/XCode, Python
+# Aided by https://www.toptal.com/developers/gitignore/api/vscode,macos,swift,python
+
+
+### VisualStudioCode ####
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+#### END VisualStudioCode ####
+
+#### macOS ####
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### macOS Patch ###
+# iCloud generated files
+*.icloud
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+#### End of macOS  ####
+
+
+#### Swift + XCode ####
+
+## Build generated
+# As per build/ and DerivedData/, this ought to have a trailing slash
+build/
+DerivedData/
+
+## User settings
+#     throw away ALL personal settings (including custom schemes!
+#     - unless they are "shared")
+xcuserdata/
+
+
+## Obj-C/Swift specific
+*.hmap
+
+## App packaging
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+## Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Xcode 4 workspaces - more detailed
+#
+# Workspaces are important! They are a core feature of Xcode - don't exclude them :)
+#
+# Workspace layout is quite spammy. For reference:
+#
+# /(root)/
+#   /(project-name).xcodeproj/
+#     project.pbxproj
+#     /project.xcworkspace/
+#       contents.xcworkspacedata
+#       /xcuserdata/
+#         /(your name)/xcuserdatad/
+#           UserInterfaceState.xcuserstate
+#     /xcshareddata/
+#       /xcschemes/
+#         (shared scheme name).xcscheme
+#     /xcuserdata/
+#       /(your name)/xcuserdatad/
+#         (private scheme).xcscheme
+#         xcschememanagement.plist
+#
+#
+
+# Swift Package Manager
+# Add this line if you want to avoid checking in source code from Swift Package Manager dependencies.
+# Packages/
+# Package.pins
+# Package.resolved
+# *.xcodeproj
+# Xcode automatically generates this directory with a .xcworkspacedata file and xcuserdata
+# hence it is not needed unless you have added a package configuration file to your project
+# .swiftpm
+
+#### END Swift + XCode ####
+
+
+#### Pyhon ####
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
