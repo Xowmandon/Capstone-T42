@@ -1,5 +1,5 @@
-# Desc: Match Model for Successful Matches between Users
-# Schema for Deserializing and Serializing
+# Author: Joshua Ferguson
+
 
 from datetime import datetime, timezone
 from marshmallow_sqlalchemy import fields

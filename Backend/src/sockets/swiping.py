@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 from flask import Flask, request
 from flask_socketio import SocketIO, Namespace, disconnect, emit, join_room, leave_room
 from flask_jwt_extended import JWTManager, decode_token
@@ -7,6 +9,10 @@ from Backend.src.extensions import db
 import  Backend.src.models as models
 from Backend.src.services.auth_service import get_user_from_token
 # Listen for Swipe Events, Emits Back Successful Match Message if Swipe is accepted
+
+# TODO: #4 Handle Emit and Buffering/Caching of Successful Matches for Offline Users
+# TODO: Implement Redis Pub/Sub for Offline User Successful Match 
+
 
 class SwipeNamespace(Namespace):
     def __init__(self, namespace=None):

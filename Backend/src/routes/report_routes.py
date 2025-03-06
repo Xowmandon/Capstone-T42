@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError

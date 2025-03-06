@@ -1,6 +1,7 @@
-from Backend.src.services.auth_service import get_user_from_token
+# Author: Joshua Ferguson
 
-        
+from Backend.src.services.auth_service import get_user_from_token
+   
 def auth_connecting_user(auth_request_header):
     """
     Authenticates the connecting user based on the provided authorization header.

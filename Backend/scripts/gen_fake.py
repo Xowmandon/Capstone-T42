@@ -1,3 +1,4 @@
+# Author: Joshua Ferguson
 # Script for Generating Fake Profiles to Demo Matching and Swiping
 
 import requests

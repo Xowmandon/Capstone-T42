@@ -8,7 +8,7 @@ Author: Joshua Ferguson
 import boto3
 from botocore.exceptions import ClientError
 from marshmallow import ValidationError
-from Backend.src.extensions import s3, db
+from Backend.src.extensions import db
 from Backend.src.models.photo import UserPhoto
 from Backend.src.models.user import User
 from Backend.src.validators.image_val import ImageValidator
@@ -31,7 +31,7 @@ class BucketService:
         folders: A list of folders within the bucket (optional).
     """
 
-    def __init__(self, s3_client, bucket_name, region, folders=None):
+    def __init__(self,s3_client_param,bucket_name, region, folders=None):
         """
         Initializes the BucketService instance.
 
@@ -41,11 +41,23 @@ class BucketService:
             region: The AWS region where the bucket is located.
             folders: A list of valid folders in the S3 bucket (optional).
         """
-        self.s3_client = s3_client
+        self.s3_client = s3_client_param
         self.bucket_name = bucket_name
         self.region = region
         self.folders = folders if folders else []
 
+        if not self.val_connection():
+            raise ValueError("Connection to S3 bucket failed")
+                
+    def val_connection(self):
+        
+        try:
+            self.s3_client.head_bucket(Bucket=self.bucket_name)
+            return True
+        except ClientError as e:
+            print(e)
+            return False
+    
     def upload_file(self, file):
         """
         Uploads a file to the S3 bucket.
@@ -85,19 +97,16 @@ class MediaStorageService(BucketService):
     Inherits from `BucketService` and adds support for user-based file management.
     """
 
-    def __init__(self, s3_client, bucket_name, region, folders=None):
-        """
-        Initializes the MediaStorageService instance.
+    def __init__(self, s3_client_param,bucket_name, region, folders=None):
+     
+        super().__init__(
+            s3_client_param=s3_client_param,
+            bucket_name=bucket_name, 
+            region=region, 
+            folders=folders
+            )
 
-        Args:
-            s3_client: The S3 client object.
-            bucket_name: The name of the S3 bucket.
-            region: The AWS region where the bucket is located.
-            folders: A list of valid folders in the S3 bucket (optional).
-        """
-        super().__init__(s3_client, bucket_name, region, folders=folders)
-
-    def upload_user_photo(self, file, user_id, file_name, db_save=True, is_main_photo=False, folder=None):
+    def upload_user_photo(self, file, user_id, file_name, db_save=True, is_main_photo=False,folder=None):
         """
         Uploads a file to the media storage service.
 
@@ -113,6 +122,7 @@ class MediaStorageService(BucketService):
         Raises:
             ClientError: If an error occurs during the upload process.
         """
+        
         file_path = self._make_file_path(user_id=user_id, file_name=file_name, folder=folder)
         file_url = self.retrieve_file_url(user_id=user_id, file_name=file_name, folder=folder)
 
@@ -122,17 +132,24 @@ class MediaStorageService(BucketService):
             if not ImageValidator().val_all(file_url):
                 raise ValidationError("error: Image Validation Failed!")
             
-            # Upload to S3 Bucket with file_data and Full Path with Folder,etc
-            self.s3_client.upload_file(file, self.bucket_name, file_path)
-            
-            # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
-            if db_save:
+            try:
+                # Upload to S3 Bucket with file_data and Full Path with Folder,etc
+                self.s3_client.upload_file(file, self.bucket_name, file_path)
                 
-                # Save to PostgreSQL
-                new_photo = UserPhoto(user_id=user_id, file_url=file_url,is_main_photo=is_main_photo)
-                db.session.add(new_photo)
-                db.session.commit()
-                
+                # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
+                if db_save:
+                                        
+                    # Save to PostgreSQL
+                    new_photo = UserPhoto(user_id=user_id, file_url=file_url,is_main_photo=is_main_photo)
+                    db.session.add(new_photo)
+                    db.session.commit()
+                    db.session.refresh(new_photo)
+                    db.session.close()
+     
+            except Exception as e:
+                print(e)
+                return None
+                    
             return file_url
         
         except ClientError as e:

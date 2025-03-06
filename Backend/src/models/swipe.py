@@ -1,11 +1,9 @@
+# Author: Joshua Ferguson
 
 from datetime import datetime, timezone
 from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship, deferred
-import enum
 from sqlalchemy import  CheckConstraint
-# Desc: Swipe Model for Swipes Table
-# Schema for Deserializing and Serializing
 
 from  Backend.src.extensions import db, ma # DB and Marshmallow Instances
 from  Backend.src.models.user import User, UserSchema # User Model

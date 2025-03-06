@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 import Backend.src.models as models
 from Backend.src.extensions import db
 from Backend.src.models.message import MessageSchema

@@ -1,6 +1,7 @@
+# Author: Joshua Ferguson
 
 #-----Swipe Routes-----
-# WIP - Not yet implemented For the Swipe Routes
+
 
 from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import SQLAlchemyError

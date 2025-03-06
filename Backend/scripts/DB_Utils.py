@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 import os
 import hashlib
 from dotenv import load_dotenv

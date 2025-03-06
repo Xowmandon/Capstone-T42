@@ -1,9 +1,11 @@
+#Author: Joshua Ferguson
+
 import logging
 
 from flask import Flask, jsonify,request
 from flask_socketio import SocketIO, emit
 
-from Backend.src.utils import EnvManager, DevDBConfig, TestingConfig
+from Backend.src.utils import EnvManager, TestingConfig
 from Backend.src.extensions import db, ma, bcrypt, flask_jwt
 #from Backend.src.middleware import before_request
 

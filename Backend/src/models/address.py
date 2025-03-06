@@ -1,5 +1,6 @@
+# Author: Joshua Ferguson
 
-import validators # URL Validation
+# TODO: #8 Implement the Address Model and Schema into the User Model (Remove Address Fields from User Model)
 
 from marshmallow_sqlalchemy import fields
 from sqlalchemy.orm import relationship

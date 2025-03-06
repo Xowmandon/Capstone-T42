@@ -1,3 +1,4 @@
+# Author: Joshua Ferguson
 # This script is used to generate metadata for the routes and models in the application
 # The metadata is written to JSON files in the config directory
 

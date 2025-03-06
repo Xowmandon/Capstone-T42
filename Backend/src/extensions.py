@@ -1,9 +1,7 @@
 """
-
-Flask Extensions Module
 Author: Joshua Ferguson
 
-
+Flask Extensions Module
 This module initializes and provides extensions for the Flask application.
 
 Extensions:
@@ -15,14 +13,24 @@ Extensions:
 - s3: Boto3 S3 resource for interacting with Amazon S3.
 
 """
-
+import boto3
 from flask import app
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 import redis
-import boto3
+
+from Backend.src.utils import EnvManager
+
+# Load Environment Variables
+EnvMan = EnvManager()
+
+AWS_REGION = EnvMan.load_env_var("AWS_REGION")
+AWS_MEDIA_BUCKET_NAME = EnvMan.load_env_var("AWS_MEDIA_BUCKET_NAME")
+AWS_MEDIA_BUCKET_FOLDERS = EnvMan.load_env_var("AWS_MEDIA_BUCKET_FOLDERS")
+AWS_MEDIA_MAIN_PHOTO_FOLDER = EnvMan.load_env_var("AWS_MEDIA_MAIN_PHOTO_FOLDER")
+AWS_MEDIA_USER_PHOTO_FOLDER = EnvMan.load_env_var("AWS_MEDIA_USER_PHOTO_FOLDER")
 
 # ------Flask Extensions (Init with/without App Instance)-----
 
@@ -41,6 +49,16 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-# S3 Bucket Service for Media/Photo Storage & Retrieval
-s3 = boto3.resource('s3') 
 
+## S3 Client for Media Storage
+# Import the MediaStorageService Class - Imported Here to Avoid Circular Imports
+from Backend.src.services.media_storage_services import MediaStorageService
+
+s3_client = boto3.client('s3', region_name=AWS_REGION)
+
+media_storage_service = MediaStorageService(
+    s3_client,
+    AWS_MEDIA_BUCKET_NAME, 
+    AWS_REGION, 
+    AWS_MEDIA_BUCKET_FOLDERS
+    )

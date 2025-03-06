@@ -1,8 +1,8 @@
+# Author: Joshua Ferguson
+
 from marshmallow import ValidationError, validates
 
-
 from Backend.src.extensions import db, ma # Import the Database and Marshmallow - SQLAlchemy and Marshmallow --> Flask
-
 from Backend.src.models import user, UserSchema # Import the User Model
 
 

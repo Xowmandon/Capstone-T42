@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 # Desc: User Model and Schema for Users Table
 # Schema for Deserializing and Serializing
 
