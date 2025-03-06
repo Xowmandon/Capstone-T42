@@ -116,7 +116,8 @@ class SwipePoolService:
         potential_matches = filtered_query.limit(limit).all()
 
         # Serialize and Return List of Potential Matches  (Users)
-        return UserSchema(many=True).dump(potential_matches)
+        schema_populated = UserSchema(many=True).dump(potential_matches)
+        return schema_populated
 
 
 

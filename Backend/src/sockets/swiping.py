@@ -105,8 +105,7 @@ class SwipeNamespace(Namespace):
                 emit('successful_match', {'matchee_id': matchee_id, 'match_id': new_match.id}, room=str(self.user_id))
                 emit('successful_match', {'matchee_id': self.user_id, 'match_id': new_match.id}, room=str(matchee_id))
                 
-                
-                
+
                  # TODO - Broadcast Message to Notification Namespace for Push Notification Service
             else:
                 print(f"Failed to create match between {self.user_id} and {matchee_id}")
