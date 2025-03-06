@@ -117,3 +117,29 @@ def test_home_route(client): # Test the Home Route
     for msg in ["Status Code 200", "Welcome Message Found in Response"]:
         pytest_assertion_success(msg)
     pytest_test_success()
+    
+def test_get_swipe_pool(client):
+    """Test Retrieving a User from the Database Through Route"""
+    pytest_start_test_display()
+    
+    # Load the Test JWT, which is used to authenticate the user (predefined User)
+    test_jwt = EnvManager().load_env_var('TEST_JWT')
+    assert test_jwt, "TEST_JWT is not set!"
+    pytest_assertion_success("Test JWT Loaded")
+
+    # Send a GET request to the get user endpoint with X-Authorization Header as JWT
+    response = client.get('/users/swipe_pool', headers={'X-Authorization': f'Bearer {test_jwt}'}) 
+
+    with Backend.app.app.app_context():
+
+        # Assert, status code is 200 (OK), id is in the response JSON, and user exists in the database
+        assert response.status_code == 200, \
+            pytest_assertion_failure(f"Unexpected Response:{response.status_code}{response.data}")
+        print(response.json)
+        assert response.json is not None, "Response JSON is None"
+        #print(response.json)
+    
+    for msg in ["Status Code 200", "Swipe Pool is Not Empty"]:
+        pytest_assertion_success(msg)
+    
+    pytest_test_success()
