@@ -130,14 +130,13 @@ def test_get_swipe_pool(client):
     # Send a GET request to the get user endpoint with X-Authorization Header as JWT
     response = client.get('/users/swipe_pool', headers={'X-Authorization': f'Bearer {test_jwt}'}) 
 
+    #print(response.json)
     with Backend.app.app.app_context():
 
         # Assert, status code is 200 (OK), id is in the response JSON, and user exists in the database
         assert response.status_code == 200, \
             pytest_assertion_failure(f"Unexpected Response:{response.status_code}{response.data}")
-        print(response.json)
         assert response.json is not None, "Response JSON is None"
-        #print(response.json)
     
     for msg in ["Status Code 200", "Swipe Pool is Not Empty"]:
         pytest_assertion_success(msg)
