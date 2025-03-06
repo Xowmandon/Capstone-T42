@@ -28,7 +28,7 @@
 #### macOS ####
 
 # General
-.DS_Store
+*.DS_Store
 .AppleDouble
 .LSOverride
 
@@ -61,6 +61,7 @@ DerivedData/
 ## User settings
 #     throw away ALL personal settings (including custom schemes!
 #     - unless they are "shared")
+*.xcuserstate
 xcuserdata/
 
 
