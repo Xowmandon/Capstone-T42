@@ -49,37 +49,45 @@ def get_user():
     return jsonify(user_schema.dump(user)), 200
 
 @user_bp.route('/users/preferences', methods=['POST'])
+@jwt_required()
 def init_preferences():
     """
     Summary: Initialize a User's Dating Preferences.
     
+    Auhorization:
+        X-Authorization: Bearer <JWT-Token>
+    
     Payload: JSON object with a Dating Preferences object:
-        - min_age: int, required
-        - max_age: int, required
-        - interested_in: str (Male, Female, Any), required
+        - minAge: int, required
+        - maxAge: int, required
+        - interestedIn: str (Male, Female, Any), required
     """
-    required_fields = ['min_age', 'max_age', 'interested_in']
+    print(request.json)
+    required_fields = ['minAge', 'maxAge', 'interestedIn']
     if validate_required_params(request.json, required_fields) is False:
+        print("Missing Required Fields.")
         return jsonify({"error": "Missing Required Fields."}), 400
     
     user_id = get_jwt_identity()
     user = models.user.User.query.get(user_id)
     
     if user is None:
+        print("User not found.")
         return jsonify({"error": "User not found."}), 404
     
     # Check if the User has already set their Dating Preferences
     dating_pref_exists = db.session.query(models.datingPreference.DatingPreference).filter_by(user_id=user_id).first()
     if dating_pref_exists is not None:
-        return jsonify({"error": "User Dating Preferences Already Initialized."}), 400
+        print("User Dating Preferences Already Initialized.")
+        return jsonify({"msg": "User Dating Preferences Already Initialized."}), 200
     
     try:
         # Create a new Dating Preference Object, Validate and Add to the Database
         dating_pref = models.datingPreference.DatingPreference(
-            user =user_id,
-            age_preference_lower=request.json.get('min_age'),
-            age_preference_upper=request.json.get('max_age'),
-            interested_in=request.json.get('interested_in')
+            user_id =user_id,
+            age_preference_lower=request.json.get('minAge'),
+            age_preference_upper=request.json.get('maxAge'),
+            interested_in=request.json.get('interestedIn').lower()
         )
         
         # Add , Commit, and Close the Database Session
@@ -87,11 +95,13 @@ def init_preferences():
         db.session.commit()
         db.session.close()
     
-    except db.exc.SQLAlchemyError as e1:
+    except SQLAlchemyError as e1:
         db.session.rollback()
+        print(f"Database Error - {e1}")
         return jsonify({f"error": "Database Error - {e1}"}), 500
     
     except Exception as e:
+        print(f"Invalid Data Provided - {e}")
         return jsonify({f"error": "Invalid Data Provided - {e}"}), 400
     
     # Success Response
@@ -105,7 +115,7 @@ def init_profile():
     Summary: Initialize a User Profile with Profile Creation Data.
     
     Parameters:
-        X_Authorization
+        X-Authorization
     
     Payload: JSON object with a User object, excluding the Email, ID, is_admin, is_fake.:
         
@@ -123,9 +133,10 @@ def init_profile():
     try:
         
         auth_user.age = request.json.get('age')
-        auth_user.gender = request.json.get('gender')
+        auth_user.name = request.json.get('name')
+        auth_user.gender = request.json.get('gender').lower()
         auth_user.state_code = request.json.get('state')
-        auth_user.city = request.json.get('city')
+        auth_user.city = request.json.get('city').lower()
         auth_user.bio = request.json.get('bio')
         
         # Commit the changes to the database
