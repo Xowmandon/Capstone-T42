@@ -123,7 +123,6 @@ def init_profile():
     try:
         
         auth_user.age = request.json.get('age')
-        auth_user.dating_preferences = request.json.get('dating_preferences')
         auth_user.gender = request.json.get('gender')
         auth_user.state_code = request.json.get('state')
         auth_user.city = request.json.get('city')
