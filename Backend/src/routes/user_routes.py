@@ -196,7 +196,7 @@ def update_profile():
         return jsonify({"error": "User not found."}), 404
 
     # List of fields that can be updated
-    updatable_fields = ['age', 'name', 'gender', 'state', 'city', 'bio', 'dating_preferences']
+    updatable_fields = ['age', 'name', 'gender', 'state', 'city', 'bio']
     
     data = request.json or {}
     if not data:
@@ -321,77 +321,7 @@ def get_profile_pictures():
         "user_photos": additional_photos
     }), 200
 
-   
-
-
-# UPDATE User by Email
-# PUT /Users
-# TODO: Test this Route
-@user_bp.route('/users', methods=['PUT'])
-@jwt_required()
-def update_user():
-    """
-    Summary: Update a user by Email.
-    
-    Headers:
-        Authorization: Bearer <JWT Token>
-        
-    Payload: JSON object with a User object, excluding the Email, ID, is_admin, is_fake.:
-    
-    """
-    try:
-        
-        user_id = get_jwt_identity()
-        user = models.user.User.query.get(user_id)
-        
-        if user is None:
-            return jsonify({"error": "User not found."}), 404
-        
-        # Retrieve User Info from Request
-        # Partially Deserialize the JSON Data and Validate using Schema
-        updated_user_data = request.get_json()
-        
-        # Check if the User Data is None or if Invalid Fields are Present
-        if updated_user_data is None:
-            return jsonify({"error": "No data provided."}), 400
-        
-        invalid_fields = ['email', 'id', 'is_admin', 'is_fake']
-        for field in invalid_fields:
-            if field in updated_user_data:
-                return jsonify({"error": f"Field '{field}' cannot be updated."}), 400
-        
-        validated_user_data = user_schema.load(updated_user_data, partial=True)
-        
-        # Update User Data with New User Data, Excluding the Email and ID
-        # Only Updates Values Sent in payload with Validated Data (Not None)
-        for field, value in validated_user_data.items():
-            if field != 'email' and field != 'id' and value is not None:
-                setattr(user, field, value)
-            
-        # Commit the changes to the database
-        db.session.commit()
-        
-        
-        # Serialize and return the updated user
-        updated_user_data = user_schema.dump(user)
-        
-        
-        return jsonify({"success": "User updated successfully.", "user": updated_user_data}), 200
-
-
-    # Catch any unexpected errors
-    except ValidationError as e:
-        return jsonify({"error": "Validation error occurred.", "details": e.messages}), 400
-
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return jsonify({"error": "Database error occurred.", "details": str(e)}), 500
-
-    except Exception as e:
-        return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
-    
-
-    
+       
 # DELETE User by Email
 # DELETE /Users
 # TODO: Test this Rout
