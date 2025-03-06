@@ -1,7 +1,7 @@
 # Author: Joshua Ferguson
 
 from flask import Flask, request
-from flask_socketio import SocketIO, Namespace, disconnect, emit, join_room, leave_room
+from flask_socketio import SocketIO, Namespace, disconnect, emit, join_room, leave_room, send
 from flask_jwt_extended import JWTManager, decode_token
 import redis
 
@@ -39,7 +39,9 @@ class SwipeNamespace(Namespace):
             disconnect()
             return False
 
+        # Join Room with User ID
         self.user_id = user.id
+        join_room(str(self.user_id))
         
         print(f"User {self.user_id} connected to Swipe namespace!")
 
@@ -86,7 +88,7 @@ class SwipeNamespace(Namespace):
         Process the New Match Event and Create a New Match
 
         Args:
-            matchee_id (int): The ID of the user being matched.
+            matchee_id (str): The str (id) of the user being matched.
 
         Returns:
             - None if not a Successful Match
@@ -94,23 +96,25 @@ class SwipeNamespace(Namespace):
         """
         try:
             # Create New Match and Push to DB
-            new_match = models.match.Match().create_match(matcher_id=self.user_id, matchee_id=matchee_id)
+            new_match = models.match.Match().create_match(matcher_id=str(self.user_id), matchee_id=str(matchee_id))
             
             if new_match:
                 print(f"Match Created: {new_match}")
 
                 # Notify both users about the successful match
-                emit('successful_match', {'matchee_id': matchee_id, 'match_id': new_match.id}, room=self.user_id)
-                emit('successful_match', {'matchee_id': self.user_id, 'match_id': new_match.id}, room=matchee_id)
+                emit('successful_match', {'matchee_id': matchee_id, 'match_id': new_match.id}, room=str(self.user_id))
+                emit('successful_match', {'matchee_id': self.user_id, 'match_id': new_match.id}, room=str(matchee_id))
+                
+                
                 
                  # TODO - Broadcast Message to Notification Namespace for Push Notification Service
             else:
                 print(f"Failed to create match between {self.user_id} and {matchee_id}")
-                emit('match_creation_failed', {'matchee_id': matchee_id, 'message': 'Match creation failed'}, room=self.user_id)
+                emit('match_creation_failed', {'matchee_id': matchee_id, 'message': 'Match creation failed'}, room=str(self.user_id))
 
         except Exception as e:
             print(f"Error in processing match: {str(e)}")
-            emit('match_creation_failed', {'matchee_id': matchee_id, 'message': 'Internal server error'}, room=self.user_id)
+            emit('match_creation_failed', {'matchee_id': matchee_id, 'message': 'Internal server error'}, room=str(self.user_id))
 
 # Register the chat namespace (CURRENTLY IN APP)
 #socketio.on_namespace(SwipeNamespace("/swipe"))
