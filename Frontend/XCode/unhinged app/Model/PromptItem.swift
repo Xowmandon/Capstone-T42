@@ -7,7 +7,7 @@
 
 import Foundation
 
-class PromptItem : Identifiable {
+struct PromptItem : Identifiable {
     
     static let examplePromptChoices : [PromptChoice] = [PromptChoice(choice: "Duck"),
                                                         PromptChoice(choice: "Duck"),

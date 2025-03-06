@@ -68,6 +68,7 @@ struct ProfileCard : View {
                     TextField("Name", text: $name)
                         .focused($focusedField, equals: .name)
                         .font(Theme.headerFont)
+                        .background(Color(.quaternarySystemFill))
                     Spacer()
                     Text("Age:")
                         .font(Theme.headerFont)

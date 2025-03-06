@@ -7,27 +7,34 @@
 
 import SwiftUI
 
+enum SexualOrientation : String, CaseIterable, Identifiable {
+    case straight = "Straight"
+    case gay = "Gay"
+    case bisexual = "Bisexual"
+    case other = "Other"
+    var id : String {self.rawValue}
+}
+
 struct MatchPreferencesView: View {
+    @EnvironmentObject var appModel : AppModel
     @Environment(\.presentationMode) var presentationMode
-    @State private var orientation: String = ""
+    @State private var orientation: SexualOrientation = .straight
     @State private var minAge: Double = 18
     @State private var maxAge: Double = 50
-    @State private var preferredGame: String = ""
+    @State private var preferredGame: String = GameObject.gameList[0].name
     @State private var minHeight: Double = 150
     @State private var location: String = "New York"
 
     let games : [GameObject] = GameObject.gameList
-    let orientations = ["Straight","Gay","Bisexual","Other"]
 
     var body: some View {
         VStack {
             HStack{
                 BackButton()
-                    .padding()
                 Spacer()
             }
             Text("Matching Preferences")
-                .font(Theme.headerFont)
+                .font(Theme.titleFont)
                 .padding(.bottom, 20)
             VStack {
                 HStack {
@@ -35,8 +42,8 @@ struct MatchPreferencesView: View {
                         .font(Theme.bodyFont)
                     Spacer()
                     Picker("Orientation", selection: $orientation) {
-                        ForEach(orientations, id: \.self) { orientation in
-                            Text(orientation).tag(orientation)
+                        ForEach(SexualOrientation.allCases) { orientation in
+                            Text(orientation.rawValue).tag(orientation)
                                 .font(Theme.bodyFont)
                         }
                     }
@@ -64,7 +71,7 @@ struct MatchPreferencesView: View {
                     }
                     .frame(width: 200)
                 }
-                .padding(.bottom, 10)
+                .padding()
 
                 HStack {
                     Text("Preferred Game")
@@ -126,11 +133,27 @@ struct MatchPreferencesView: View {
     }
     
     func saveMatchPreferences() {
-        
+        print("saveMatchPreferences()")
         //Add settings to preferences struct
+        let interestedIn : ProfileGender = MatchPreferencesView.determineInterestFromOrientation(orientation: self.orientation, gender: appModel.profile.gender)
+        let interestedInString : String = interestedIn.rawValue
+        let preference = MatchPreference(minAge: Int(self.minAge), maxAge: Int(self.maxAge), interestedIn: interestedInString)
+            
         //Push preferences to AccountData Singleton
-        
-        
+        APIClient.shared.pushPreference(preference: preference)
+    }
+    
+    static func determineInterestFromOrientation(orientation: SexualOrientation, gender: ProfileGender) -> ProfileGender {
+        switch(orientation){
+        case .other:
+            return .other
+        case .bisexual:
+            return .other
+        case .straight:
+            return gender == (.male) ? .female : .male
+        case .gay:
+            return gender == (.male) ? .male : .female
+        }
     }
     
 }

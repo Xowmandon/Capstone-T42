@@ -322,6 +322,7 @@ struct MatchView : View {
         //API.getMatches
         appModel.prospectiveMatches.append(AccountData.shared.profile)
         appModel.prospectiveMatches.append(Profile())
+        appModel.prospectiveMatches.append(appModel.profile)
     }
 
     func didDismissAccountConfigSheet(){

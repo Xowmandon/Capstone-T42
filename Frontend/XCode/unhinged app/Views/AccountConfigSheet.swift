@@ -9,6 +9,7 @@ import SwiftUI
 import Foundation
 
 struct AccountConfigSheet : View {
+    @EnvironmentObject var appModel : AppModel
     var body : some View {
         NavigationStack{
             VStack{
@@ -21,7 +22,7 @@ struct AccountConfigSheet : View {
                 .padding(.top)
                 
                 //Build Profile
-                NavigationLink(destination: BuildProfileView(profile: AccountData.shared.profile)) {
+                NavigationLink(destination: BuildProfileView(profile: appModel.profile)) {
                     HStack{
                         
                         //Avatar

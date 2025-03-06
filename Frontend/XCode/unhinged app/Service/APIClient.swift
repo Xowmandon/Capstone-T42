@@ -140,6 +140,59 @@ class APIClient {
         return false
     }
     
+    //Push Profile
+    func initProfile(profile: Profile) {
+        let token : String = KeychainHelper.load(key: "JWTToken")!
+        let profileData : [String:String] = ["age":"\(profile.age)",
+                                             "name":profile.name,
+                                             "gender":"\(profile.gender.rawValue)",
+                                             "state":"\(profile.state.rawValue)",
+                                             "city":profile.city,
+                                             "bio":profile.biography]
+        guard let payload = try? JSONEncoder().encode(profileData) else {
+            fatalError("Failed to encode payload")
+        }
+        apiTask(type: .post, endpoint: "users/profile", hasHeader: true ,headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: payload){ result in
+            switch result {
+            case .success(let data):
+                do {
+                    let response : [String:String] = try JSONDecoder().decode([String:String].self, from: data)
+                    print(response)
+                } catch {
+                    print("Failed to decode JSON: \(error.localizedDescription)")
+                }
+            case .failure(let error):
+                print("Init profile failed: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    //Push Preferences
+    func pushPreference(preference: MatchPreference){
+        print("attempting to push preference")
+        let token : String = KeychainHelper.load(key: "JWTToken")!
+        let preferenceData : [String:String]  = ["minAge":"\(preference.minAge)",
+                                                 "maxAge":"\(preference.maxAge)",
+                                                 "interestedIn":"\(preference.interestedIn)"]
+        guard let payload = try? JSONEncoder().encode(preferenceData) else {
+            fatalError("Failed to encode payload")
+        }
+        apiTask(type: .post, endpoint: "users/preferences", hasHeader: true ,headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: payload){result in
+            switch result {
+            case .success(let data):
+                do {
+                    let response : [String:String] = try JSONDecoder().decode([String:String].self, from: data)
+                    print(response)
+                } catch {
+                    print("Failed to decode JSON: \(error.localizedDescription)")
+                }
+            case .failure(let error):
+                print("Push Preference failed: \(error.localizedDescription)")
+            }
+        }
+        
+    }
+    
     /*
     func createAccount(account: AccountData) {
         struct AccountJSON: Codable {

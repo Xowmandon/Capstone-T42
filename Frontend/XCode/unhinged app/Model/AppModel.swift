@@ -10,7 +10,9 @@ import SwiftUI
 
 final class AppModel : ObservableObject {
     
-    @Published var userIsAuthenticated : Bool = false
+    @Published var userIsAuthenticated : Bool = false //TODO: store this in user defaults
+    @Published var profile : Profile
+    @Published var matchPreferences : MatchPreference?
     
     @Published var prospectiveMatches : [Profile]
     @Published var conversations : [Conversation]
@@ -19,7 +21,13 @@ final class AppModel : ObservableObject {
         
         self.prospectiveMatches = AppModel.getMatches()
         self.conversations = []
+        self.profile = AppModel.getProfile()
         
+    }
+    
+    static func getProfile() -> Profile {
+        //API call returns profile data
+        return Profile()
     }
     
     static func getMatches() -> [Profile] {

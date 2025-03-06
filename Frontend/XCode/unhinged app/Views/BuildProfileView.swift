@@ -13,13 +13,16 @@ enum BuildProfileFocusedField: Hashable {
     case none
     case name
     case biography
+    case attribute
 }
 
 struct BuildProfileView: View {
     
     //TODO: confirm changes upon dismiss
-    //TODO: use .overlay for edit button
+    //TODO: extract subviews
+    //TODO: fix textEditor empty upon reentry (pass binding to this view, persist profile changes in app model)
     
+    @EnvironmentObject var appModel : AppModel
     @State var profile : Profile
     var theme : Theme = Theme.shared
     var editButtonImage : String = "pencil.circle.fill"
@@ -29,109 +32,152 @@ struct BuildProfileView: View {
     //@State var showEditProfileCardSheet : Bool = false // TODO: Image Picker
     @State var showAttributeCreatorSheet : Bool = false  //TODO: Attribute builder
     
-    @State var biographyText : String = ""
-    
-    /*
-    
-    @State var name : String
-    @State var attributes : [Attribute]
-    var prompts : [PromptItem]
-    */
+    //@State var biographyText : String = ""
     
     @FocusState private var focusedField : BuildProfileFocusedField?
-    /*
-    init(){
-        //Initialize variables with existing profile data
-        _name = State(initialValue: (profile.name))
-        _biography = State(initialValue: profile.biography ?? "No Bio written yet")
-        _attributes = State(initialValue: profile.attributes)
-        prompts = []
-    }
-     */
+    
+    @State var attributes : [Attribute] = []
+    
     public var body: some View {
         NavigationStack {
             ZStack {
                 // Profile Content
-                ScrollView{
+                ScrollView {
+                    VStack (spacing: 10){
                     
-                    Text("My Profile")
-                        .font(Theme.titleFont)
-                    
-                    //Avatar Customization
-                    Text("Avatar")
-                        .font(Theme.headerFont)
-                    Circle()
-                        .foregroundStyle(Color.blue)
-                        .frame(maxWidth: 100)
-                        .overlay{
-                            Image(systemName: "pencil.circle.fill")
-                                .font(.system(.title))
-                                .frame(minWidth: 100, minHeight: 100, alignment: .topTrailing)
-                        }
-                    ProfileCard(profileImage: $profile.image, name: $profile.name, age: $profile.age, isEditable: true, focusedField: $focusedField)
-                        .padding(.horizontal)
-                        .frame(minHeight: 400)
-                    
-                    
-                    // Basic Info (Attributes?)
-                    ZStack(alignment:.topTrailing) {
-                        VStack (spacing: 5){
-                            ForEach(profile.attributes, id: \.self) { attribute in
-                                HStack{
-                                    Image(systemName: attribute.symbolName)
-                                    Text(attribute.customName)
-                                        .font(Theme.bodyFont)
+                        Text("My Profile")
+                            .font(Theme.titleFont)
+                        
+                        //Avatar Customization
+                        VStack (alignment: .leading) {
+                            Text("Avatar")
+                                .font(Theme.headerFont)
+                            HStack {
+                                Circle()
+                                    .foregroundStyle(Color.blue)
+                                    .frame(maxWidth: 100)
+                                    .overlay{
+                                        Image(systemName: "pencil.circle.fill")
+                                            .font(.system(.title))
+                                            .frame(minWidth: 100, minHeight: 100, alignment: .topTrailing)
+                                    }
+                                VStack{
+                                    Text("<Select Head>")
+                                    Text("<Select Top>")
+                                    Text("<Select Bottom>")
                                 }
                             }
                         }
-                        .padding()
-                        .frame(maxWidth:.infinity)
+                        ProfileCard(profileImage: $profile.image, name: $profile.name, age: $profile.age, isEditable: true, focusedField: $focusedField)
+                            .frame(minHeight: 400)
+                        // Basic Info (Attributes)
+                        VStack (spacing : 10){
+                            /*
+                            HStack{
+                                Text("Attributes")
+                                    .font(Theme.headerFont)
+                                    .padding()
+                                Spacer()
+                                //Edit Attributes Button
+                                Button(action: {
+                                    profile.attributes.append(Attribute(customName: "ABC", symbolName: "house.fill"))
+                                    print("added attribute to profile")
+                                }, label: {
+                                    Image(systemName: "plus.circle.fill").padding(.horizontal).font(.title2)
+                                })
+                            }
+                            .padding(.top)
+                            .padding(.horizontal)
+                             */
+                            //Location
+                            VStack {
+                                HStack {
+                                    Image(systemName: "mappin")
+                                        .foregroundStyle(.secondary)
+                                    Text("Location:")
+                                        .font(Theme.headerFont)
+                                    Spacer()
+                                }
+                                VStack (alignment: .leading){
+                                    HStack {
+                                        Text("City:")
+                                        TextField("City", text: $profile.city)
+                                            .focused($focusedField, equals: .attribute)
+                                            .background(Color(.quaternarySystemFill))
+                                    }
+                                    HStack{
+                                        Text("State:")
+                                        Picker("Select a State", selection: $profile.state) {
+                                            ForEach(USState.allCases) { state in
+                                                Text(state.fullName) // Display the full name of the state
+                                                    .tag(state) // Tag each picker item with the corresponding state
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(.leading)
+                            }
+                            .padding()
+                            /*
+                            ForEach($profile.attributes){ $attribute in
+                                VStack (alignment: .leading){
+                                    Text("Custom Attribute")
+                                    HStack{
+                                        //SF Symbol Picker
+                                        Image(systemName: "pencil")
+                                            .foregroundStyle(.secondary)
+                                        TextField("Name", text: $attribute.customName)
+                                            .focused($focusedField, equals: .attributeField)
+                                            .background(Color(.quaternarySystemFill))
+                                    }
+                                }
+                                .padding()
+                            }
+                            Spacer()
+                             */
+                        }
+                        .font(Theme.bodyFont)
                         .background{
                             CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                         }
-                        .padding()
-                    }
-                    
-                    // Biography
-                    VStack{
-                        HStack{
-                            Text("About Me!")
-                                .font(Theme.headerFont)
-                                .padding(.top)
-                                .padding(.horizontal)
-                            Spacer()
-                            
-                            Button(action: {
-                                focusedField = .biography
-                            }, label: {
-                                Image(systemName: editButtonImage).padding(.horizontal).font(.title2)
-                            })
-                            
-                        }
-                        TextEditor(text:$biographyText)
-                            .focused($focusedField, equals: .biography)
-                            .font(Theme.bodyFont)
-                            .padding()
-                            .frame(minHeight: 10)
-                            .onAppear{
-                                biographyText = profile.biography ?? "Create a Biography..."
+                        // Biography
+                        VStack{
+                            HStack{
+                                Image(systemName: "star.fill")
+                                    .foregroundStyle(.secondary)
+                                Text("About Me!")
+                                    .font(Theme.headerFont)
+                                Spacer()
+                                Button(action: {
+                                    focusedField = .biography
+                                }, label: {
+                                    Image(systemName: editButtonImage).padding(.horizontal).font(.title2)
+                                })
+                                
                             }
+                            .padding()
+                            TextEditor(text:$profile.biography)
+                                .focused($focusedField, equals: .biography)
+                                .font(Theme.bodyFont)
+                                .padding(.horizontal)
+                                .padding(.bottom)
+                                .frame(minHeight: 10)
+                        }
+                        .background{
+                            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                        }
+                        
+                        
+                        //TODO: Image Gallery
+                        //Prompts
+                        ForEach(profile.prompts ?? []){prompt in
+                            PromptView(prompt: prompt)
+                                
+                        }
+                        Spacer()
+                            .padding(.vertical, 60)
                     }
                     .padding()
-                    .background{
-                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                    }
-                    .padding(.horizontal)
-                    
-                    
-                    //TODO: Image Gallery
-                    //Prompts
-                    ForEach(profile.prompts ?? []){prompt in
-                        PromptView(prompt: prompt)
-                            .padding()
-                    }
-                    Spacer()
-                        .padding(.vertical, 60)
                 }
                 
                 //Overlay
@@ -238,13 +284,14 @@ struct BuildProfileView: View {
                 }
             }
         }
-        
+        .onDisappear(perform: saveProfile)
     }
     
     func saveProfile() {
-        AccountData.shared.setProfile(self.profile)
-        
+        appModel.profile = self.profile
         //TODO: Push new profile data to server
+        APIClient.shared.initProfile(profile: appModel.profile)
+        
     }
 }
 
@@ -259,7 +306,6 @@ private extension PhotosPickerItem {
 
 #Preview{
     
-    let profile = AccountData.shared.profile
-    BuildProfileView(profile: profile)
+    BuildProfileView(profile: Profile())
     
 }
