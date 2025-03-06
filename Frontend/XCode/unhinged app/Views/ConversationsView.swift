@@ -26,7 +26,7 @@ public struct ConversationsView: View {
             
             HStack{
                 
-                Image(conversation.recipient.imageName)
+                conversation.recipient.image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 50, height: 50)
