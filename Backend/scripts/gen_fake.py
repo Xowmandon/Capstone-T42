@@ -146,10 +146,10 @@ if __name__ == '__main__':
             for pref in dating_prefs:
                 db.session.refresh(pref)
             Generator.write_users_to_csv(fake_users)
-            ex_swipe_pool = Generator.gen_fake_swipe_pool(fake_users[0].id)
+            ex_swipe_pool = Generator.gen_fake_swipe_pool('000519.f1637da8f2c14d39b61d3653a8797532.1310')
             #control_ex = Generator.gen_fake_swipe_pool("49c4420a-d30a-4b2e-b5bd-0d36ca24ae37")
             
-            print("User for Swipe Pool: ", UserSchema().dump(fake_users[0]))
+            #print("User for Swipe Pool: ", UserSchema().dump(fake_users[0]))
             # PRetty Print Json of Swipe Pool
             print("Swipe Pool: ", ex_swipe_pool)
 
