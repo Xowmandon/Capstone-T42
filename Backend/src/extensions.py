@@ -16,6 +16,7 @@ Extensions:
 
 """
 
+import boto3
 from flask import app
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
@@ -24,7 +25,6 @@ from flask_bcrypt import Bcrypt
 import redis
 
 
-from Backend.src.services.media_storage_services import MediaStorageService
 from Backend.src.utils import EnvManager
 
 # Load Environment Variables
@@ -53,9 +53,12 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-
+s3_client = boto3.client('s3', region_name=AWS_REGION)
 # Initilize S3  as MediaStorageService
+
+from Backend.src.services.media_storage_services import MediaStorageService
 media_storage_service = MediaStorageService(
+    s3_client,
     AWS_MEDIA_BUCKET_NAME, 
     AWS_REGION, 
     AWS_MEDIA_BUCKET_FOLDERS

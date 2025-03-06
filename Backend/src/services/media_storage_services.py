@@ -8,7 +8,7 @@ Author: Joshua Ferguson
 import boto3
 from botocore.exceptions import ClientError
 from marshmallow import ValidationError
-#from Backend.src.extensions import db # - Moved to Function to Avoid Circular Import
+from Backend.src.extensions import db
 from Backend.src.models.photo import UserPhoto
 from Backend.src.models.user import User
 from Backend.src.validators.image_val import ImageValidator
@@ -31,7 +31,7 @@ class BucketService:
         folders: A list of folders within the bucket (optional).
     """
 
-    def __init__(self,bucket_name, region, folders=None):
+    def __init__(self,s3_client_param,bucket_name, region, folders=None):
         """
         Initializes the BucketService instance.
 
@@ -41,7 +41,7 @@ class BucketService:
             region: The AWS region where the bucket is located.
             folders: A list of valid folders in the S3 bucket (optional).
         """
-        self.s3_client = boto3.client('s3', region_name=region)
+        self.s3_client = s3_client_param
         self.bucket_name = bucket_name
         self.region = region
         self.folders = folders if folders else []
@@ -97,20 +97,14 @@ class MediaStorageService(BucketService):
     Inherits from `BucketService` and adds support for user-based file management.
     """
 
-    def __init__(self, bucket_name, region, folders=None):
-        """
-        Initializes the MediaStorageService instance.
-
-        Args:
-            s3_client: The S3 client object.
-            bucket_name: The name of the S3 bucket.
-            region: The AWS region where the bucket is located.
-            folders: A list of valid folders in the S3 bucket (optional).
-        """
-        
-        
-        
-        super().__init__(bucket_name, region, folders=folders)
+    def __init__(self, s3_client_param,bucket_name, region, folders=None):
+     
+        super().__init__(
+            s3_client_param=s3_client_param,
+            bucket_name=bucket_name, 
+            region=region, 
+            folders=folders
+            )
 
     def upload_user_photo(self, file, user_id, file_name, db_save=True, is_main_photo=False,folder=None):
         """
@@ -144,9 +138,7 @@ class MediaStorageService(BucketService):
                 
                 # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
                 if db_save:
-                    
-                    from Backend.src.extensions import db
-                    
+                                        
                     # Save to PostgreSQL
                     new_photo = UserPhoto(user_id=user_id, file_url=file_url,is_main_photo=is_main_photo)
                     db.session.add(new_photo)
