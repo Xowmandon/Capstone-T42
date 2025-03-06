@@ -124,7 +124,7 @@ def handle_apple_signup(identity_token):
 
     # Check if Apple user already exists by Apple id
     existing_user = models.User.query.filter_by(id=apple_sub).first()
-    
+
     # TODO: Check if user exists by email, if so, link Apple sub to existing user
     # Linking Apple sub to existing user
     # Update Apple sub if user exists, else create a new user
@@ -134,13 +134,15 @@ def handle_apple_signup(identity_token):
             existing_user.auth_provider = "apple"
             db.session.commit()
         user = existing_user
+        #else: # User already exists and is linked to Apple sub
+            #return jsonify({"message": "User already exists"}), 200
     else:
         # Create New User if one does not exists, export name, email, and apple_sub as user.id
         user = models.User.create_user(email=email, apple_sub=apple_sub)
 
     # Create Unique JWT associated/encoded to user.id
     token = gen_access_token(str(user.id))
-
+    print(token)
     return jsonify({"message": "Signup successful", "token": token}), 201
 
 

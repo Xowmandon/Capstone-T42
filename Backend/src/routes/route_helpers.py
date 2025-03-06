@@ -11,7 +11,7 @@ import Backend.src.models as models # Import the Models and Schemas
 def validate_required_params(request, required_params):
     """Validate that all required parameters are in the request."""
     for param in required_params:
-        if param not in request.args:
+        if param not in request.keys() or request[param] is None:
             return False
     return True
 
