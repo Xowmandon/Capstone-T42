@@ -13,8 +13,3 @@ def validate_required_params(request, required_params):
             return False
     return True
 
-
-def get_user_from_token(token):
-    """Get the user object from the JWT token."""
-    user_id = get_jwt_identity()    
-    return models.User.query.get(user_id)

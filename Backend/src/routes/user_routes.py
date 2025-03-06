@@ -6,7 +6,8 @@ from marshmallow import ValidationError
 import logging
 
 from Backend.src.extensions import db # Import the DB Instance
-import Backend.src.models as models # Import the Models and Schemas
+import Backend.src.models as models
+from Backend.src.routes.route_helpers import validate_required_params # Import the Models and Schemas
 
 
 user_bp = Blueprint('user_bp', __name__)
@@ -48,34 +49,97 @@ def get_user():
     
     return jsonify(user_schema.dump(user)), 200
 
+@user_bp.route('/users/init/preferences', methods=['POST'])
+def init_preferences():
+    """
+    Summary: Initialize a User's Dating Preferences.
+    
+    Payload: JSON object with a Dating Preferences object:
+        - min_age: int, required
+        - max_age: int, required
+        - interested_in: str (Male, Female, Any), required
+    """
+    required_fields = ['min_age', 'max_age', 'interested_in']
+    if validate_required_params(request.json, required_fields) is False:
+        return jsonify({"error": "Missing Required Fields."}), 400
+    
+    user_id = get_jwt_identity()
+    user = models.user.User.query.get(user_id)
+    
+    if user is None:
+        return jsonify({"error": "User not found."}), 404
+    
+    # Check if the User has already set their Dating Preferences
+    dating_pref_exists = db.session.query(models.datingPreference.DatingPreference).filter_by(user_id=user_id).first()
+    if dating_pref_exists is not None:
+        return jsonify({"error": "User Dating Preferences Already Initialized."}), 400
+    
+    try:
+        # Create a new Dating Preference Object, Validate and Add to the Database
+        dating_pref = models.datingPreference.DatingPreference(
+            user =user_id,
+            age_preference_lower=request.json.get('min_age'),
+            age_preference_upper=request.json.get('max_age'),
+            interested_in=request.json.get('interested_in')
+        )
+        
+        # Add , Commit, and Close the Database Session
+        db.session.add(dating_pref)
+        db.session.commit()
+        db.session.close()
+    
+    except db.exc.SQLAlchemyError as e1:
+        db.session.rollback()
+        return jsonify({f"error": "Database Error - {e1}"}), 500
+    
+    except Exception as e:
+        return jsonify({f"error": "Invalid Data Provided - {e}"}), 400
+    
+    # Success Response
+    return jsonify({"success": "User Dating Preferences Initialized."}), 201
+
 # Init User with Profile Creation Data
-@user_bp.route('/users/init', methods=['POST'])
+@user_bp.route('/users/init/profile', methods=['POST'])
 @jwt_required()
 def init_profile():
     """
     Summary: Initialize a User Profile with Profile Creation Data.
     
     Parameters:
-        Authorization
+        X_Authorization
     
     Payload: JSON object with a User object, excluding the Email, ID, is_admin, is_fake.:
         
     """
+    # Retrieve User Info from Request
     auth_user_id = get_jwt_identity()
     auth_user = models.user.User.query.get(auth_user_id)
     if auth_user is None:
         return jsonify({"error": "User not found."}), 404
     
-    required_fields = ['age', 'dating_preferences', 'gender', 'location', 'profile_picture']
+    required_fields = ['age', 'name', 'gender', 'state','city', 'bio']
+    if validate_required_params(request.json, required_fields) is False:
+        return jsonify({"error": "Missing Required Fields."}), 400
+
+    try:
+        
+        auth_user.age = request.json.get('age')
+        auth_user.dating_preferences = request.json.get('dating_preferences')
+        auth_user.gender = request.json.get('gender')
+        auth_user.state_code = request.json.get('state')
+        auth_user.city = request.json.get('city')
+        auth_user.bio = request.json.get('bio')
+        
+        # Commit the changes to the database
+        db.session.commit()
+        db.session.close()
+        
+    except db.exc.SQLAlchemyError as e1:
+        db.session.rollback()
+        return jsonify({f"error": "Database Error - {e1}"}), 500
+    except Exception as e:
+        return jsonify({f"error": "Invalid Data Provided - {e}"}), 400
     
-    
-    # Update User Data with New User Data from Request
-    auth_user.age = request.json.get('age')
-    auth_user.dating_preferences = request.json.get('dating_preferences')
-    auth_user.gender = request.json.get('gender')
-    
-    
-    #auth_user.location = request.json.get('profile_picture')
 
 @user_bp.route('/users/profile_picture', methods=['POST'])
 @jwt_required()
