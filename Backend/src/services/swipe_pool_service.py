@@ -8,11 +8,11 @@ TODO - Testing and Validating Swipe Pool Generation and Cache
 import json, asyncio
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
-from sqlalchemy import and_, exists, not_
+from sqlalchemy import and_, exists, not_, or_
 
 
 from Backend.src.extensions import db, redis_client # Import the DB Instance
-from Backend.src.models.user import User
+from Backend.src.models.user import User, UserSchema
 from Backend.src.models.swipe import Swipe
 from Backend.src.models.datingPreference import DatingPreference  
 from datetime import datetime, timedelta
@@ -34,7 +34,7 @@ class SwipePoolService:
     """
 
     def __init__(self):
-        self.setup_routes()
+        pass
         
     async def ensure_swipe_pool(self, user_id):
         """
@@ -66,7 +66,7 @@ class SwipePoolService:
             return []
          
         # Get current user's dating preferences
-        current_user_preferences = DatingPreference.query.get(user_id)
+        current_user_preferences = DatingPreference.query.filter_by(user_id=user_id).first()
         if not current_user_preferences:
             return []  # If user has no preferences set, return empty list
         
@@ -91,28 +91,32 @@ class SwipePoolService:
             User.id != user_id,
             User.state_code == current_user.state_code,  # Same City and State
             User.city == current_user.city,
-            User.last_active >= active_date, # Active in the Last Two Weeks
+            #User.last_active >= active_date, # Active in the Last Two Weeks
             not_(current_user_already_swiped_exists),  # Exclude users the current user has swiped on
             not_(current_user_rejected_exists)  # Exclude users who rejected the current user
         )
 
         # Filtered Query for potnetial matches with Additional Dating Preferences
         filtered_query = base_query.join(DatingPreference, DatingPreference.user_id == User.id).filter(
-            current_user_preferences.interested_in == User.gender,  # Gender interest
-            DatingPreference.interested_in == current_user.gender,  
-            current_user_preferences.age_preference_lower <= User.age, # Age preference Validations
-            current_user_preferences.age_preference_upper >= User.age,  
-            DatingPreference.age_preference_lower <= current_user.age,  
+            or_(
+            current_user_preferences.interested_in == "any",
+            current_user_preferences.interested_in == User.gender  # Gender interest
+            ),
+            or_(
+            DatingPreference.interested_in == "any",
+            DatingPreference.interested_in == current_user.gender
+            ),
+            current_user_preferences.age_preference_lower <= User.age,  # Age preference Validations
+            current_user_preferences.age_preference_upper >= User.age,
+            DatingPreference.age_preference_lower <= current_user.age,
             DatingPreference.age_preference_upper >= current_user.age
         )
 
-        #  Fetch Results from Filtered Query with Limit and Eager Load JOINS
-        potential_matches = filtered_query.options(
-            joinedload(User.dating_preferences) # Eager load the dating preferences to Avoid N+1 Queries
-            ).limit(limit).all()
+        #  Fetch Results from Filtered Query with Limit
+        potential_matches = filtered_query.limit(limit).all()
 
         # Serialize and Return List of Potential Matches  (Users)
-        return User.users_schema.dump(potential_matches)
+        return UserSchema(many=True).dump(potential_matches)
 
 
 
