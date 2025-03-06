@@ -8,7 +8,7 @@ Author: Joshua Ferguson
 import boto3
 from botocore.exceptions import ClientError
 from marshmallow import ValidationError
-from Backend.src.extensions import s3, db
+#from Backend.src.extensions import db # - Moved to Function to Avoid Circular Import
 from Backend.src.models.photo import UserPhoto
 from Backend.src.models.user import User
 from Backend.src.validators.image_val import ImageValidator
@@ -52,7 +52,7 @@ class BucketService:
     def val_connection(self):
         
         try:
-            self.s3_client.meta.client.head_bucket(Bucket=self.bucket_name)
+            self.s3_client.head_bucket(Bucket=self.bucket_name)
             return True
         except ClientError as e:
             print(e)
@@ -144,6 +144,8 @@ class MediaStorageService(BucketService):
                 
                 # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
                 if db_save:
+                    
+                    from Backend.src.extensions import db
                     
                     # Save to PostgreSQL
                     new_photo = UserPhoto(user_id=user_id, file_url=file_url,is_main_photo=is_main_photo)

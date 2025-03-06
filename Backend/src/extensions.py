@@ -22,7 +22,7 @@ from flask_marshmallow import Marshmallow
 from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 import redis
-import boto3
+
 
 from Backend.src.services.media_storage_services import MediaStorageService
 from Backend.src.utils import EnvManager
