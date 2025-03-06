@@ -13,6 +13,7 @@ from Backend.src.extensions import db, ma, bcrypt, flask_jwt
 from Backend.src.routes import user_routes, match_routes, swipe_routes, message_routes # Main Routes
 from Backend.src.routes import aggregate_routes # Utils Routes
 from Backend.src.routes import auth_routes # Auth Routes
+from Backend.src.routes import matchmaking_routes
 
 from Backend.src.sockets.chat import ChatNamespace
 from Backend.src.sockets.swiping import SwipeNamespace
@@ -43,6 +44,7 @@ app.register_blueprint(message_routes.message_bp)
 # Register the Utility Route Blueprints
 app.register_blueprint(aggregate_routes.aggregate_bp)
 app.register_blueprint(auth_routes.auth_bp)
+app.register_blueprint(matchmaking_routes.matchmaking_bp)
 
 # Initialize the DB with Flask
 db.init_app(app)
@@ -114,9 +116,9 @@ def after_request(response):
 if __name__ == '__main__':
 
     # Create DB Tables
-    with app.app_context():
-        db.drop_all()
-        db.create_all()
+   # with app.app_context():
+        #db.drop_all()
+        #db.create_all()
     
     # Set up Logging
     #logging.basicConfig(filename='./logs/app.log', level=logging.INFO)
