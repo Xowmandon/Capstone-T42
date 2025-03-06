@@ -15,7 +15,6 @@ Extensions:
 - s3: Boto3 S3 resource for interacting with Amazon S3.
 
 """
-
 import boto3
 from flask import app
 from flask_sqlalchemy import SQLAlchemy
@@ -23,7 +22,6 @@ from flask_marshmallow import Marshmallow
 from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 import redis
-
 
 from Backend.src.utils import EnvManager
 
@@ -53,10 +51,13 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-s3_client = boto3.client('s3', region_name=AWS_REGION)
-# Initilize S3  as MediaStorageService
 
+## S3 Client for Media Storage
+# Import the MediaStorageService Class - Imported Here to Avoid Circular Imports
 from Backend.src.services.media_storage_services import MediaStorageService
+
+s3_client = boto3.client('s3', region_name=AWS_REGION)
+
 media_storage_service = MediaStorageService(
     s3_client,
     AWS_MEDIA_BUCKET_NAME, 
