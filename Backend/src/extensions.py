@@ -24,6 +24,18 @@ from flask_bcrypt import Bcrypt
 import redis
 import boto3
 
+from Backend.src.services.media_storage_services import MediaStorageService
+from Backend.src.utils import EnvManager
+
+# Load Environment Variables
+EnvMan = EnvManager()
+
+AWS_REGION = EnvMan.load_env_var("AWS_REGION")
+AWS_MEDIA_BUCKET_NAME = EnvMan.load_env_var("AWS_MEDIA_BUCKET_NAME")
+AWS_MEDIA_BUCKET_FOLDERS = EnvMan.load_env_var("AWS_MEDIA_BUCKET_FOLDERS")
+AWS_MEDIA_MAIN_PHOTO_FOLDER = EnvMan.load_env_var("AWS_MEDIA_MAIN_PHOTO_FOLDER")
+AWS_MEDIA_USER_PHOTO_FOLDER = EnvMan.load_env_var("AWS_MEDIA_USER_PHOTO_FOLDER")
+
 # ------Flask Extensions (Init with/without App Instance)-----
 
 db = SQLAlchemy() # Postgres Client
@@ -41,6 +53,10 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-# S3 Bucket Service for Media/Photo Storage & Retrieval
-s3 = boto3.resource('s3') 
 
+# Initilize S3  as MediaStorageService
+media_storage_service = MediaStorageService(
+    AWS_MEDIA_BUCKET_NAME, 
+    AWS_REGION, 
+    AWS_MEDIA_BUCKET_FOLDERS
+    )
