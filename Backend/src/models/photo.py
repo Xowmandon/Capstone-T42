@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 from datetime import datetime, timezone
 from marshmallow import ValidationError, validates
 from Backend.src.validators.image_val import ImageValidator

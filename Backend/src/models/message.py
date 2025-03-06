@@ -1,5 +1,6 @@
-# Desc: Message Model and Schema for Messages Table
-# Schema for Deserializing and Serializing
+# Author: Joshua Ferguson
+
+
 from datetime import datetime, timezone
 from marshmallow import ValidationError, validates
 

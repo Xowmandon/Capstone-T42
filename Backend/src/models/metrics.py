@@ -1,5 +1,5 @@
-# Desc: Models for Activity and Game Metrics
-# Schema for Deserializing and Serializing
+# Author: Joshua Ferguson
+
 from datetime import datetime, timezone
 from Backend.src.extensions import db, ma
 

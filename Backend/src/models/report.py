@@ -1,5 +1,5 @@
-# Desc: Report Model and Schema for Reports Table
-# Schema for Deserializing and Serializing
+# Author: Joshua Ferguson
+
 
 from datetime import datetime, timezone
 

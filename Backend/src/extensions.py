@@ -1,9 +1,7 @@
 """
-
-Flask Extensions Module
 Author: Joshua Ferguson
 
-
+Flask Extensions Module
 This module initializes and provides extensions for the Flask application.
 
 Extensions:

@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 # WIP - Not yet implemented For the Date, Time, and TimeZone Models
 # TODO: Integrate into the Corresponding Models 
 # TODO: Validate the Date, Time, and TimeZone Fields in their Schema

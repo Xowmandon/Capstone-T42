@@ -1,3 +1,5 @@
+#Author: Joshua Ferguson
+
 import os
 from sqlalchemy.engine.url import URL
 from dotenv import load_dotenv

@@ -1,3 +1,5 @@
+# Author: Joshua Ferguson
+
 from flask import Flask, request
 from flask_socketio import SocketIO, Namespace, disconnect, emit, join_room, leave_room
 from flask_jwt_extended import JWTManager, decode_token

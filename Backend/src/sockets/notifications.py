@@ -1,3 +1,4 @@
+# Author: Joshua Ferguson
 
 from flask_socketio import SocketIO, Namespace, emit, join_room, leave_room
 
