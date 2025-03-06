@@ -139,6 +139,8 @@ def init_profile():
     except Exception as e:
         return jsonify({f"error": "Invalid Data Provided - {e}"}), 400
     
+    return jsonify({"success": "User Profile Initialized."}), 201
+    
 @user_bp.route('/users/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
@@ -182,7 +184,41 @@ def get_profile():
     
     # Return Schema when Implemented from #6
     return jsonify(user_profile), 200
-        
+
+@user_bp.route('/users/profile', methods=['PATCH'])
+@jwt_required()
+def update_profile():
+    """
+    Update a User Profile with only the fields provided in the JSON payload.
+    """
+    auth_user_id = get_jwt_identity()
+    auth_user = models.user.User.query.get(auth_user_id)
+    if auth_user is None:
+        return jsonify({"error": "User not found."}), 404
+
+    # List of fields that can be updated
+    updatable_fields = ['age', 'name', 'gender', 'state', 'city', 'bio', 'dating_preferences']
+    
+    data = request.json or {}
+    if not data:
+        return jsonify({"error": "No data provided."}), 400
+
+    # Update the User Profile with the New Data if Provided
+    for field in updatable_fields:
+        if field in data:
+            setattr(auth_user, field, data[field])
+            
+    # Commit the changes to the database
+    try:
+        db.session.commit()
+        db.session.close()
+    except db.exc.SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": f"Database Error - {e}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Invalid Data Provided - {e}"}), 400   
+    
+    return jsonify({"success": "User Profile Updated."}), 200  
 
 @user_bp.route('/users/profile_picture', methods=['POST'])
 @jwt_required()
@@ -208,6 +244,19 @@ def upload_profile_picture():
     user = db.session.query(models.user.User).get(user_id)
     if user is None:
         return jsonify({"error": "User not found."}), 404
+    
+    # Check if a file is in the request
+    if 'profile_picture' not in request.files:
+        return jsonify({"error": "No Profile Picture Provided."}), 400
+    
+    file = request.files['profile_picture']
+
+    if file.filename == '':
+        return jsonify({"error": "Invalid file name."}), 400
+
+
+    # Check if is_main_photo was sent, default to False
+    is_main_photo = request.form.get('is_main_photo', 'false').lower() == 'true'
     
     # Retrieve the Profile Picture from the Request, Convert to BLOB
     profile_picture = request.files.get('profile_picture',type=bytes)
