@@ -67,3 +67,9 @@ struct AccountConfigSheet : View {
         .navigationBarBackButtonHidden()
     }
 }
+
+#Preview{
+    
+    AccountConfigSheet()
+    
+}

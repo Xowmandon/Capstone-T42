@@ -23,7 +23,7 @@ final class AppModel : ObservableObject {
     }
     
     static func getMatches() -> [Profile] {
-        
+        /*
         //Fetch
         let test_prompt_choices : [PromptChoice] = [
             PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
@@ -41,6 +41,10 @@ final class AppModel : ObservableObject {
         let matches = [prompt_profile, Profile(), Profile(name: "john doe1", imageName: "stockPhoto"), Profile(name: "john doe2", imageName: "stockPhoto")]
         
         return matches
+         
+         */
+        
+        return [Profile(name: "Joe Doe", image: Image("stockPhoto"))]
     }
     
 }

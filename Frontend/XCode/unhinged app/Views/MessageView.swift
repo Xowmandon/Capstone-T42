@@ -50,7 +50,7 @@ struct MessageView : View {
         ZStack {
             VStack {
                 HStack{
-                    Image(profile.imageName)
+                    profile.image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 40, height: 40)

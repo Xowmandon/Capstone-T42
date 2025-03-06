@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 class Profile : Identifiable {
     
@@ -15,7 +16,9 @@ class Profile : Identifiable {
     
     var name : String = "John Doe"
     
-    var imageName : String = "stockPhoto"
+    var age : Int = 18
+    
+    var image : Image = Image("stockPhoto")
     
     var attributes : [Attribute] = [Attribute(customName: "He/Him", symbolName: "person")]
     
@@ -29,9 +32,9 @@ class Profile : Identifiable {
     
     init(){}
     
-    init(name: String, imageName: String) {
+    init(name: String, image: Image = Image(systemName: "person.fill")) {
         self.name = name
-        self.imageName = imageName
+        self.image = image
     }
     
     func addPrompts(promptList : [PromptItem]){

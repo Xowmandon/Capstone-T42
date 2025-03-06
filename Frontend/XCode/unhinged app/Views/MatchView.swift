@@ -31,7 +31,7 @@ struct MatchView : View {
             //Profile Image
             VStack (spacing: 0) {
                 GeometryReader { geometry in
-                    Image(profile.imageName)
+                    profile.image
                         .resizable()
                         .scaledToFill()
                         .frame(width: geometry.size.width, height: geometry.size.height)
