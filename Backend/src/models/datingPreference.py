@@ -3,15 +3,15 @@
 from marshmallow import ValidationError, validates
 
 from Backend.src.extensions import db, ma # Import the Database and Marshmallow - SQLAlchemy and Marshmallow --> Flask
-from Backend.src.models import user, UserSchema # Import the User Model
+from Backend.src.models import UserSchema # Import the User Model
 
 
 # Dating Preference Model for Dating Preferences Table
 
 class DatingPreference(db.Model):
-    __tablename__ = 'DatingPreferences' # Define the table name
+    __tablename__ = 'datingpreferences' # Define the table name
     
-    id = db.Column(db.Integer, primary_key=True, nullable=True) # Primary Key
+    id = db.Column(db.Integer, primary_key=True) # Primary Key
     
     # Sexual Orientation, Could Change to Reference Gender Table (interested_in)
     interested_in = db.Column(db.String(50), nullable=False)
@@ -22,9 +22,9 @@ class DatingPreference(db.Model):
     
     # Reference to Users Table
     # On Delete Cascade to Remove Dating Preference if User is Deleted
-    user = db.Column(db.String(64), db.ForeignKey('users.id',ondelete="CASCADE"), unique=True,nullable=False)
+    user_id = db.Column(db.String(64), db.ForeignKey('users.id'), unique=True,nullable=False)
     
-    
+
     # String representation of a Dating Preference, Outputting each Field Associated
     def __repr__(self):
         return f"<DatingPreference id={self.id}, preference={self.preference}>"

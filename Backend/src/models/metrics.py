@@ -6,7 +6,7 @@ from Backend.src.extensions import db, ma
 
 class ActivityMetric(db.Model):
         
-    __tablename__ = 'ActivityMetrics' 
+    __tablename__ = 'activitymetrics' 
         
     ## TODO
     # ?? Update to ActivityMetrics on Event or A Type of Chron Job Ran on Backend ??

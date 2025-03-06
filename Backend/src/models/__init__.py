@@ -4,5 +4,7 @@ from .swipe import Swipe, SwipeSchema
 from .message import Message, MessageSchema
 from .metrics import ActivityMetric, GameMetric
 from .report import Report, ReportSchema
+from .datingPreference import DatingPreference
+from .photo import UserPhoto
 
-__all__ = ["user", "match", "swipe", "message","metrics","report"]
+__all__ = ["user", "match", "swipe", "message","metrics","report","datingPreference","photo"]
