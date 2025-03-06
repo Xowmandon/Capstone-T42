@@ -134,7 +134,12 @@ class MediaStorageService(BucketService):
             
             try:
                 # Upload to S3 Bucket with file_data and Full Path with Folder,etc
-                self.s3_client.upload_file(file, self.bucket_name, file_path)
+                self.s3_client.upload_file(
+                    file, 
+                    self.bucket_name, 
+                    file_path, 
+                    ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
+                    )
                 
                 # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
                 if db_save:
