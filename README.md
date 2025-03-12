@@ -22,3 +22,4 @@
 - **Gamified Elements**: Developed using the **Unity Game Engine**, integrated via the **Unity SDK for iOS**.
 
 ---
+[![wakatime](https://wakatime.com/badge/github/Xowmandon/Capstone-T42.svg)](https://wakatime.com/badge/github/Xowmandon/Capstone-T42)
