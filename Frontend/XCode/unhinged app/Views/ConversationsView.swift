@@ -24,47 +24,56 @@ public struct ConversationsView: View {
         
         NavigationLink(destination: MessageView(profile: conversation.recipient)){
             
-            HStack{
-                
-                conversation.recipient.image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 50, height: 50)
-                    .clipShape(Circle())
-                    .shadow(radius: 3)
+            VStack(alignment: .leading){
+                HStack{
+                    conversation.recipient.image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 70, height: 70)
+                        .clipShape(Circle())
+                        .shadow(radius: 3)
+                        .padding()
+                    
+                    VStack (alignment: .leading, spacing: 5){
+                        
+                        Text(conversation.recipient.name)
+                            .font(Theme.headerFont)
+                        HStack {
+                            Image(systemName: "bubble.left.and.text.bubble.right.fill")
+                                .font(.caption2)
+                            Text(conversation.messages.last?.content ?? "No Messages")
+                                .font(Theme.captionFont)
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+                    .frame(alignment: .topLeading)
                     .padding()
-                
-                VStack (spacing: 5){
-                    
-                    Text(conversation.recipient.name)
-                        .font(Theme.headerFont)
-                        .bold()
-                    
-                    Text(conversation.messages.last?.content ?? "No Messages")
-                        .font(Theme.bodyFont)
-                        .padding(.leading, 5)
                 }
-                .frame(alignment: .topLeading)
-                .padding()   
             
             }
+            .frame(maxWidth:.infinity)
             .background{
                 
                 CardBackground(borderColor: Theme.defaultBorderColor, innerColor: Theme.defaultInnerColor)
                 
             }
-            
         }
-        
-        
     }
     
     public var body: some View {
-        List(conversations){conversation in
-            
-            conversationRow(conversation: conversation)
-            
+        
+        HStack{
+            BackButton()
+                .padding(.horizontal)
+            Text("My Matches")
+                .font(Theme.titleFont)
+            Spacer()
         }
+        List(conversations){conversation in
+            conversationRow(conversation: conversation)
+        }
+        .scrollContentBackground(.hidden)
+        .navigationBarHidden(true)
     }
     
     // Query database for conversations associated with client account

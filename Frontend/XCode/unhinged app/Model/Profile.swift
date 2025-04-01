@@ -37,6 +37,8 @@ struct Profile : Identifiable {
     
     var prompts : [PromptItem] = [PromptItem.examplePrompt]
     
+    var gallery : [Image]? = [Image(systemName: "pencil.tip.crop.circle.fill")]
+    
     private var userIdentifyingEmail : String?
     
     init(){}

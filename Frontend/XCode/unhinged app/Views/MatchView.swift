@@ -165,20 +165,38 @@ struct MatchView : View {
     
     var body: some View {
         
+        //Navigation Buttons
+        HStack{
+            Text("Find a Match")
+                .font(Theme.titleFont)
+            Spacer()
+            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                .overlay{
+                    Button(action: {showAccountConfigSheet.toggle()}){
+                        Image(systemName:"person.fill")
+                            .padding()
+                    }
+                }
+                .frame(maxWidth: 50)
+            NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
+                CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                    .overlay{
+                        Image("Speech_bubble")
+                            .resizable()
+                            .scaledToFit()
+                            .offset(x:-1, y: 2)
+                    }
+                    .frame(maxWidth: 50)
+            }
+        }
+        .frame(maxHeight: 50)
+        .padding(.horizontal)
+        
         NavigationStack {
             
             ZStack {
                 // Profile Content
                 ScrollView{
-                    
-                    Spacer()
-                        .frame(minHeight: 80)
-                    
-                    Text("Let's Match!")
-                        .font(Theme.titleFont)
-                        .opacity(0.7)
-                    
-                    //ForEach(appModel.prospectiveMatches.reversed()){ profile in
                     
                     ProfileCard(profile: currentProfile!)
                         .padding(.horizontal)
@@ -222,33 +240,7 @@ struct MatchView : View {
                 //Overlay
                 VStack {
                     
-                    //Navigation Buttons
-                    HStack{
-                        Button(action: {showAccountConfigSheet.toggle()}){
-                            HStack (spacing: 5){
-                                
-                                //Avatar
-                                Circle()
-                                Text("\(AccountData.shared.profile.name)")
-                                    .font(Theme.bodyFont)
-                            }
-                            .padding()
-                            .background{
-                                CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                            }
-                        }
-                        Spacer()
-                        NavigationLink(destination: ConversationsView().navigationTitle("My Matches")){
-                            Image("Speech_bubble")
-                                .resizable()
-                                .scaledToFit()
-                                .offset(x:-1, y: 2)
-                                .background{
-                                    CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                                }
-                        }
-                    }
-                    .frame(maxHeight: 60)
+                    
                     Spacer()
                     MainButtons()
                         .frame(maxWidth: 100)
@@ -284,7 +276,7 @@ struct MatchView : View {
     func Match(){
         
         //Right Swipe animation
-        withAnimation (Animation.easeIn(duration: 1)) {
+        withAnimation (.snappy) {
             offsetX = UIScreen.main.bounds.width // Slide to the right
             opacity = 0
         }
@@ -304,7 +296,7 @@ struct MatchView : View {
     
     func refreshMatches(){
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1){
             
             shouldAnimateProfileCard = false
             

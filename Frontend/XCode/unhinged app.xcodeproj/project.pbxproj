@@ -68,13 +68,12 @@
 				Views/BuildProfileView.swift,
 				Views/CardBackground.swift,
 				Views/ConversationsView.swift,
+				Views/ImageGalleryCard.swift,
 				Views/LoginView.swift,
 				Views/MatchPreferencesView.swift,
 				Views/MatchView.swift,
 				Views/MessageView.swift,
 				Views/ProfileCard.swift,
-				Views/ProfileConfigView.swift,
-				Views/ProfileDetailsView.swift,
 				Views/PromptView.swift,
 			);
 			target = DF12F1972CDD3FB4006A0DC2 /* unhinged appTests */;
@@ -101,13 +100,12 @@
 				Views/BuildProfileView.swift,
 				Views/CardBackground.swift,
 				Views/ConversationsView.swift,
+				Views/ImageGalleryCard.swift,
 				Views/LoginView.swift,
 				Views/MatchPreferencesView.swift,
 				Views/MatchView.swift,
 				Views/MessageView.swift,
 				Views/ProfileCard.swift,
-				Views/ProfileConfigView.swift,
-				Views/ProfileDetailsView.swift,
 				Views/PromptView.swift,
 			);
 			target = DF12F1A12CDD3FB4006A0DC2 /* unhinged appUITests */;

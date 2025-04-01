@@ -12,14 +12,17 @@ struct AccountConfigSheet : View {
     @EnvironmentObject var appModel : AppModel
     var body : some View {
         NavigationStack{
-            VStack{
-                HStack{
-                    
-                    BackButton()
-                    Spacer()
-                    
-                }
-                .padding(.top)
+            HStack{
+                
+                BackButton()
+                Spacer()
+                Text("My Account")
+                    .font(Theme.titleFont)
+                Spacer()
+                
+            }
+            .padding()
+            List{
                 
                 //Build Profile
                 NavigationLink(destination: BuildProfileView(profile: appModel.profile)) {
@@ -28,7 +31,10 @@ struct AccountConfigSheet : View {
                         //Avatar
                         Circle()
                             .frame(maxHeight: 100)
-                        Text("\(AccountData.shared.profile.name)'s Profile")
+                        Spacer()
+                        Text("\(AccountData.shared.profile.name)")
+                            .font(Theme.headerFont)
+                        Spacer()
                     }
                     .padding()
                     .background{
@@ -41,6 +47,8 @@ struct AccountConfigSheet : View {
                     HStack{
                         Image(systemName: "slider.horizontal.2.square")
                         Text("Matchmaking Preferences")
+                            .font(Theme.bodyFont)
+                        Spacer()
                     }
                     .padding()
                     .background{
@@ -49,21 +57,26 @@ struct AccountConfigSheet : View {
                 }
                 
                 //Account
-                VStack{
-                    Text("Logged in as: <name>")
-                    HStack{
-                        Image(systemName: "person.fill.xmark")
-                            .foregroundStyle(.red)
-                        Text("Logout")
+                HStack{
+                    VStack{
+                        
+                        HStack{
+                            Image(systemName: "person.fill.xmark")
+                                .foregroundStyle(.red)
+                            Text("Logout")
+                                .font(Theme.bodyFont)
+                                .foregroundStyle(.red)
+                        }
                     }
+                    Spacer()
                 }
                 .padding()
                 .background {
                     CardBackground()
                 }
-                Spacer()
             }
             .frame(alignment: .leading)
+            .scrollContentBackground(.hidden)
         }
         .navigationBarBackButtonHidden()
     }
@@ -72,5 +85,6 @@ struct AccountConfigSheet : View {
 #Preview{
     
     AccountConfigSheet()
+        .environmentObject(AppModel())
     
 }

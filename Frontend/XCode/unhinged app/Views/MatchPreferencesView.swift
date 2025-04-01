@@ -28,66 +28,72 @@ struct MatchPreferencesView: View {
     let games : [GameObject] = GameObject.gameList
 
     var body: some View {
-        VStack {
-            HStack{
-                BackButton()
-                Spacer()
-            }
+        
+        HStack{
+            BackButton()
+                .padding(.trailing)
             Text("Matching Preferences")
                 .font(Theme.titleFont)
-                .padding(.bottom, 20)
-            VStack {
+            Spacer()
+        }
+        .padding(.horizontal)
+        List {
+            Section{
                 HStack {
                     Text("Orientation")
                         .font(Theme.bodyFont)
-                    Spacer()
-                    Picker("Orientation", selection: $orientation) {
+                    Picker("", selection: $orientation) {
                         ForEach(SexualOrientation.allCases) { orientation in
                             Text(orientation.rawValue).tag(orientation)
                                 .font(Theme.bodyFont)
                         }
                     }
                     .pickerStyle(MenuPickerStyle())
-                    .frame(width: 150)
                 }
-                .padding(.bottom, 10)
+                .padding()
+            }
+            .listRowBackground(Rectangle().foregroundStyle(.ultraThinMaterial))
 
-                HStack {
+            Section{
+                VStack {
                     Text("Age Range")
                         .font(Theme.bodyFont)
                     Spacer()
                     VStack {
                         Slider(value: $minAge, in: 18...100, step: 1)
                             .accentColor(.blue)
-                        Text("Min Age: \(Int(minAge))")
-                            //.font(Theme.bodyFont)
+                        Text("Minimum Age: \(Int(minAge))")
+                            .font(Theme.bodyFont)
                     }
-                    .frame(width: 200)
                     VStack {
                         Slider(value: $maxAge, in: 18...100, step: 1)
                             .accentColor(.blue)
-                        Text("Max Age: \(Int(maxAge))")
-                            //.font(Theme.bodyFont)
+                        Text("Maximum Age: \(Int(maxAge))")
+                            .font(Theme.bodyFont)
                     }
-                    .frame(width: 200)
                 }
                 .padding()
+            }
+            .listRowBackground(Rectangle().foregroundStyle(.ultraThinMaterial))
 
+            Section{
                 HStack {
                     Text("Preferred Game")
                         .font(Theme.bodyFont)
                     Spacer()
-                    Picker("Preferred Game", selection: $preferredGame) {
+                    Picker("", selection: $preferredGame) {
                         ForEach(games, id: \.id) { game in
                             Text(game.name).tag(game.name)
                                 .font(Theme.bodyFont)
                         }
                     }
                     .pickerStyle(MenuPickerStyle())
-                    .frame(width: 150)
                 }
-                .padding(.bottom, 10)
+                .padding()
+            }
+            .listRowBackground(Rectangle().foregroundStyle(.ultraThinMaterial))
 
+            Section{
                 HStack {
                     Text("Minimum Height")
                         .font(Theme.bodyFont)
@@ -95,13 +101,15 @@ struct MatchPreferencesView: View {
                     VStack {
                         Slider(value: $minHeight, in: 100...250, step: 1)
                             .accentColor(.green)
-                        Text("Min Height: \(Int(minHeight)) cm")
-                            //.font(Theme.bodyFont)
+                        Text("\(Int(minHeight)) cm")
+                            .font(Theme.bodyFont)
                     }
-                    .frame(width: 200)
                 }
-                .padding(.bottom, 10)
+                .padding()
+            }
+            .listRowBackground(Rectangle().foregroundStyle(.ultraThinMaterial))
 
+            Section {
                 HStack {
                     Text("Location")
                         .font(Theme.bodyFont)
@@ -109,27 +117,26 @@ struct MatchPreferencesView: View {
                     TextField("Enter location", text: $location)
                         .font(Theme.bodyFont)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .frame(width: 200)
                 }
-                .padding(.bottom, 10)
-
+                .padding()
             }
-            .padding()
-            Button(action: {
-                saveMatchPreferences()
-                presentationMode.wrappedValue.dismiss()
-            } ){
-                Text("Save Changes")
-                    .font(Theme.bodyFont)
-                    .padding()
-                    .background{
-                        CardBackground()
-                    }
-                
-            }
+            .listRowBackground(Rectangle().foregroundStyle(.ultraThinMaterial))
         }
         .padding()
+        .scrollContentBackground(.hidden)
         .navigationBarBackButtonHidden()
+        
+        Button(action: {
+            saveMatchPreferences()
+            presentationMode.wrappedValue.dismiss()
+        } ){
+            Text("Save Changes")
+                .font(Theme.bodyFont)
+                .padding()
+                .background{
+                    CardBackground()
+                }
+        }
     }
     
     func saveMatchPreferences() {

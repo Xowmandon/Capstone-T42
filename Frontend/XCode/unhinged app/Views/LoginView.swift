@@ -9,6 +9,8 @@ import SwiftUI
 import AuthenticationServices
 
 struct LoginView: View {
+    
+    //TODO: move account information to appModel
     @Binding var userIsAuthenticated : Bool
     @State private var showErrorAlert = false
     @State private var errorMessage : String = ""
