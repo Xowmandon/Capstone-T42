@@ -46,6 +46,32 @@ struct MessageView : View {
             }
         }
     }
+    
+    @ViewBuilder
+    func gameSelect(games: [GameObject]) -> some View {
+        
+        VStack{
+            Text("Select a Game!")
+                .font(Theme.titleFont)
+            
+            ForEach(games){gameObject in
+                HStack{
+                    Text("\(gameObject.name)")
+                        .font(Theme.headerFont)
+                    Spacer()
+                    Image(systemName: "\(gameObject.imageName)")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(maxWidth: 50)
+                        .foregroundStyle(.blue)
+                }
+                .padding()
+                .background{
+                    CardBackground()
+                }
+            }
+        }
+    }
     var body: some View {
         ZStack {
             VStack {
@@ -56,12 +82,12 @@ struct MessageView : View {
                         .frame(width: 40, height: 40)
                         .clipShape(Circle())
                     Text(profile.name)
+                        .font(Theme.headerFont)
                 }
                 ScrollView{
                     VStack{
                         ForEach(messages) {message in
                             messageBubble(message: message, sentFromClient: message.sentFromClient)
-                                .border(.black, width: 1)
                             
                         }
                     }
@@ -77,6 +103,10 @@ struct MessageView : View {
                         // pass game state to Unity instance
                     }, label: {
                         Text("Press Start!")
+                            .padding()
+                            .background{
+                                CardBackground()
+                            }
                     })
                 }
                 HStack{
@@ -100,6 +130,9 @@ struct MessageView : View {
             }
         }
         .toolbar{
+            ToolbarItem(placement:.topBarLeading){
+                BackButton()
+            }
             ToolbarItem(placement: .topBarTrailing){
                 //present options sheet
                 Button(action: {showOptionsSheet.toggle()} ){
@@ -149,28 +182,9 @@ struct MessageView : View {
             
         }
         .sheet(isPresented: $showGameSheet){
-            VStack{
-                Text("Select a Game!")
-                    .font(Theme.titleFont)
-                
-                ForEach(games){gameObject in
-                    HStack{
-                        Text("\(gameObject.name)")
-                            .font(Theme.headerFont)
-                        Spacer()
-                        Image(systemName: "\(gameObject.imageName)")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(maxWidth: 50)
-                            .foregroundStyle(.blue)
-                    }
-                    .padding()
-                    .background{
-                        CardBackground()
-                    }
-                }
-            }
+            
         }
+        .navigationBarBackButtonHidden()
     }
     private func sendMesage() {
         // push message
@@ -180,7 +194,7 @@ struct MessageView : View {
     private static func fetchMessages() -> [Message]{
         //
         APIClient.shared
-        return [Message(), Message(), Message(sentFromClient: true)]
+        return [Message(), Message(), Message(sentFromClient: true), Message()]
     }
 }
 

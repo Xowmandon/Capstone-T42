@@ -30,11 +30,11 @@ struct BuildProfileView: View {
     @State var showAddObjectSheet : Bool = false
     @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
     
-    //@State var biographyText : String = ""
-    
     @FocusState private var focusedField : BuildProfileFocusedField?
     
     @State var attributes : [Attribute] = []
+    @State var biographyText : String = ""
+    
     public var body: some View {
         NavigationStack {
             ZStack {
@@ -153,13 +153,13 @@ struct BuildProfileView: View {
                         }
                         .padding()
                         
-                        TextEditor(text: $profile.biography)
+                        TextEditor(text: $biographyText)
                             .focused($focusedField, equals: .biography)
                             .font(Theme.bodyFont)
                             .padding(.horizontal)
                             .padding(.bottom)
-                            .frame(minHeight: 10)
-                            .onAppear(perform: {profile.biography = appModel.profile.biography})
+                            .onAppear(perform: {biographyText = profile.biography})
+                            
                     }
                     .background{
                         CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
@@ -220,12 +220,14 @@ struct BuildProfileView: View {
     }
     
     func saveProfile() {
+        self.profile.biography = biographyText
         appModel.profile = self.profile
         //TODO: Push new profile data to server
         APIClient.shared.initProfile(profile: appModel.profile)
         
     }
 }
+
 
 struct AddObjectSheet : View {
     

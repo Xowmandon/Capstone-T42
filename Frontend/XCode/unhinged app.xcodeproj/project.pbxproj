@@ -74,6 +74,7 @@
 				Views/MatchView.swift,
 				Views/MessageView.swift,
 				Views/ProfileCard.swift,
+				Views/PromptFormView.swift,
 				Views/PromptView.swift,
 			);
 			target = DF12F1972CDD3FB4006A0DC2 /* unhinged appTests */;
@@ -106,6 +107,7 @@
 				Views/MatchView.swift,
 				Views/MessageView.swift,
 				Views/ProfileCard.swift,
+				Views/PromptFormView.swift,
 				Views/PromptView.swift,
 			);
 			target = DF12F1A12CDD3FB4006A0DC2 /* unhinged appUITests */;

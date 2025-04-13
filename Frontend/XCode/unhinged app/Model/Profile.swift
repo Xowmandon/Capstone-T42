@@ -18,6 +18,8 @@ struct Profile : Identifiable {
     
     var id : UUID = UUID()
     
+    var profile_id : Int = 0
+    
     var name : String = "John Doe"
     
     var age : Int = 18
@@ -30,20 +32,18 @@ struct Profile : Identifiable {
     
     var city : String = "Reno"
     
-    var attributes : [Attribute] = [Attribute(customName: "He/Him", symbolName: "person"),
-                                    Attribute(customName: "He/Him", symbolName: "person")]
+    var attributes : [Attribute] = [Attribute(customName: "He/Him", symbolName: "person")]
     
-    var biography : String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia"
+    var biography : String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
     
     var prompts : [PromptItem] = [PromptItem.examplePrompt]
     
     var gallery : [Image]? = [Image(systemName: "pencil.tip.crop.circle.fill")]
     
-    private var userIdentifyingEmail : String?
-    
     init(){}
     
-    init(name: String, image: Image = Image(systemName: "person.fill")) {
+    init(id: Int = 0, name: String, age: Int, image: Image = Image(systemName: "person.fill"), gender: ProfileGender, state: USState, city: String, bio: String = "No Bio") {
+        self.profile_id = id
         self.name = name
         self.image = image
     }

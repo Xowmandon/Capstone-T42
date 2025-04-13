@@ -20,6 +20,7 @@ struct MatchView : View {
     private var theme : Theme = Theme.shared // TODO: Add theme settings for profile, change style depending on profile data
     
     var currentProfile: Profile? {
+            //TODO: if profile buffer empty -> alert user
             return appModel.prospectiveMatches.first
     }
     
@@ -296,6 +297,7 @@ struct MatchView : View {
     
     func refreshMatches(){
         
+        //animate card
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1){
             
             shouldAnimateProfileCard = false
@@ -312,6 +314,8 @@ struct MatchView : View {
         }
         
         //API.getMatches
+        //check size of profile buffer
+        //query for appropriate
         appModel.prospectiveMatches.append(AccountData.shared.profile)
         appModel.prospectiveMatches.append(Profile())
         appModel.prospectiveMatches.append(appModel.profile)

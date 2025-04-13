@@ -9,7 +9,7 @@ import Foundation
 
 class APIClient {
     
-    //establish connection with database
+    //TODO: create websocket task manager, endpoint: <socket.io/>
     static let shared = APIClient()
     private init() {}
     enum TaskType {
@@ -72,8 +72,6 @@ class APIClient {
 
         // Start the task
         task.resume()
-        
-        
     }
     
     //send identity token
@@ -191,6 +189,74 @@ class APIClient {
             }
         }
         
+    }
+    
+    //TODO: Get Swipe pool
+    func getSwipes (limit: Int) -> [Profile] {
+        print("Attempting to pull swipe pool")
+        let token : String = KeychainHelper.load(key: "JWTToken")!
+        var profiles : [Profile] = []
+        apiTask(type: .get, endpoint: "/users/swipe_pool", hasHeader: true, headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: nil){ result in
+            switch result {
+            case .success(let data):
+                do {
+                    let response : [[String:String]] = try JSONDecoder().decode([[String:String]].self, from: data)
+                    print(response)
+                    for person in response {
+                        
+                        guard let idString  = person["userID"] else {
+                            print("invalid idString")
+                            return
+                        }
+                        let id = Int(idString)
+                        
+                        guard let ageString    = person["age"] else {
+                            print("invalid age string")
+                            return
+                        }
+                        let age: Int    = Int(ageString)!
+                        
+                        guard let name   = person["name"] else {
+                            print("invalid name string")
+                            return
+                        }
+                        
+                        guard let genderString = person["gender"] else {
+                            print("invalid age string")
+                            return
+                        }
+                        guard let gender = ProfileGender(rawValue: genderString) else{
+                            print("Failed to match ProfileGender case: \(genderString)")
+                            return
+                        }
+                        
+                        let stateString  = person["state"]
+                        guard let stateCode = USState(rawValue: stateString ?? "") else {
+                            print("Failed to match USState case: \(String(describing: stateString))")
+                            return
+                        }
+                        
+                        guard let cityString: String   = person ["city"] else {
+                            print("invalid city string")
+                            return
+                        }
+                        guard let bioString: String    = person["bio"] else {
+                            print("invalid bio string")
+                            return
+                        }
+                        
+                        profiles.append(Profile(id: id!, name: name, age: age , gender: gender, state: stateCode, city: cityString, bio: bioString))
+                    }
+                } catch {
+                    print("Failed to decode JSON: \(error.localizedDescription)")
+                }
+                
+            case .failure(let error):
+                print("getSwipes failed with error: \(error.localizedDescription)")
+            }
+        }
+        
+        return [Profile()]
     }
     
     /*

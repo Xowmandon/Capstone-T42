@@ -114,7 +114,7 @@ struct LoginView: View {
             // Set account information
             AccountData.shared.setUserID(userIdentifier)
             AccountData.shared.setEmail(credentialEmail)
-            let accountProfile = Profile(name: "\(credentialFirstName) \(credentialLastName)")
+            //TODO: store account information in user.defaults let accountProfile = Profile(name: "\(credentialFirstName) \(credentialLastName)")
             AccountData.shared.setProfile(accountProfile)
             print("Set Account information:")
             print(AccountData.shared.getUserID() as Any, AccountData.shared.getEmail() as Any, AccountData.shared.getProfile().name)
