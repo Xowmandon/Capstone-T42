@@ -12,6 +12,14 @@ struct PromptFormView: View {
     @State private var incorrectAnswers: [String] = [""]
     
     var body: some View {
+        HStack{
+            BackButton()
+            Spacer()
+            Text("Create a Prompt")
+                .font(Theme.titleFont)
+            Spacer()
+        }
+        .padding()
         Form {
             Section(header: Text("Correct Answer")) {
                 TextField("Enter correct answer", text: $correctAnswer)
@@ -39,7 +47,20 @@ struct PromptFormView: View {
                     }
                 }
             }
+            
+            Button{
+                finishCreatingPrompt()
+            } label: {
+                Text("Confirm")
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background{
+                        CardBackground()
+                    }
+            }
+            
         }
+        
     }
     
     // Computed properties for final output
@@ -49,6 +70,11 @@ struct PromptFormView: View {
     
     var incorrect: [String] {
         incorrectAnswers.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    }
+    
+    func finishCreatingPrompt(){
+        
+        
     }
 }
 

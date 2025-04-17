@@ -10,7 +10,6 @@ import SwiftUI
 
 final class AppModel : ObservableObject {
     
-    @Published var userIsAuthenticated : Bool = false //TODO: store this in user defaults
     @Published var profile : Profile
     @Published var matchPreferences : MatchPreference?
     
@@ -52,7 +51,7 @@ final class AppModel : ObservableObject {
          
          */
         
-        return [Profile(name: "Joe Doe", image: Image("stockPhoto"))]
+        return [Profile(name: "Joe Doe")]
     }
     
 }

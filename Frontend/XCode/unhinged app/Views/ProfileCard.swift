@@ -61,30 +61,36 @@ struct ProfileCard : View {
                 CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
             }
             //Profile Info
-            HStack(spacing: 10){
-                if isEditable{
-                    Image(systemName: "pencil")
-                        .foregroundStyle(.secondary)
-                    TextField("Name", text: $name)
-                        .focused($focusedField, equals: .name)
-                        .font(Theme.headerFont)
-                        .background(Color(.quaternarySystemFill))
-                    Spacer()
-                    Text("Age:")
-                        .font(Theme.headerFont)
-                    Picker("",selection: $age) {
-                        ForEach(18..<101, id: \.self) { age in
-                            Text("\(age)").tag(age)
+            HStack(spacing: 10) {
+                if isEditable {
+                    VStack {
+                        HStack {
+                            Image(systemName: "pencil")
+                                .foregroundStyle(.secondary)
+                            TextField("Name", text: $name)
+                                .focused($focusedField, equals: .name)
+                                .font(Theme.headerFont)
+                                .background(Color(.quaternarySystemFill))
+                        }
+                        HStack {
+                            Text("Age:")
+                                .font(Theme.headerFont)
+                            Picker("",selection: $age) {
+                                ForEach(18..<101, id: \.self) { age in
+                                    Text("\(age)").tag(age)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            Spacer()
                         }
                     }
-                    .pickerStyle(.menu)
                     
-                }else{
-                    Text(self.name)
-                        .font(Theme.headerFont)
-                    Spacer()
-                    Text("\(age)")
-                        .font(Theme.headerFont)
+                } else {
+                        Text(self.name)
+                            .font(Theme.headerFont)
+                        Spacer()
+                        Text("\(age)")
+                            .font(Theme.headerFont)
                 }
             }
             .padding(.horizontal, 30)

@@ -20,10 +20,11 @@ class APIClient {
         case failedToSaveToken
     }
 
-    private func apiTask(type: TaskType, endpoint: String, hasHeader:Bool, headerValue: String?  = "", headerField: String? = "",  payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) {
-        
+    private func apiTask(type: TaskType, endpoint: String, hasHeader:Bool, headerValue: String?  = "", headerField: String? = "", queryItems: [URLQueryItem]? = nil,  payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) {
         // Construct the URL
-        guard let url = URL(string: "https://cowbird-expert-exactly.ngrok-free.app/\(endpoint)") else {
+        var urlComponents = URLComponents(string: "https://cowbird-expert-exactly.ngrok-free.app/\(endpoint)")!
+        urlComponents.queryItems = queryItems ?? []
+        guard let url = urlComponents.url else {
             completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
             return
         }
@@ -82,7 +83,7 @@ class APIClient {
     func sendIdentityToken(token: String) {
         print("Sending identity token")
         let body : [String : String] = ["auth_method": "apple",
-                    "identity_token": token]
+                                        "identity_token": token]
         guard let payload = try? JSONEncoder().encode(body) else {
             print("failed to encode payload")
             return
@@ -128,16 +129,7 @@ class APIClient {
             
         }
     }
-     
-     //check if account associated with ID exists
-    func assertAccountExistence(userEmailID: String) -> Bool {
-        print("asserting account existence")
-        apiTask(type: .get, endpoint: "",hasHeader: false, payload: nil){ data in
-            
-        }
-        return false
-    }
-    
+
     //Push Profile
     func initProfile(profile: Profile) {
         let token : String = KeychainHelper.load(key: "JWTToken")!
@@ -175,7 +167,10 @@ class APIClient {
         guard let payload = try? JSONEncoder().encode(preferenceData) else {
             fatalError("Failed to encode payload")
         }
-        apiTask(type: .post, endpoint: "users/preferences", hasHeader: true ,headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: payload){result in
+        
+        let urlQueryItems = [URLQueryItem(name: "limit", value: "20")]
+        
+        apiTask(type: .post, endpoint: "users/preferences", hasHeader: true ,headerValue: "Bearer \(token)", headerField: "X-Authorization", queryItems: urlQueryItems, payload: payload){result in
             switch result {
             case .success(let data):
                 do {
@@ -256,7 +251,7 @@ class APIClient {
             }
         }
         
-        return [Profile()]
+        return profiles
     }
     
     /*

@@ -11,59 +11,53 @@ import AuthenticationServices
 @main
 struct unhinged_appApp: App {
     
+    enum AppRoute: Hashable {
+        case login
+        case buildProfile
+        case match
+    }
+    
     @StateObject var appModel : AppModel = AppModel()
+    @State var userIsAuthenticated : Bool = false
+    @State var navPath : [AppRoute] = [.login]
     
     //TODO: get token from keychain and do auth check
-    // TODO: Make LoginView the root View and add authentication check
-    
     private var account : AccountData = AccountData.shared
+    private var isFirstLogin : Bool = true
     //@State private var userIsAuthenticated : Bool = false
     
     init(){
+        let defaults = UserDefaults.standard
+        userIsAuthenticated = defaults.bool(forKey: "UserIsAuthenticated")
+        print("Initial Authentication State:\(String(describing: userIsAuthenticated))")
         
-        //self.appModel.userIsAuthenticated = getAuthenticationStatus(account: self.account)
-        self.account = AccountData(hasBeenAuthenticated: false, email: "")
-        
+        self.isFirstLogin = account.isFirstLogin
+        print("Is first login: \(isFirstLogin)")
     }
-    
-    func getAuthenticationStatus(account: AccountData) -> Bool {
-        var success : Bool = false
-        let appleIDProvider = ASAuthorizationAppleIDProvider()
-        appleIDProvider.getCredentialState(forUserID: account.getUserID() ?? "0"){ credentialState, error in
-            
-            if (credentialState == .authorized){
-                
-                
-                //Retrieve account information from backend
-                
-                
-                
-                //Login Successful, Present Match View to user
-                success = true
-                
-            } else {
-                
-                //Login Denied
-                success = false
-            }
-            
-        }
-        
-        return success
-    }
-    
     var body: some Scene {
+        // LoginView(isFirstLogin: account.isFirstLogin, userIsAuthenticated: $userIsAuthenticated)
+        /*
+         BuildProfileView(isFirstTimeCreation: isFirstLogin, profile: Profile(name: account.fullName))
+             .onAppear {
+                 account.finishedFirstTimeSetup()
+             }
+         */
         
         WindowGroup {
-            NavigationStack{
-                if appModel.userIsAuthenticated {
-                    
-                    MatchView()
-                    
+            NavigationStack {
+                if userIsAuthenticated {
+                    if isFirstLogin {
+                        BuildProfileView(isFirstTimeCreation: isFirstLogin, profile: Profile(name: account.fullName))
+                            .onAppear {
+                                account.finishedFirstTimeSetup()
+                            }
+                    } else {
+                        
+                        MatchView()
+                        
+                    }
                 } else {
-                    
-                    LoginView(userIsAuthenticated: $appModel.userIsAuthenticated)
-                    
+                    LoginView(isFirstLogin: account.isFirstLogin, userIsAuthenticated: $userIsAuthenticated)
                 }
             }
             .environmentObject(appModel)

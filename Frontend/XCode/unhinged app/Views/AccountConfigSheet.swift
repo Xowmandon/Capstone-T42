@@ -25,14 +25,14 @@ struct AccountConfigSheet : View {
             List{
                 
                 //Build Profile
-                NavigationLink(destination: BuildProfileView(profile: appModel.profile)) {
+                NavigationLink(destination: BuildProfileView(isFirstTimeCreation: false, profile: appModel.profile)) {
                     HStack{
                         
                         //Avatar
                         Circle()
                             .frame(maxHeight: 100)
                         Spacer()
-                        Text("\(AccountData.shared.profile.name)")
+                        Text("\(AccountData.shared.fullName)")
                             .font(Theme.headerFont)
                         Spacer()
                     }

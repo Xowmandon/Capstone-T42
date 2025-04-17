@@ -40,7 +40,14 @@ struct Profile : Identifiable {
     
     var gallery : [Image]? = [Image(systemName: "pencil.tip.crop.circle.fill")]
     
-    init(){}
+    init(){
+        
+        
+    }
+    
+    init(name: String){
+        self.name = name
+    }
     
     init(id: Int = 0, name: String, age: Int, image: Image = Image(systemName: "person.fill"), gender: ProfileGender, state: USState, city: String, bio: String = "No Bio") {
         self.profile_id = id

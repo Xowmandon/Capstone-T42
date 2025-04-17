@@ -15,19 +15,20 @@ struct ImageGalleryCard : View {
     let description : String = "Very descriptive"
     
     var body: some View {
-        CardBackground()
-            .overlay{
-                VStack (spacing: 5) {
-                    image
-                        .resizable()
-                        .mask(Rectangle())
-                    Text(title)
-                        .font(Theme.headerFont)
-                    Text(description)
-                        .font(Theme.captionFont)
-                }
-                .padding()
-            }
+        VStack (spacing: 5) {
+            image
+                .resizable()
+                .scaledToFill()
+                .mask(Rectangle())
+            Text(title)
+                .font(Theme.headerFont)
+            Text(description)
+                .font(Theme.captionFont)
+        }
+        .padding()
+        .background{
+            CardBackground()
+        }
     }
     
 }

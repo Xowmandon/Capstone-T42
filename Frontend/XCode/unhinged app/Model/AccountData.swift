@@ -9,49 +9,31 @@ import Foundation
 
 final class AccountData {
     
-    static let shared = AccountData(hasBeenAuthenticated: false, email: "") // Singleton for client's account
+    static let shared = AccountData()
     
-    var profile : Profile
+    init(){}
     
-    private var hasBeenAuthenticated : Bool = false
-    
-    private var userID : String?
-    
-    private var email : String
-    
-    init(hasBeenAuthenticated: Bool, userID: String? = nil, email: String , profile: Profile = Profile()) {
-        self.hasBeenAuthenticated = hasBeenAuthenticated
-        self.userID = userID
-        self.email = email
-        self.profile = profile
+    var fullName: String {
+        let defaults = UserDefaults.standard
+        
+        let first = defaults.string(forKey: "UserFirstName")
+        let last = defaults.string(forKey: "UserLastName")
+        
+        return String("\(first) \(last)")
     }
     
-    func getUserID() -> String? {
-        return self.userID
+    var isFirstLogin: Bool {
+        let defaults = UserDefaults.standard
+        let hasLoggedInBefore = defaults.bool(forKey: "UserHasLoggedInBefore")
+        return !hasLoggedInBefore
     }
     
-    func authenticate() -> Void {
-        AccountData.shared.hasBeenAuthenticated = true
-    }
-    
-    func setUserID(_ newUserID: String?) {
-        self.userID = newUserID
-    }
-
-    func getEmail() -> String? {
-        return self.email
-    }
-    
-    func setEmail(_ newEmail: String) {
-        self.email = newEmail
-    }
-    
-    func setProfile(_ newProfile: Profile) {
-        self.profile = newProfile
-    }
-    
-    func getProfile() -> Profile {
-        return self.profile
+    func finishedFirstTimeSetup () {
+        let defaults = UserDefaults.standard
+        let hasLoggedInBefore = defaults.bool(forKey: "UserHasLoggedInBefore")
+        if !hasLoggedInBefore {
+            defaults.set(true, forKey: "UserHasLoggedInBefore")
+        }
     }
     
 }

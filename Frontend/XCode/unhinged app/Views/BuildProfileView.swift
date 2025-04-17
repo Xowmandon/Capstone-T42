@@ -20,18 +20,18 @@ struct BuildProfileView: View {
     
     //TODO: confirm changes upon dismiss
     //TODO: extract subviews
-    //TODO: fix textEditor empty upon reentry (pass binding to this view, persist profile changes in app model)
+    let isFirstTimeCreation : Bool
+    @State var hasMadeChanges : Bool = true
     
     @EnvironmentObject var appModel : AppModel
+    @FocusState private var focusedField : BuildProfileFocusedField?
+    var editButtonImage : String = "pencil.circle.fill"
+    
     @State var profile : Profile
     var theme : Theme = Theme.shared
-    var editButtonImage : String = "pencil.circle.fill"
     
     @State var showAddObjectSheet : Bool = false
     @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
-    
-    @FocusState private var focusedField : BuildProfileFocusedField?
-    
     @State var attributes : [Attribute] = []
     @State var biographyText : String = ""
     
@@ -159,28 +159,60 @@ struct BuildProfileView: View {
                             .padding(.horizontal)
                             .padding(.bottom)
                             .onAppear(perform: {biographyText = profile.biography})
+                            .frame(minHeight: 150)
                             
                     }
                     .background{
                         CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                        
                     }
                     
                     
                     //TODO: Image Gallery
                     //Prompts
-                    ForEach(profile.prompts ?? []){prompt in
-                        PromptView(prompt: prompt)
+                    ForEach(profile.prompts){prompt in
+                        ZStack (alignment:.topTrailing){
+                            PromptView(prompt: prompt)
+                            Button{
+                              
+                                //TODO: remove prompt from profile
+                                
+                            } label: {
+                                Image(systemName: "trash.fill")
+                                    .foregroundStyle(.red)
+                                    .padding()
+                                    .background{
+                                        CardBackground()
+                                    }
+                                    .padding()
+                            }
+                        }
                     }
                     Spacer()
                         .padding(.vertical, 60)
                 }
                 .padding()
                 
-                //Plus button Overlay
+                //UI Overlay
                 VStack {
                     HStack{
-                        BackButton()
+                        if !isFirstTimeCreation {
+                            BackButton()
+                        }
                         Spacer()
+                        Button {
+                            saveProfile()
+                            hasMadeChanges = false
+                            if isFirstTimeCreation {
+                                
+                            }
+                        } label: {
+                            Image(systemName: "checkmark")
+                                .padding()
+                                .background{
+                                    CardBackground()
+                                }
+                        }
                     }
                     Spacer()
                     if focusedField == nil {
@@ -204,8 +236,10 @@ struct BuildProfileView: View {
                 ToolbarItem(placement: .keyboard) {
                     HStack{
                         Spacer()
-                        Button("Done") {
+                        Button() {
                             focusedField = nil // Dismiss keyboard
+                        } label: {
+                            Image(systemName: "checkmark.circle.fill")
                         }
                     }
                     .fixedSize()
@@ -264,10 +298,14 @@ struct AddObjectSheet : View {
                             .frame(maxWidth: .infinity)
                             .padding()
                     }
-                    PromptView(prompt: PromptItem.examplePrompt)
-                        .padding(.horizontal)
-                
+                    VStack {
+                        PromptView(prompt: PromptItem.examplePrompt)
+                            .padding(.horizontal)
+                    
+                    }
+                    
                 }
+                
                 Section{
                     VStack{
                         HStack {
@@ -305,7 +343,7 @@ private extension PhotosPickerItem {
 
 #Preview{
     
-    BuildProfileView(profile: Profile())
+    BuildProfileView(isFirstTimeCreation: false,profile: Profile())
         .environmentObject(AppModel())
     
 }

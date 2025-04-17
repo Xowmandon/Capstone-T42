@@ -316,7 +316,6 @@ struct MatchView : View {
         //API.getMatches
         //check size of profile buffer
         //query for appropriate
-        appModel.prospectiveMatches.append(AccountData.shared.profile)
         appModel.prospectiveMatches.append(Profile())
         appModel.prospectiveMatches.append(appModel.profile)
     }

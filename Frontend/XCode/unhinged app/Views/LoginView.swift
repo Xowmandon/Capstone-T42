@@ -9,8 +9,7 @@ import SwiftUI
 import AuthenticationServices
 
 struct LoginView: View {
-    
-    //TODO: move account information to appModel
+    let isFirstLogin : Bool
     @Binding var userIsAuthenticated : Bool
     @State private var showErrorAlert = false
     @State private var errorMessage : String = ""
@@ -44,34 +43,6 @@ struct LoginView: View {
                     Text("Start Matching!")
                 }
             }
-            /*
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(.blue)
-                .frame(width: 200, height: 60)
-                .clipped()
-                .overlay {
-                    HStack {
-                        Text("Sign in with Email")
-                            .foregroundStyle(.white)
-                        Image(systemName: "paperplane")
-                            .font(.body)
-                            .foregroundStyle(.white)
-                    }
-                }
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(.blue)
-                .frame(width: 200, height: 60)
-                .clipped()
-                .overlay {
-                    HStack {
-                        Text("Sign in with Google")
-                            .foregroundStyle(.white)
-                        Image(systemName: "paperplane")
-                            .font(.body)
-                            .foregroundStyle(.white)
-                    }
-                }
-             */
             Spacer()
         }
         .alert(isPresented: $showErrorAlert) {
@@ -91,86 +62,88 @@ struct LoginView: View {
     }
     
     private func handleAppleSignIn(result: Result<ASAuthorization, Error>) {
+        let defaults = UserDefaults.standard
+        
         switch result {
         case .success(let auth):
             print("authentication successful")
             print(auth)
-        
             guard let credentials = auth.credential as? ASAuthorizationAppleIDCredential else {
                 print("Failed to get Apple ID credentials")
                 return
             }
-
             let userIdentifier = credentials.user // Unique identifier for the user
-            let credentialEmail = credentials.email ?? "No email provided" // User's email
-            let credentialFirstName = credentials.fullName?.givenName ?? "No first name" // User's first name
-            let credentialLastName = credentials.fullName?.familyName ?? "No last name" // User's last name
+            let credentialEmail = credentials.email ?? "None" // User's email
+            let credentialFirstName = credentials.fullName?.givenName ?? "None" // User's first name
+            let credentialLastName = credentials.fullName?.familyName ?? "None" // User's last name
             let identityToken = credentials.identityToken // JWT for backend verification
             let authorizationCode = credentials.authorizationCode // Short-lived token for backend use
-        
             print("Got Credentials:")
             print(userIdentifier, credentialEmail, credentialFirstName, credentialLastName, identityToken as Any, authorizationCode as Any)
             
-            // Set account information
-            AccountData.shared.setUserID(userIdentifier)
-            AccountData.shared.setEmail(credentialEmail)
-            //TODO: store account information in user.defaults let accountProfile = Profile(name: "\(credentialFirstName) \(credentialLastName)")
-            AccountData.shared.setProfile(accountProfile)
-            print("Set Account information:")
-            print(AccountData.shared.getUserID() as Any, AccountData.shared.getEmail() as Any, AccountData.shared.getProfile().name)
-            
-            //Send identity token to backend server
-            let identityTokenString = String(data: identityToken!, encoding: .utf8)
-            ///print("Identity Token String: \(String(describing: identityTokenString))")
-            APIClient.shared.sendIdentityToken(token: identityTokenString!) //Saves JWTToken to keychain
-            
-            //Ensure account exists in DB
-            let accountExists : Bool = APIClient.shared.assertAccountExistence(userEmailID: credentialEmail)
-            if (accountExists) {
-                // Mark account's authentication status
-                AccountData.shared.authenticate()
-            } else {
-                //APIClient.shared.createAccount(account: AccountData.shared)
-            }
-            
-            //Save basic profile information to DB
-            
             //Assert Apple Credential State
-            
             let provider = ASAuthorizationAppleIDProvider()
-            
             provider.getCredentialState(forUserID: userIdentifier){
                 credentialState, error in
-                
                 switch credentialState {
                 case .authorized:
                     print("Credential state is authorized")
+                    defaults.set(true, forKey: "UserIsAuthenticated")
+                    break
                 case .revoked:
                     print("Credential state is revoked")
+                    authenticationFailed(error: error)
+                    return
                 case .notFound:
                     print("Credential state is not found")
+                    authenticationFailed(error: error)
+                    return
                 case .transferred:
                     print("Credential state transferred")
+                    authenticationFailed(error: error)
+                    return
                 @unknown default:
                     fatalError()
                 }
             }
             
-            //Present Main View
+            //Send identity token to backend server and save JWT to keychain
+            let identityTokenString = String(data: identityToken!, encoding: .utf8)
+            ///print("Identity Token String: \(String(describing: identityTokenString))")
+            APIClient.shared.sendIdentityToken(token: identityTokenString!)
+            
+            // Set account information
+            if isFirstLogin {
+                if let userID = defaults.string(forKey: "UserID"),
+                   let email = defaults.string(forKey: "UserEmail"),
+                   let firstName = defaults.string(forKey: "UserFirstName"),
+                   let lastName = defaults.string(forKey: "UserLastName") {
+                    print("Set Account information in User defaults:")
+                    print(userID, email, firstName, lastName)
+                }
+            } else {
+                print (AccountData.shared.fullName)
+            }
             userIsAuthenticated = true
-            
             //TODO: present profile creation view upon first account creation
-            
             break
         case .failure(let error):
-            print("Authentication unsuccessful")
-            errorMessage = "Authentication Error: \(error)"
-            showErrorAlert = true
+            authenticationFailed(error: error)
             break
         }
     }
+    
+    func authenticationFailed(error: (any Error)? = nil){
+        
+        print("Authentication unsuccessful")
+        errorMessage = "Authentication Error: \(String(describing: error))"
+        showErrorAlert = true
+        userIsAuthenticated = false
+        return
+    }
+    
 }
 
 #Preview {
-    LoginView(userIsAuthenticated: .constant(false))
+    LoginView(isFirstLogin: true,userIsAuthenticated: .constant(false))
 }
