@@ -14,7 +14,7 @@ enum ProfileGender : String, Equatable {
     case other = "Any"
 }
 
-struct Profile : Identifiable {
+class Profile : Identifiable {
     
     var id : UUID = UUID()
     
@@ -55,10 +55,15 @@ struct Profile : Identifiable {
         self.image = image
     }
     
-    mutating func addPrompts(promptList : [PromptItem]){
+    func addPrompts(promptList : [PromptItem]){
         self.prompts = promptList
     }
     
+    func removePrompt(promptItemIDtoRemove: UUID){
+        if let index = prompts.firstIndex(where: { $0.id == promptItemIDtoRemove }) {
+            prompts.remove(at: index)
+        }
+    }
 }
 
 enum USState: String, CaseIterable, Identifiable {

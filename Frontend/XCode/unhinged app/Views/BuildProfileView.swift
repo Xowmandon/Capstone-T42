@@ -34,6 +34,10 @@ struct BuildProfileView: View {
     @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
     @State var attributes : [Attribute] = []
     @State var biographyText : String = ""
+    @State var prompts : [PromptItem] = []
+    
+    @State var isShowingPromptDeleteConfirmation: Bool = false
+    @State var promptItemIDToDelete: UUID?
     
     public var body: some View {
         NavigationStack {
@@ -65,6 +69,7 @@ struct BuildProfileView: View {
                     }
                     ProfileCard(profileImage: $profile.image, name: $profile.name, age: $profile.age, isEditable: true, focusedField: $focusedField)
                         .frame(minHeight: 400)
+                    
                     // Basic Info (Attributes)
                     VStack (spacing : 10){
                         /*
@@ -170,13 +175,14 @@ struct BuildProfileView: View {
                     
                     //TODO: Image Gallery
                     //Prompts
-                    ForEach(profile.prompts){prompt in
+                    ForEach(prompts){ prompt in
                         ZStack (alignment:.topTrailing){
                             PromptView(prompt: prompt)
                             Button{
-                              
-                                //TODO: remove prompt from profile
                                 
+                                promptItemIDToDelete = prompt.id
+                                isShowingPromptDeleteConfirmation = true
+                                 
                             } label: {
                                 Image(systemName: "trash.fill")
                                     .foregroundStyle(.red)
@@ -188,6 +194,22 @@ struct BuildProfileView: View {
                             }
                         }
                     }
+                    .confirmationDialog(
+                        "Delete this Prompt Item?",
+                        isPresented: $isShowingPromptDeleteConfirmation,
+                        titleVisibility: .visible
+                    ){
+                        Button("Delete", role: .destructive) {
+                            if let id = promptItemIDToDelete {
+                                DispatchQueue.main.async {
+                                    prompts.removeAll { $0.id == id }
+                                }
+                            }
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                       Text("You will not be able to undo this action.")
+                    }
                     Spacer()
                         .padding(.vertical, 60)
                 }
@@ -195,6 +217,7 @@ struct BuildProfileView: View {
                 
                 //UI Overlay
                 VStack {
+                    //navbar
                     HStack{
                         if !isFirstTimeCreation {
                             BackButton()
@@ -253,8 +276,11 @@ struct BuildProfileView: View {
             }
             //Add Object Sheet
             .sheet(isPresented: $showAddObjectSheet){
-                AddObjectSheet(profile: $profile)
+                AddObjectSheet(profile: $profile, prompts: $prompts)
             }
+        }
+        .onAppear{
+            prompts = appModel.profile.prompts
         }
         .onDisappear(perform: saveProfile)
     }
@@ -272,6 +298,7 @@ struct BuildProfileView: View {
 struct AddObjectSheet : View {
     
     @Binding var profile : Profile
+    @Binding var prompts : [PromptItem]
     
     var body: some View {
         NavigationStack{
@@ -288,16 +315,19 @@ struct AddObjectSheet : View {
                             Text("Add A Prompt")
                                 .font(Theme.headerFont)
                                 .padding()
-                            Spacer()
                             
-                            Image(systemName: "plus")
-                                .imageScale(.large)
-                                .symbolRenderingMode(.hierarchical)
-                                .padding()
-                                .background{
-                                    CardBackground()
-                                }
-                                .padding()
+                            NavigationLink(destination: PromptFormView().navigationBarBackButtonHidden()) {
+                                /*
+                                Image(systemName: "plus")
+                                    .imageScale(.large)
+                                    .symbolRenderingMode(.hierarchical)
+                                    .padding()
+                                    .background{
+                                        CardBackground()
+                                    }
+                                    .padding()
+                                */
+                            }
                         }
                         Text("Keep your matches guessing with a custom prompt - be creative!")
                             .font(Theme.bodyFont)
@@ -307,9 +337,7 @@ struct AddObjectSheet : View {
                     VStack {
                         PromptView(prompt: PromptItem.examplePrompt)
                             .padding(.horizontal)
-                    
                     }
-                    
                 }
                 
                 Section{

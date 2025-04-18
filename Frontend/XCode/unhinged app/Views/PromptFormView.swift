@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PromptFormView: View {
+    @State private var question: String = ""
     @State private var correctAnswer: String = ""
     @State private var incorrectAnswers: [String] = [""]
     
@@ -21,14 +22,17 @@ struct PromptFormView: View {
         }
         .padding()
         Form {
+            Section(header: Text("Question")){
+                TextField("Ask possible matches anything", text: $question)
+            }
             Section(header: Text("Correct Answer")) {
-                TextField("Enter correct answer", text: $correctAnswer)
+                TextField("Enter the correct answer to your prompt", text: $correctAnswer)
             }
             
             Section(header: Text("Incorrect Answers")) {
                 ForEach(incorrectAnswers.indices, id: \.self) { index in
                     HStack {
-                        TextField("Incorrect answer", text: $incorrectAnswers[index])
+                        TextField("Throw off your matches with incorrect options", text: $incorrectAnswers[index])
                         Button(action: {
                             incorrectAnswers.remove(at: index)
                         }) {
