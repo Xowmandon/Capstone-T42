@@ -287,7 +287,7 @@
 					};
 				};
 			};
-			buildConfigurationList = DF12F1812CDD3FB3006A0DC2 /* Build configuration list for PBXProject "unhinged app" */;
+			buildConfigurationList = DF12F1812CDD3FB3006A0DC2 /* Build configuration list for PBXProject "unhinged-app" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -654,7 +654,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		DF12F1812CDD3FB3006A0DC2 /* Build configuration list for PBXProject "unhinged app" */ = {
+		DF12F1812CDD3FB3006A0DC2 /* Build configuration list for PBXProject "unhinged-app" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				DF12F1AA2CDD3FB4006A0DC2 /* Debug */,

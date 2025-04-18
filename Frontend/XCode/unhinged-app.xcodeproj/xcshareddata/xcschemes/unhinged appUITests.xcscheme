@@ -28,7 +28,7 @@
                BlueprintIdentifier = "DF12F1852CDD3FB3006A0DC2"
                BuildableName = "unhinged app.app"
                BlueprintName = "unhinged app"
-               ReferencedContainer = "container:unhinged app.xcodeproj">
+               ReferencedContainer = "container:unhinged-app.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
          <BuildActionEntry
@@ -42,7 +42,7 @@
                BlueprintIdentifier = "DF12F1A12CDD3FB4006A0DC2"
                BuildableName = "unhinged appUITests.xctest"
                BlueprintName = "unhinged appUITests"
-               ReferencedContainer = "container:unhinged app.xcodeproj">
+               ReferencedContainer = "container:unhinged-app.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -67,7 +67,7 @@
                BlueprintIdentifier = "DF12F1A12CDD3FB4006A0DC2"
                BuildableName = "unhinged appUITests.xctest"
                BlueprintName = "unhinged appUITests"
-               ReferencedContainer = "container:unhinged app.xcodeproj">
+               ReferencedContainer = "container:unhinged-app.xcodeproj">
             </BuildableReference>
             <SkippedTests>
                <Test

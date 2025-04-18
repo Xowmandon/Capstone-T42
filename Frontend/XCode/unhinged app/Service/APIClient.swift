@@ -18,6 +18,7 @@ class APIClient {
     }
     enum TaskError : Error{
         case failedToSaveToken
+        case invalidValue(String)
     }
 
     private func apiTask(type: TaskType, endpoint: String, hasHeader:Bool, headerValue: String?  = "", headerField: String? = "", queryItems: [URLQueryItem]? = nil,  payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) {
@@ -109,6 +110,7 @@ class APIClient {
                 }
         }
     }
+    
     //verify JWT Token
     func verifyJWTToken() throws {
         let token : String = KeychainHelper.load(key: "JWTToken")!
@@ -130,6 +132,9 @@ class APIClient {
         }
     }
 
+    
+    //TODO: implement gallery data flow
+    //TODO: implement prompts data flow
     //Push Profile
     func initProfile(profile: Profile) {
         let token : String = KeychainHelper.load(key: "JWTToken")!
@@ -186,7 +191,47 @@ class APIClient {
         
     }
     
-    //TODO: Get Swipe pool
+    //Get Swipe profiles for MatchView()
+    func decodeProfile (person: [String:String]) throws -> Profile  {
+        guard let idString  = person["userID"] else {
+            throw TaskError.invalidValue("idstring")
+        }
+        let id = Int(idString)
+        
+        guard let ageString    = person["age"] else {
+            throw TaskError.invalidValue("agestring")
+        }
+        let age: Int    = Int(ageString)!
+        
+        guard let name   = person["name"] else {
+            throw TaskError.invalidValue("nameString")
+        }
+        
+        guard let genderString = person["gender"] else {
+            throw TaskError.invalidValue("genderString")
+        }
+        guard let gender = ProfileGender(rawValue: genderString) else{
+            print("Failed to match ProfileGender case: \(genderString)")
+            throw TaskError.invalidValue("\(genderString)")
+        }
+        
+        let stateString  = person["state"]
+        guard let stateCode = USState(rawValue: stateString ?? "") else {
+            print("Failed to match USState case: \(String(describing: stateString))")
+            throw TaskError.invalidValue("stateCode")
+        }
+        
+        guard let cityString: String   = person ["city"] else {
+            print("invalid city string")
+            throw TaskError.invalidValue("cityString")
+        }
+        guard let bioString: String    = person["bio"] else {
+            print("invalid bio string")
+            throw TaskError.invalidValue("bioString")
+        }
+        
+        return Profile(id: id!, name: name, age: age , gender: gender, state: stateCode, city: cityString, bio: bioString)
+    }
     func getSwipes (limit: Int) -> [Profile] {
         print("Attempting to pull swipe pool")
         let token : String = KeychainHelper.load(key: "JWTToken")!
@@ -198,52 +243,10 @@ class APIClient {
                     let response : [[String:String]] = try JSONDecoder().decode([[String:String]].self, from: data)
                     print(response)
                     for person in response {
-                        
-                        guard let idString  = person["userID"] else {
-                            print("invalid idString")
-                            return
-                        }
-                        let id = Int(idString)
-                        
-                        guard let ageString    = person["age"] else {
-                            print("invalid age string")
-                            return
-                        }
-                        let age: Int    = Int(ageString)!
-                        
-                        guard let name   = person["name"] else {
-                            print("invalid name string")
-                            return
-                        }
-                        
-                        guard let genderString = person["gender"] else {
-                            print("invalid age string")
-                            return
-                        }
-                        guard let gender = ProfileGender(rawValue: genderString) else{
-                            print("Failed to match ProfileGender case: \(genderString)")
-                            return
-                        }
-                        
-                        let stateString  = person["state"]
-                        guard let stateCode = USState(rawValue: stateString ?? "") else {
-                            print("Failed to match USState case: \(String(describing: stateString))")
-                            return
-                        }
-                        
-                        guard let cityString: String   = person ["city"] else {
-                            print("invalid city string")
-                            return
-                        }
-                        guard let bioString: String    = person["bio"] else {
-                            print("invalid bio string")
-                            return
-                        }
-                        
-                        profiles.append(Profile(id: id!, name: name, age: age , gender: gender, state: stateCode, city: cityString, bio: bioString))
+                        try profiles.append(self.decodeProfile(person: person))
                     }
                 } catch {
-                    print("Failed to decode JSON: \(error.localizedDescription)")
+                    print("Failed to decode profile: \(error.localizedDescription)")
                 }
                 
             case .failure(let error):
@@ -254,40 +257,67 @@ class APIClient {
         return profiles
     }
     
+    //Get Matches for ConversationsView()
+    func getMatches () -> [Conversation] {
+        
+        var pulledConversations : [Conversation] = []
+        let token : String = KeychainHelper.load(key: "JWTToken")!
+        
+        print("Attempting to pull matches")
+        apiTask(type: .get, endpoint: "users/matches", hasHeader: true, headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: nil){ result in
+            switch(result){
+            case .success(let data):
+                do {
+                    let response : [[String:String]] = try JSONDecoder().decode([[String:String]].self, from: data)
+                    print(response)
+                } catch {
+                    print("Failed to decode JSON: \(error.localizedDescription)")
+                }
+                break
+            case .failure(let error):
+                print("getMatches failed with error: \(error.localizedDescription)")
+                break
+            }
+        }
+        
+        return pulledConversations
+    }
     
+    //Get messages associated with a match (Conversation)
+    func getConversationMessages (match_id: String, page: Int?, all_messages: Bool?) -> [Message] {
+        var pulledMessages : [Message] = []
+        
+        print("Attmepting to pull messages for match_id: \(match_id)")
+        /*
+         apiTask(type: .get, endpoint: "users/messages/conversation", hasHeader: <#T##Bool#>, payload: <#T##Data?#>, completion: <#T##(Result<Data, any Error>) -> Void#>){ result in
+            switch(result){
+            case .success(let data):
+             break
+            case .failure(let error):
+             print("getMatches failed with error: \(error.localizedDescription)")
+             break
+            }
+        }
+         */
+        
+        return pulledMessages
+    }
+    
+    //TODO: additional backend routes
+    
+    //Send message to conversation associated with match
+    func pushConversationMessage (match_id: String, type: Message.Kind?, content: String) {
+        
+        
+    }
+    
+    func pushSwipe (swiped_user_id: String, accepted: Bool){
+        
+        
+        
+    }
     
     /*
-    // Like a profile
-    func createMatch() {
-        
-        //api.add to liked list
-        
-    }
-    
-    // Reject a profile
-    func rejectMatch() {
-        
-        //api.add to dislike list
-        
-    }
-     
-    func getConversations(forProfile: ProfileID) -> [Conversation] {
-        
-        
-        
-    }
-     
-    func getMessages(withConversationID: ConversationID) -> EC2Response {
-        
-        
-        
-    }
-     
-    func pushMessage() -> EC2Response {
-        
-        
-        
-    }
      
     func pushProfileItem() -> Bool {
         
