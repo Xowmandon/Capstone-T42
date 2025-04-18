@@ -198,20 +198,26 @@ struct BuildProfileView: View {
                     HStack{
                         if !isFirstTimeCreation {
                             BackButton()
-                        }
-                        Spacer()
-                        Button {
-                            saveProfile()
-                            hasMadeChanges = false
-                            if isFirstTimeCreation {
-                                
+                            Spacer()
+                            Button {
+                                saveProfile()
+                                hasMadeChanges = false
+                            } label: {
+                                Image(systemName: "checkmark")
+                                    .padding()
+                                    .background{
+                                        CardBackground()
+                                    }
                             }
-                        } label: {
-                            Image(systemName: "checkmark")
-                                .padding()
-                                .background{
-                                    CardBackground()
-                                }
+                        } else {
+                            Spacer()
+                            NavigationLink(destination: MatchView().navigationBarBackButtonHidden(), label: {
+                                Image(systemName: "checkmark")
+                                    .padding()
+                                    .background{
+                                        CardBackground()
+                                    }
+                            })
                         }
                     }
                     Spacer()

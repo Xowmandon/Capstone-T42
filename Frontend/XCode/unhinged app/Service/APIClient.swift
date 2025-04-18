@@ -254,31 +254,9 @@ class APIClient {
         return profiles
     }
     
-    /*
-    func createAccount(account: AccountData) {
-        struct AccountJSON: Codable {
-            let name: String
-            let email: String
-        }
-        let accountInfo : AccountJSON = AccountJSON(name: account.getProfile().name, email: account.getEmail()!)
-        let payload = try! JSONEncoder().encode(accountInfo)
-        print("pushing JSON payload")
-        print(payload)
-        apiTask(type: .post, endpoint: "users", payload: payload){data in
-            
-        }
-    }
-    */
+    
     
     /*
-    // Get list of possible profiles to match
-    func getProspects() -> [Profile] {
-        
-        
-        
-    }
-     
-    
     // Like a profile
     func createMatch() {
         

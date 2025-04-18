@@ -203,8 +203,9 @@ struct MatchView : View {
                         .padding(.horizontal)
                         .frame(minHeight: 400)
                     
-                    // Basic Info (Attributes?)
+                    // Attribute Section
                     
+                    /*
                     VStack (spacing: 5){
                         ForEach(currentProfile!.attributes, id: \.self) { attribute in
                             AttributeRow(attribute:attribute)
@@ -216,8 +217,9 @@ struct MatchView : View {
                         CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
                     }
                     .padding()
+                    */
                     
-                    //About Me
+                    // Biography Section
                     AboutMeSection(bio: currentProfile?.biography ?? "No bio provided")
                     
                     //TODO: Image Gallery

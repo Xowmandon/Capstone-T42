@@ -151,11 +151,12 @@ struct MessageView : View {
                             .foregroundStyle(.primary)
                             .font(.headline)
                         Text("Conversation with \(profile.name)")
+                        //Metrics
                         Text("You matched on November 17, 2024")
                         Text("27 Messages")
                         Text("5 Games Played")
                         Spacer()
-                        // Email
+                        // Report Button
                         HStack(alignment: .firstTextBaseline) {
                             Image(systemName: "flag.fill")
                                 .imageScale(.medium)
@@ -182,7 +183,7 @@ struct MessageView : View {
             
         }
         .sheet(isPresented: $showGameSheet){
-            
+            gameSelect(games: games)
         }
         .navigationBarBackButtonHidden()
     }
@@ -193,7 +194,7 @@ struct MessageView : View {
     }
     private static func fetchMessages() -> [Message]{
         //
-        APIClient.shared
+        //APIClient.shared
         return [Message(), Message(), Message(sentFromClient: true), Message()]
     }
 }
