@@ -1,6 +1,7 @@
 # Author: Joshua Ferguson
 
 
+from flask import jsonify
 import jwt
 import json
 import requests
@@ -29,10 +30,13 @@ def get_user_from_token(token):
     """
     decoded_token = decode_token(token)
     user_id = decoded_token.get('sub')
-    user = models.User.query.get(user_id)
+    return validate_user_exists(user_id)
     
-    return user
 
+def validate_user_exists(user_id):
+    """Validate if a user exists."""
+    user = models.User.query.get(user_id)
+    return user
 
 def byte_to_str_decode_token(token):
     """Decode a token if it's bytes."""

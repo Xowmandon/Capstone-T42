@@ -61,13 +61,22 @@ class SwipePoolService:
         Returns:
             list: A list of potential matches for the user.
         """
+        print(f"\nGenerating swipe pool for user: {user_id}")
+        
         current_user = User.query.get(user_id)
+        print(f"Current User: {current_user}")
+        print(f"Current User State: {current_user.state_code if current_user else 'None'}")
+        print(f"Current User City: {current_user.city if current_user else 'None'}")
+
         if not current_user:
+            print("Current User Not Found")
             return []
          
         # Get current user's dating preferences
         current_user_preferences = DatingPreference.query.filter_by(user_id=user_id).first()
+        print(f"Current User Preferences: {current_user_preferences}")
         if not current_user_preferences:
+            print("Current User Preferences Not Found")
             return []  # If user has no preferences set, return empty list
         
         active_date = datetime.now() - timedelta(weeks=2)
@@ -85,26 +94,23 @@ class SwipePoolService:
         )
 
         # Base query for potential matches
-        # filter Only Users in the Same City and State, and Active in the Last Two Weeks
-        # Exclude users the current user has swiped on and users who rejected the current user
         base_query = User.query.filter(
             User.id != user_id,
             User.state_code == current_user.state_code,  # Same City and State
             User.city == current_user.city,
-            #User.last_active >= active_date, # Active in the Last Two Weeks
             not_(current_user_already_swiped_exists),  # Exclude users the current user has swiped on
             not_(current_user_rejected_exists)  # Exclude users who rejected the current user
         )
-
-        # Filtered Query for potnetial matches with Additional Dating Preferences
+ 
+        # Filtered Query for potential matches with Additional Dating Preferences
         filtered_query = base_query.join(DatingPreference, DatingPreference.user_id == User.id).filter(
             or_(
-            current_user_preferences.interested_in == "any",
-            current_user_preferences.interested_in == User.gender  # Gender interest
+                current_user_preferences.interested_in == "any",
+                current_user_preferences.interested_in == User.gender  # Gender interest
             ),
             or_(
-            DatingPreference.interested_in == "any",
-            DatingPreference.interested_in == current_user.gender
+                DatingPreference.interested_in == "any",
+                DatingPreference.interested_in == current_user.gender
             ),
             current_user_preferences.age_preference_lower <= User.age,  # Age preference Validations
             current_user_preferences.age_preference_upper >= User.age,
@@ -112,10 +118,13 @@ class SwipePoolService:
             DatingPreference.age_preference_upper >= current_user.age
         )
 
-        #  Fetch Results from Filtered Query with Limit
+        # Fetch Results from Filtered Query with Limit
         potential_matches = filtered_query.limit(limit).all()
+        print(f"\nPotential Matches Found: {len(potential_matches)}")
+        for match in potential_matches:
+            print(f"Match: {match.name} (ID: {match.id}, Age: {match.age}, Gender: {match.gender})")
 
-        # Serialize and Return List of Potential Matches  (Users)
+        # Serialize and Return List of Potential Matches (Users)
         schema_populated = UserSchema(many=True).dump(potential_matches)
         return schema_populated
 

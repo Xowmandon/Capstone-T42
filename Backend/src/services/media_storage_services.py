@@ -58,14 +58,14 @@ class BucketService:
             print(e)
             return False
     
-    def upload_file(self, file):
+    def upload_file_obj(self, file):
         """
         Uploads a file to the S3 bucket.
 
         Args:
             file: The local file path to be uploaded.
         """
-        self.s3_client.upload_file(file, self.bucket_name, file)
+        self.s3_client.upload_fileobj(file, self.bucket_name, file)
 
     def delete_file(self, file_path):
         """
@@ -125,43 +125,51 @@ class MediaStorageService(BucketService):
         
         file_path = self._make_file_path(user_id=user_id, file_name=file_name, folder=folder)
         file_url = self.retrieve_file_url(user_id=user_id, file_name=file_name, folder=folder)
-
+        print(f"File Path: {file_path}")
+        print(f"File URL: {file_url}")
+        print(f"File Type: {type(file)}")
+          
         try:
             
             # Validates Image According to Size, Format, and Profanity 
-            if not ImageValidator().val_all(file_url):
-                raise ValidationError("error: Image Validation Failed!")
-            
+            #if not ImageValidator().val_all(file_url):
+                #raise ValidationError("error: Image Validation Failed!")
+            print(f"File Type: {type(file)}")
             try:
                 # Upload to S3 Bucket with file_data and Full Path with Folder,etc
+
                 self.s3_client.upload_file(
-                    file, 
+                    file,
                     self.bucket_name, 
-                    file_path, 
-                    ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
-                    )
+                    file_path,
+                    ExtraArgs={"ContentType": 'image/jpeg'}
+                )
+                print(f"File uploaded to S3: {file_path}")
+              
+                #file_url = self.retrieve_file_url(user_id=user_id, file_name=file_name, folder=folder)
+                #print(f"File URL: {file_url}")
                 
-                # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
-                if db_save:
-                                        
-                    # Save to PostgreSQL
-                    new_photo = UserPhoto(user_id=user_id, file_url=file_url,is_main_photo=is_main_photo)
-                    db.session.add(new_photo)
-                    db.session.commit()
-                    db.session.refresh(new_photo)
-                    db.session.close()
-     
+                
             except Exception as e:
-                print(e)
+                print(f"Error uploading file to S3: {e}")
                 return None
-                    
+            
+            # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
+            if db_save and file_url:
+                                    
+                # Save to PostgreSQL
+                new_photo = UserPhoto(user_id=user_id, url=file_url,is_main_photo=is_main_photo)
+                db.session.add(new_photo)
+                db.session.commit()
+     
+          
             return file_url
         
         except ClientError as e:
-            print(e)
+            print(f"Error uploading file to S3: {e}")
             return None
         except Exception as e:
-            print(e)
+            print(f"Error uploading file to S3: {e}")
             return None
 
     def retrieve_file_url(self, user_id, file_name, folder=None):
@@ -230,9 +238,15 @@ class MediaStorageService(BucketService):
         del_success = super().delete_file(file_path)
         
         # Deletion of File From S3 Was Successful
-        if del_success:
+        if not del_success:
+            return False
+        
+        try:
+    
+            # Retrieve File URL from S3
             url = self.retrieve_file_url(user_id=user_id,file_name=file_name,folder=folder)
-            # Delete from DB
+            
+            # Retrieve User Photo from DB
             user_photo = UserPhoto.query.filter(UserPhoto.user_id == user_id, UserPhoto.url == url).first()
             
             # If Photo is a Profile Main Picture, Update User Reference to Point to None IMAGE for Now
@@ -240,14 +254,16 @@ class MediaStorageService(BucketService):
                 user = User.query.filter(User.user_id == user_id).first()
                 user.profile_picture = EnvManager().load_env_var("DEFAULT_PROFILE_PICTURE")
                 
+            # Delete Photo from DB
             db.session.delete(user_photo)
+            db.session.commit()
+            db.session.close()
             
             return True
-        
-        # File Could not Deleted from S3
-        else:
+
+        except Exception as e:
             return False
-    
+                        
     def get_user_photo_urls(self, user_id, folder=None):
         
         # Construct Base_Url and Prefix of Folder if Given
