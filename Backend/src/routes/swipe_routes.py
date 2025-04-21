@@ -13,6 +13,8 @@ import  Backend.src.models as models # Import the Models and Schemas
 #from  Backend.src.routes import app # Blueprint
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from flask_socketio import emit
+
+from Backend.src.services.messaging_service import send_fcm_notification
 # Blueprint for the Swipe Routes
 swipe_bp = Blueprint('swipe_bp', __name__)
 
@@ -20,7 +22,23 @@ swipe_bp = Blueprint('swipe_bp', __name__)
 swipe_schema = models.swipe.SwipeSchema()
 
 # -----Swipe Routes-----
-    
+def notify_new_match(user_ids, new_match):
+    """
+    Notify users of a new match through FCM
+    """
+    try:
+        for id in user_ids:
+            # Get Name of the User
+            user = models.user.User.query.get(id)
+            # Send FCM Notification
+            send_fcm_notification(
+                    user_id=id,
+                    title="New Match!",
+                    body=f"Matched with {user.name}",
+                    data_payload=models.match.match_schema.dump(new_match)
+                )
+    except Exception as e:
+        raise Exception(f"Error notifying users of new match: {str(e)}")
 
 # Post A Swipe Event to the Database - Swipe Right or Left
 # POST /Users/Swipes 
@@ -46,28 +64,38 @@ def create_swipe():
     """
 
     swiper_id = get_jwt_identity()
-    swipee_id = request.get_json().get('swipee_id')
-    swipe_result = request.get_json().get('swipe_result')
+    data = request.get_json()
+    swipee_id = data.get('swipee_id')
+    swipe_result = data.get('swipe_result')
     
     if swiper_id is None or swipee_id is None:
         return jsonify({"error": "One or more users not found."}), 404
     
-    processed_swipe = models.swipe.SwipeProcessor.process_new_swipe(swiper_id, swipee_id, swipe_result)
-    
+    try:
+        processed_swipe = models.swipe.SwipeProcessor.process_new_swipe(swiper_id, swipee_id, swipe_result)
+    except Exception as e:
+       return jsonify({"error": "Failed to process swipe.", "details": str(e)}), 500
+   
+    # Create New Match, Push to DB, and Emit MSG Back to Client
     if processed_swipe.swipe_result == "ACCEPTED":
-        # Create New Match, Push to DB, and Emit MSG Back to Client
         print(f"New Match Detected from Swipe - {str(processed_swipe)}")
         
-        new_match = models.match.Match().create_match(matcher_id=swiper_id,matchee_id=swipee_id)
+        try:
+            # Create a new match event
+            new_match = models.match.Match().create_match(matcher_id=swiper_id,matchee_id=swipee_id)
+            if new_match is None:
+                return jsonify({"error": "Failed to create a new match."}), 500
+            
+            # Notify Users of the New Match
+            notify_new_match([swiper_id, swipee_id], new_match)
 
-        if new_match is not None:
-            # Emit Successful Match to Client, with Swipee ID and Match ID
-            emit('successful_match', {'swipee_id': swipee_id, 'match_id': new_match.id})
+        except Exception as e:
+            return jsonify({"error": "Failed to create a new match.", "details": str(e)}), 500
+
     # Log the success and return the message
     #logging.info(f"Swipe created successfully! - {swipe}")
     return "Swipe created successfully!", 201
-    
-    
+
     
 @swipe_bp.route('/users/swipes>', methods=['GET'])
 def get_swipes():
