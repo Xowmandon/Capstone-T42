@@ -36,7 +36,10 @@ class User(db.Model):
     auth_provider = db.Column(db.String(36), nullable=False)  # "apple" or "email"
     created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    last_online = db.Column(db.DateTime, default=datetime.now(timezone.utc)) # Last Online Timestamp
+    deleted = db.Column(db.Boolean, default=False) # Soft Delete Flag
     
+
     # General User Information
     name = db.Column(db.String(100), nullable=True)
     gender = db.Column(db.String(10), nullable=True)
@@ -50,7 +53,7 @@ class User(db.Model):
                                    #) # Profile Picture - URL to Image
 
     bio = db.Column(db.String(500), nullable=True) # Bio - Description of User
-
+    
     # Location Information
     state_code = db.Column(db.String(10), nullable=True)
     city = db.Column(db.String(100), nullable=True)
@@ -100,12 +103,25 @@ class User(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-    #@staticmethod
-    #def soft_delete_user(self):
-        #"""Soft delete a user."""
-        #self.deleted = True
-        #db.session.commit()
-        
+    @staticmethod
+    def soft_delete_user(self):
+        """Soft delete a user."""
+        self.deleted = True
+        db.session.commit()
+    
+    @staticmethod
+    def set_online(self):
+        """Set the user as online."""
+        self.last_online = datetime.now(timezone.utc)
+        db.session.commit()
+        return self
+    
+    @staticmethod
+    def get_new_matches(self):
+        """Get new matches for the user."""
+        helper = UserModelHelper(self.id)
+        matches = helper.get_new_matches()
+        return matches
 
 
 # Marshmallow Schema for the User Model
@@ -175,3 +191,13 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
             profanity.censor(url)
             raise ValidationError("URL contains profanity. Please choose a different URL.")
     """
+
+class UserProfileSchema(ma.SQLAlchemyAutoSchema):
+    """Schema for serializing user profile information to the frontend."""
+    class Meta:
+        model = User
+        load_instance = True
+        include_relationships = True
+        fields = ('age', 'name', 'gender', 'state_code', 'city', 'bio')
+
+        # Set the Gender, State, and City to Lowercase

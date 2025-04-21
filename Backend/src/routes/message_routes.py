@@ -14,7 +14,7 @@ from Backend.src.models.model_helpers import MatchModelHelper
 import Backend.src.models as models# Import the Models and Schemas
 from Backend.src.models import message
 from flask_jwt_extended import jwt_required, get_jwt_identity
-import Backend.src.routes.route_helpers as route_helpers
+from Backend.src.services.messaging_service import send_fcm_notification
 
 
 #from Backend.src.sockets import get_private_chat_room
@@ -28,23 +28,35 @@ message_bp_schema = models.message.MessageSchema()
 #message_schema = models.message.MessageSchema(only = ('messager', 'message_content', 'message_date'))
 
 
-def save_message(message):
+def save_message(message_json):
     
-    #match_id = message.match_id
-    #match = models.match.Match.query.get(match_id)
-    #messager = message.messager
-    #message_content = message.message_content
-    #message_date = message.message_date
-    
-    # Extract the values from the data
-    message = message_bp_schema.load(message)
-    
-    # Add the new message to the session
-    db.session.add(message)
-    # Commit the changes to the database
-    db.session.commit()
+    try:
+        # Extract the values from the data
+        message = message_bp_schema.loads(message_json)
+        
+         # Validate Match Exists
+        match = models.match.Match.query.get(message_json["match_id"])
+        # Check if Match Exists
+        if not match:
+            raise ValidationError("Match not found in database.")
 
-    return message
+        user = models.user.User.query.get(message_json["messager_id"])
+        # Check if User Exists
+        user_in_match = (user.id == match.matcher_id or user.id == match.matchee_id)
+        if not user or not user_in_match:
+            raise ValidationError("User not found in Match.")
+        
+        # Add the new message to the session
+        db.session.add(message)
+        # Commit the changes to the database
+        db.session.commit()
+    
+    except SQLAlchemyError as e:
+        raise SQLAlchemyError(f"Database error occurred: {str(e)}")
+    except ValidationError as e:
+        raise ValidationError(f"Validation error occurred: {str(e)}")
+    except Exception as e:
+        raise Exception(f"An error occurred: {str(e)}")
 
 @message_bp.route('/users/messages', methods=['POST'])
 @jwt_required()
@@ -54,63 +66,59 @@ def post_message():
     
     Parameters:
         JSON object with the following fields:
-            - messager_email str, required
-            - messagee_email: str, required
+            - match_id str, required
             - message_content: str, required
-            - message_date: str, required
+            
+    Request Headers:
+        X-Authorization: JWT Token for the requesting user (Needs to Be Apart of the Match)
+
+    Returns:
+        JSON response with the status of the message creation.
+
     """
-    
     try:
-        
+    
         messager_id = get_jwt_identity()
-        
         data = request.get_json()
         
-        match_id = data.get('match_id')
-        message_content = data.get('message_content')
-        #message_date = data.get('message_date') # TODO: Add the message date to the message schema
-        
-        # Validate Match Exists
-        match = models.match.Match.query.get(match_id)
-        if not match:
-            return jsonify({"error": "Match not found in database."}), 404
-        
-        # Validate Users Exist
-        messager = models.user.User.query.get(messager_id)
-        if not messager:
-            return jsonify({"error": "Messager not found in database."}), 404
-        
-        # Add Messager ID to the Data to be Loaded into Schema
-        data['messager_id'] = messager_id
-        
-        # Extract the values from the data
-        message = message_bp_schema.load(data)
-        
-        # Add the new message to the session
-        db.session.add(message)
-        # Commit the changes to the database
-        db.session.commit()
-        
-        #room_name = get_private_chat_room(user1.email, user2.email)
-        
-        """
-        # Emit the new message to the private chat room
-        socketio.emit('new_message', {
-            "id": message.id,
-            "messager_email": user1.email,
-            "messagee_email": user2.email,
-            "message_content": message.message_content,
-            "message_date": message.message_date
-        }, room=room_name)
-        """
-        
-        return jsonify({"Success":"Message created successfully!"}), 201
+        req_params = {
+            "messager_id": messager_id,
+            "match_id": data.get('match_id'),
+            "message_content": data.get('message_content')
+        }
     
+        # Save the message to the database
+        save_message(req_params)
+        
+        # Get Recipient ID
+        match = models.match.Match.query.get(req_params["match_id"])
+        if match.matcher_id == messager_id:
+            reciever_id = match.matchee_id
+        else:
+            reciever_id = match.matcher_id
+        
+        # Send FCM Notification to the recipient
+        send_fcm_notification(
+                user_id=reciever_id,
+                title="New Message Received!",
+                body=req_params["message_content"],
+                data_payload={
+                    "match_id": req_params["match_id"],
+                    "messager_id": messager_id,
+                    "message_content": req_params["message_content"]
+                }
+            )
+
+        # Success Response
+        return jsonify({"Success":"Message Created and Sent successfully!"}), 201
+
+    # Handle Validation and Database Errors
     except ValidationError as e:
         return jsonify({"error": "Validation error occurred.", "details": str(e)}), 400
-    
     except SQLAlchemyError as e:
         return jsonify({"error": "Database error occurred.", "details": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": "An error occurred.", "details": str(e)}), 400
 
 
 @message_bp.route('/users/messages/conversation', methods=['GET'])

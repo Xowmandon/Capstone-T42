@@ -20,7 +20,8 @@ class Match(db.Model):
     # On Delete of User - Cascade to Remove Associated Matches
     matcher_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
     matchee_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.now)
+    created_at = db.Column(db.DateTime, default=datetime.now(timezone.utc))
+
     
     """"
     # Relationships for matcher and matchee
@@ -47,9 +48,10 @@ class Match(db.Model):
     # Returns the Matcher and Matchee Email Addresses and Match Date
     def to_dict(self):
         return {
-            'matcher': User.query.get(self.matcher),
-            'matchee': User.query.get(self.matchee),
-            'match_date': self.match_date
+            'id': self.id,
+            'matcher_id': self.matcher_id,
+            'matchee_id': self.matchee_id,
+            'match_date': self.match_date,
         }
         
     @staticmethod
@@ -66,11 +68,15 @@ class Match(db.Model):
         if not User.query.get(matcher_id) or not User.query.get(matchee_id):
             return None
         
-        # Create Match
-        match = Match(matcher_id=matcher_id, matchee_id=matchee_id)
-        db.session.add(match)
-        db.session.commit()
-        return match
+        try:
+            # Create Match
+            match = Match(matcher_id=matcher_id, matchee_id=matchee_id)
+            db.session.add(match)
+            db.session.commit()
+            return match
+        except Exception as e:
+            print(f"Error creating match: {str(e)}")
+            return None
     
     @staticmethod 
     # Get Messages between two users, with optional limit and offset
@@ -81,6 +87,13 @@ class Match(db.Model):
         helper = MatchModelHelper(self.id)
         return helper.get_messages(limit=limit, page=page, get_all_messages=get_all_messages)
     
+    @staticmethod
+    def get_last_message(self):
+        """
+        Get the Last Message in the Match
+        """
+        helper = MatchModelHelper(self.id)
+        return helper.get_last_message()
     
     # String representation of a User, Outputting each Field Associated
     def __repr__(self):

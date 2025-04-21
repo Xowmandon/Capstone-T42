@@ -27,7 +27,7 @@ class DatingPreference(db.Model):
 
     # String representation of a Dating Preference, Outputting each Field Associated
     def __repr__(self):
-        return f"<DatingPreference id={self.id}, preference={self.preference}>"
+        return f"<DatingPreference id={self.id}, preference={self.interested_in}, age_preference_lower={self.age_preference_lower}, age_preference_upper={self.age_preference_upper}>"
 
 class DatingPreferenceSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

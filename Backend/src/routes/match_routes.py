@@ -3,11 +3,12 @@
 from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
-from flask_jwt_extended import  jwt_required
+from flask_jwt_extended import  get_jwt_identity, jwt_required
 import logging
 
 from Backend.src.extensions import db # Import the DB Instance
-import Backend.src.models as models # Import the Models and Schemas
+import Backend.src.models as models
+from Backend.src.models.model_helpers import UserModelHelper, MatchModelHelper
 
 
 # Blueprint for the Match Routes
@@ -16,29 +17,79 @@ match_bp = Blueprint('match_bp', __name__)
 match_schema = models.match.MatchSchema()
 
 #-----Match Routes-----
+def match_response_helper(matches):
+    """
+    Helper function to create a response for a match.
+    """
+    matches_response = []
+    for user_match in matches:
+            
+        # Get the Last Message in the Match
+        last_message = user_match.get_last_message()
+        
+        # Get the Matched User Id
+        matched_user_id = user_match.matchee_id if user_match.matcher_id == user.id else user_match.matcher_id
+        
+        # Get the Matched User Object
+        matched_user = models.user.User.query.get(matched_user_id)
+        
+        # TODO Get the Unread Count for the Match
+        
+        # Serialize the Match Data and Add to the Response
+        match_data = {
+            "match_id": user_match.id,
+            "matched_user_id": matched_user_id,
+            "matched_user_name": matched_user.name,
+            "match_date": user_match.match_date.isoformat(),
+            "last_message": last_message.message_content,
+            #"unread_count": 0
+        }
+        
+        matches_response.append(match_data)
+        
+    return matches_response
 
 # Get all matches for a user
-# GET /Users/Matches/{email}
 @match_bp.route('/users/matches', methods=['GET'])
+@jwt_required()
 def get_matches():
     """
-    Summary: Get all matches for a user by ID.
+    Summary: Get all matches for a user.
     
-    Parameters:
-        email (string): The Email of the user.
-        
     Returns:
-        JSON with list: A list of matches for the user. - Including Matcher, Matchee and Match Date
-        
+        JSON with list: A list of matches for the user, including:
+        - match_id: str
+        - matched_user_id: str
+        - matched_user_name: str
+        - match_date: str
+        - last_message: str 
+        - unread_count: int 
     """
-    data = request.get_json()
-    email = data.get('email')
+    # Get current user and validate
+    user_id = get_jwt_identity()
+    user = models.user.User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found."}), 404
     
-    # Get the matches for the user
-    matches = models.match.Match.query.filter_by(matcher=email).all()
-    
-    # Return the matches - 
-    return jsonify([models.match.MatchSchema().dump(match) for match in matches]), 200
+    try:
+        # Get the Last Message in the Match
+        matches = UserModelHelper(user_id).get_user_matches()
+            
+        if not matches:
+            return jsonify({"error": "No matches found."}), 404
+        
+        # Create the response
+        matches_response = match_response_helper(matches)
+        # Return the response
+        
+        # Return the response
+        return jsonify(matches_response), 200
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        return jsonify({"error": "Database error occurred", "details": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
 
 
 # Create a new match event of a User

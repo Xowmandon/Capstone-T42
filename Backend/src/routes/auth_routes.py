@@ -1,11 +1,13 @@
 # Author: Joshua Ferguson
 
+from datetime import datetime, timezone
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
-
+from sqlalchemy.exc import SQLAlchemyError
 from Backend.src.extensions import db # Import the DB Instance
 import Backend.src.models as models # Import the Models and Schemas
 
+from Backend.src.models.userFCMToken import UserFcmToken
 from Backend.src.services.auth_service import EmailAuthService, AppleAuthService, gen_access_token, gen_refresh_token
 
 auth_bp = Blueprint('auth_bp', __name__)
@@ -37,6 +39,49 @@ def verify_token():
         return jsonify({"error": "User not found"}), 404
 
     return jsonify({"user_id": user.id, "email": user.email, "auth_provider": user.auth_provider}), 200
+
+@auth_bp.route("/fcm", methods=["POST"])
+@jwt_required()
+def register_fcm_token():
+    """Register FCM token for push notifications.
+    POST /fcm HTTP/1.1
+    Body Parameters:
+        - fcm_token: The FCM token to register.
+    Headers:
+        X-Authorization: Bearer <your_jwt_token>
+    Returns:
+        - 200 OK: Token registered successfully.
+        - 400 Bad Request: Missing fcm_token in request body.
+    """
+    try:
+
+        # Get the user ID from the JWT token
+        # and the fcm_token from the request body
+        user_id = get_jwt_identity()
+        data = request.get_json()
+        fcm_token = data.get("fcm_token")
+
+        if not fcm_token:
+            return jsonify({"error": "Missing fcm_token"}), 400
+
+        # Check if Token already exists, update it if it does
+        # or create a new entry if it doesn't
+        token_entry = UserFcmToken.query.filter_by(user_id=user_id).first()
+        if token_entry:
+            token_entry.fcm_token = fcm_token
+        else:
+            token_entry = UserFcmToken(user_id=user_id, fcm_token=fcm_token)
+            db.session.add(token_entry)
+
+        # Commit the changes to the database
+        # This is where the token is actually saved
+        db.session.commit()
+        return jsonify({"status": "token registered"}), 200
+
+    except SQLAlchemyError as e:
+        return jsonify({"error": "Database error.", "details": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": "Internal error.", "details": str(e)}), 500
 
 
 @auth_bp.route("/signup", methods=["POST"])
@@ -71,7 +116,7 @@ def signup():
     data = request.json
     auth_method = data.get("auth_method")
     auth_method = auth_method.lower()
-
+    
     if auth_method == "email":
         return handle_email_signup(data.get("email"), data.get("password"))
     elif auth_method == "apple":
@@ -100,9 +145,6 @@ def handle_email_signup(email, password):
     if not email or not password:
         return jsonify({"error": "Email and password required"}), 400
 
-    existing_user = models.User.query.filter_by(email=email).first()
-    if existing_user:
-        return jsonify({"error": "Email already in use"}), 409
 
     user = models.User.create_user(email=email, password=password)
     token = gen_access_token(str(user.id))
@@ -124,28 +166,28 @@ def handle_apple_signup(identity_token):
 
     # Check if Apple user already exists by Apple id
     existing_user = models.User.query.filter_by(id=apple_sub).first()
+    
 
-    # TODO: Check if user exists by email, if so, link Apple sub to existing user
-    # Linking Apple sub to existing user
-    # Update Apple sub if user exists, else create a new user
     if existing_user:
-        if existing_user.id != apple_sub:
-            existing_user.id = apple_sub
-            existing_user.auth_provider = "apple"
-            db.session.commit()
-        user = existing_user
-        #else: # User already exists and is linked to Apple sub
-            #return jsonify({"message": "User already exists"}), 200
-    else:
+        # User already exists and is linked to Apple sub
+        existing_user.last_online = datetime.now(timezone.utc)
+        db.session.commit()
+        return jsonify({"message": "User already exists"}), 200
+
+    try:
         # Create New User if one does not exists, export name, email, and apple_sub as user.id
         user = models.User.create_user(email=email, apple_sub=apple_sub)
-
-    # Create Unique JWT associated/encoded to user.id
-    token = gen_access_token(str(user.id))
-    print(token)
-    return jsonify({"message": "Signup successful", "token": token}), 201
-
-
+         
+        # Create Unique JWT associated/encoded to user.id
+        token = gen_access_token(str(user.id))
+        print(token)
+            
+        return jsonify({"message": "Signup successful", "token": token}), 201
+    
+    except SQLAlchemyError as e:
+        return jsonify({"error": "Database error occurred.", "details": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": "An unexpected error occurred,", "details": str(e)}), 500
 
 # ** Login Handlers **
 def handle_email_login(email, password):
@@ -156,6 +198,12 @@ def handle_email_login(email, password):
     if not user_id:
         return jsonify({"error": "Invalid email or password"}), 401
 
+    user = models.User.query.get(user_id)
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+    
+    user.last_online = datetime.now(timezone.utc)
+    db.session.commit()
     token = create_access_token(identity=str(user_id))
     return jsonify({"message": "Login successful", "token": token}), 200
 
@@ -174,6 +222,20 @@ def handle_apple_login(identity_token):
     user = models.User.query.filter_by(id=apple_sub, auth_provider="apple").first()
     if not user:
         return jsonify({"error": "User not found, please sign up first"}), 404
+    user.last_online = datetime.now(timezone.utc)
+    db.session.commit()
+    #token = gen_access_token(str(user.id))    
+    return jsonify({"message": "Login successful"}), 200
 
-    token = gen_access_token(str(user.id))    
-    return jsonify({"message": "Login successful", "token": token}), 200
+
+def handle_apple_sub_update(user_id, apple_sub):
+    """Handles Apple sub update."""
+    user = models.User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 404
+
+    user.id = apple_sub
+    user.auth_provider = "apple"
+    db.session.commit()
+    
+    return jsonify({"message": "Apple sub updated successfully"}), 200

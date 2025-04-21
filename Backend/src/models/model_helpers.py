@@ -9,26 +9,46 @@ class UserModelHelper:
     def __init__(self,user_id):
         self.user_id = user_id
 
-    def get_user_matches(user_id):
+    def get_user_matches(self):
 
         user_matches = models.match.Match.query.filter(
-            (models.match.Match.matcher_id == user_id) | (models.match.Match.matchee_id == user_id)
-        ).all()
+            (models.match.Match.matcher_id == self.user_id) | (models.match.Match.matchee_id == self.user_id)
+        ).order_by(models.match.Match.match_date.desc()).all()
         
         return user_matches
+    
+    def get_new_matches(self):
+        # Get Matches with "Created At" Date Greater than Last Online
+        new_matches = models.match.Match.query.filter(
+            (models.match.Match.matcher_id == self.user_id) | (models.match.Match.matchee_id == self.user_id),
+            models.match.Match.created_at > self.user.last_online
+        ).order_by(models.match.Match.created_at.desc()).all()
+        
+
+        return new_matches
     
     def get_user_matches_ids(self):
         """
         Get the User Matches for the User
         """
-        return [match.id for match in self.get_user_matches_()]
-    
+        return [match.id for match in self.get_user_matches()]
+
 class MatchModelHelper:
     
-    def __init__(self,match_id):
+    def __init__(self,match_id=None):
         self.match_id = match_id
 
-    def get_messages(match_id, limit=10, page=1, get_all_messages=False): 
+    def get_last_message(self):
+        """
+        Get the Last Message in the Match
+        """
+        message = self.get_messages(limit=1)
+        if message and message.get("messages"):
+            return message["messages"][0]
+        else:
+            return None
+
+    def get_messages(self, limit=10, page=1, get_all_messages=False): 
     
         """
         Retrieve messages exchanged between two users in a match.
@@ -51,7 +71,7 @@ class MatchModelHelper:
         
         # Get the messages marked with the match ID
         # ...
-        conversation_filter = models.message.Message.match_id == match_id
+        conversation_filter = models.message.Message.match_id == self.match_id
 
         conversation_query = (
             db.session.query(models.message.Message)
@@ -99,3 +119,29 @@ class MatchModelHelper:
         except Exception as e:
             print(f"Error saving message: {str(e)}")
             return None
+
+    # Get New Messages for the Match or All Messages Sent to User Since Last Online
+    def get_new_messages(self,user,match_id=None):
+        """
+        Get New Messages for the Match
+        """
+        
+        if match_id:
+            # If match_id is provided, filter messages for that match
+            new_messages = models.message.Message.query.filter(
+                models.message.Message.match_id == match_id,
+                models.message.Message.message_date > user.last_online
+            )
+        else:
+            # Otherwise, get all new messages for the user
+            new_messages = models.message.Message.query.filter(
+                models.message.Message.match_id.in_(user.get_user_matches_ids()),
+                models.message.Message.message_date > user.last_online
+            )
+            
+        # Order by message date descending
+        new_messages = new_messages.order_by(models.message.Message.message_date.desc()).all()
+  
+        # Return the new messages
+        return new_messages
+  

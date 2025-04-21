@@ -142,3 +142,25 @@ def test_get_swipe_pool(client):
         pytest_assertion_success(msg)
     
     pytest_test_success()
+
+def test_get_matches(client):
+    """Test Retrieving a User from the Database Through Route"""
+    pytest_start_test_display()
+    
+    # Load the Test JWT, which is used to authenticate the user (predefined User)
+    test_jwt = EnvManager().load_env_var('TEST_JWT')
+    assert test_jwt, "TEST_JWT is not set!"
+    
+    # Send a GET request to the get user endpoint with X-Authorization Header as JWT
+    response = client.get('/users/matches', headers={'X-Authorization': f'Bearer {test_jwt}'}) 
+    
+    #print(response.json)
+    with Backend.app.app.app_context():
+        
+        # Assert, status code is 200 (OK), id is in the response JSON, and user exists in the database
+        assert response.status_code == 200, \
+            pytest_assertion_failure(f"Unexpected Response:{response.status_code}{response.data}")
+        assert response.json is not None, "Response JSON is None"
+    
+    for msg in ["Status Code 200", "Matches Found in Response"]:
+        pytest_assertion_success(msg)
