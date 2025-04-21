@@ -1,50 +1,71 @@
 #Author: Joshua Ferguson
 
+from datetime import datetime, timezone
 import logging
 
 from flask import Flask, jsonify,request
 from flask_socketio import SocketIO, emit
+from flask_migrate import Migrate
+
 
 from Backend.src.utils import EnvManager, TestingConfig
 from Backend.src.extensions import db, ma, bcrypt, flask_jwt
-#from Backend.src.middleware import before_request
-
-# Import the Main Routes and Blueprints
-from Backend.src.routes import user_routes, match_routes, swipe_routes, message_routes # Main Routes
-from Backend.src.routes import aggregate_routes # Utils Routes
-from Backend.src.routes import auth_routes # Auth Routes
-from Backend.src.routes import matchmaking_routes
 
 from Backend.src.sockets.chat import ChatNamespace
 from Backend.src.sockets.swiping import SwipeNamespace
 
+# Import the Main Routes and Blueprints
+from Backend.src.routes import (
+    user_routes, 
+    match_routes, 
+    swipe_routes, 
+    message_routes,
+    polling_routes,
+    prompt_routes,
+    aggregate_routes,
+    auth_routes,
+    matchmaking_routes,
+)
+
+
 envMan = EnvManager()
 PASS_SECRET_KEY = envMan.load_env_var("PASS_SECRET_KEY")
+
+# Initialize the Logger
+file_handler = logging.FileHandler("app.log")
+# Extend Flask With Logging
+file_handler.setLevel(logging.INFO)
+# Set the log format
+formatter = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+)
+file_handler.setFormatter(formatter)
 logger = logging.getLogger(__name__)
 
-
-# Init Flask App
-app = Flask("UnHinged-API")
-
-# Initialize SocketIO TODO
-#socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Load the Config for Flask App
 # - DB Configurations, (Host, Port, Database Name), etc
 # - JWT_HEADER_NAME, JWT_HEADER_TYPE, and JWT_SECRET_KEY
+app = Flask("UnHinged-API")
 app.config.from_object(TestingConfig)
 
+# Blueprint Routes in /routes
+# - Resource, Utility , Auth, Polling, etc
+blueprints = [
+    user_routes.user_bp,
+    match_routes.match_bp,
+    swipe_routes.swipe_bp,
+    message_routes.message_bp,
+    polling_routes.polling_bp,
+    matchmaking_routes.matchmaking_bp,
+    prompt_routes.prompt_bp,
+    aggregate_routes.aggregate_bp,
+    auth_routes.auth_bp, 
+]
 
-# Register the Main Route Blueprints
-app.register_blueprint(user_routes.user_bp)
-app.register_blueprint(match_routes.match_bp)
-app.register_blueprint(swipe_routes.swipe_bp)
-app.register_blueprint(message_routes.message_bp)
-
-# Register the Utility Route Blueprints
-app.register_blueprint(aggregate_routes.aggregate_bp)
-app.register_blueprint(auth_routes.auth_bp)
-app.register_blueprint(matchmaking_routes.matchmaking_bp)
+# Register the Blueprints
+for blueprint in blueprints:
+    app.register_blueprint(blueprint)
 
 # Initialize the DB with Flask
 db.init_app(app)
@@ -57,78 +78,94 @@ bcrypt.init_app(app)
 # Must be initialized after the DB
 ma.init_app(app)
 
+# Alembic Migrations with Flask
+# - Migrations are used to manage database schema changes
+migrate = Migrate(app, db)
+
 # Socket Io Init with App - Needs to Be Defined in App.py
 socketio = SocketIO(app)
 
-# Register the chat namespace
+# Register the SocketIo Namespaces, After the SocketIo Init
 socketio.on_namespace(ChatNamespace("/chat"))
 socketio.on_namespace(ChatNamespace("/swipe"))
 
-#app.register_blueprint(routes_api)
+# Register Logger with Flask
+app.logger.addHandler(file_handler)
 
-with app.app_context():
-    db.create_all()
+
 
 @app.route('/')
 def home():
     return jsonify({"message": "Welcome to the UnHinged API!"}), 200
 
-"""
+@app.route('/api/info')
+def info():
+    return jsonify({
+        "app_name": "UnHinged API",
+        "version": "1.0.0",
+        "description": "API for UnHinged, a dating app.",
+        "author": "Joshua Ferguson",
+        "libraries": "Python - Flask, SocketIO, PostgreSQL, SQLAlchemy, Marshmallow, JWT, Redis, and more."
+    }), 200
+
+@app.route('/robots.txt')
+def robots():
+    return jsonify({"User-agent": "*", "Disallow": "/"}), 200
+
+
 @app.before_request
 def before_request():
-    
-    #This function runs before each request.
-    
-    #Logging the request method, path, and body.
-    #Validating Request Body and Headers.
-    
-    
+    """
+    Log request details before processing the request.
+    """
+    # Get the current timestamp
+    timestamp = datetime.now(timezone.utc).isoformat()
 
-    # Log the request method, path, and body
-    # TODO: Validate Request Body and Headers
-    # TODO: Implement Security Measures
-    logger.info(f"Request Path: {request.path}")
-    logger.info(f"Request Method: {request.method}")
-    logger.info(f"Request Headers: {request.headers}")
-    logger.info(f"Request Body: {request.json}")
+    # Log the request method and URL
+    app.logger.info(f"Request: {request.method} {request.path}")
+    app.logger.info(f"Request Headers: {request.headers}")
     
     
+    # Log URL parameters (query string)
+    if request.args:
+        app.logger.info(f"URL Parameters: {request.args.to_dict()}")
 
+    # Log body parameters (for POST/PUT requests)
+    if request.method in ['POST', 'PUT', 'PATCH']:
+        try:
+            logger.info(f"Body Parameters: {request.json}")
+        except Exception as e:
+            logger.warning(f"Failed to parse body parameters: {e}")
+          
+    # Example: Add custom headers to the response
+    request.start_time = datetime.now()  
 @app.after_request
 def after_request(response):
-"""
-    #This function runs after each request.
-    
-    #Logging the response status code and body.
-"""
-        
-    # Log the response status code and body
-    logger.info(f"Response Status Code: {response.status_code}")
-    logger.info(f"Response Body: {response.json}")
-        
-    return response
-"""    
+    """
+    Log response details after processing the request.
+    """
 
+   # Log the response status, method, and url
+    logger.info(f"Response: {response.status_code} for {request.method} {request.path}")
+
+    # Log response body (if applicable)
+    if response.is_json:
+        app.logger.info(f"Response Body: {response.get_json()}")
+        
+    # Example: Log request duration
+    if hasattr(request, 'start_time'):
+        duration = datetime.now() - request.start_time
+        logger.info(f"Request duration: {duration.total_seconds()} seconds")
+    
+    return response
 
 
 
 # Main Entry Point for the API Application
 if __name__ == '__main__':
 
-    # Create DB Tables
-   # with app.app_context():
-        #db.drop_all()
-        #db.create_all()
-    
-    # Set up Logging
-    #logging.basicConfig(filename='./logs/app.log', level=logging.INFO)
-    
-    #logger.info('Started')
-    
+    socketio.logger.info('Flask App Starting')
     # Run the Flask App with HTTP Support
     socketio.run(app, debug=True, port=3001)
     
-     # Run the Flask App with WebSocket support
-   # socketio.run(app, host='0.0.0.0', port=3000)
-    
-    #logger.info('Finished')
+    socketio.logger.info('Flask App Finished Running')
