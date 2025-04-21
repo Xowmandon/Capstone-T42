@@ -21,6 +21,7 @@ from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 import redis
 
+
 from Backend.src.utils import EnvManager
 
 # Load Environment Variables
@@ -39,7 +40,6 @@ ma = Marshmallow(app) # JSON Serialization/Deserilization of Models
 flask_jwt = JWTManager() # JwtManager for Protected Resources
 bcrypt = Bcrypt() # Generating Password Hashes
 
-
 # -----External Services-----
 
 # Redis for Swipe Pool and Caching Frequently Reads
@@ -55,10 +55,13 @@ redis_client = redis.Redis(
 from Backend.src.services.media_storage_services import MediaStorageService
 
 s3_client = boto3.client('s3', region_name=AWS_REGION)
-
 media_storage_service = MediaStorageService(
     s3_client,
     AWS_MEDIA_BUCKET_NAME, 
     AWS_REGION, 
     AWS_MEDIA_BUCKET_FOLDERS
     )
+
+from Backend.src.services.messaging_service import GCPService
+# Instantiate GCPManager and initialize the Firebase app
+firebase_app = GCPService().get_app()
