@@ -23,6 +23,17 @@ struct UnityGameView: View {
                 ProgressView("Loading...").foregroundStyle(.primary)
             } else if let UnityContainer = unity.view.flatMap({ UIViewContainer(view: $0) }) {
                 UnityContainer
+                VStack{
+                    Spacer()
+                    Button("Stop Unity", systemImage: "stop", action: {
+                        loading = true
+                        DispatchQueue.main.async(execute: {
+                            unity.stop()
+                            loading = false
+                        })
+                    })
+                    
+                }
             } else {
                 Button("Start Unity", systemImage: "play", action: {
                     /* Unity startup is slow and must must occur on the
