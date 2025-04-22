@@ -73,7 +73,8 @@ class Unity {
     func start() {
         if !loaded {
             framework.runEmbedded(withArgc: CommandLine.argc, argv: CommandLine.unsafeArgv, appLaunchOpts: nil)
-            framework.appController()?.rootView.becomeFirstResponder()
+            //framework.appController()?.rootView.becomeFirstResponder()
+            framework.appController().window.isHidden = true
             loaded = true
             print("Started Unity Instance")
         } else {
