@@ -34,11 +34,11 @@ def poll_matches():
         new_matches = helper.get_new_matches()
         
         if not new_matches:
-            return jsonify({"NONE": "No new matches found."}), 404
+            return jsonify({"status": "NONE"}), 200
         
         response = match_response_helper(new_matches)     
         # Return the Response
-        return jsonify({"NEW",response}), 200
+        return jsonify({"status": "NEW", **response}), 200
     
     except SQLAlchemyError as e:
         return jsonify({"error": "Database error occurred."}), 500
@@ -69,11 +69,28 @@ def poll_messages():
             new_messages = helper.get_new_messages(user)
         
         if not new_messages:
-            return jsonify({"NONE": "No new messages found."}), 404
+            return jsonify({"status": "NONE"}), 200
         
         response = models.message.MessageSchema(many=True).dump(new_messages)
+        
+        msgs_shaped = []
+        for m in new_messages:
+            msgs_shaped.append({
+                "kind":            "text",                   # always text for now
+                "content":         m.message_content,        # rename field
+                "sentFromClient":  (m.messager_id == user_id)  # Bool
+            })
+                
+        # Construct the Response, Base Message Return
+        message_return = {  
+            "status": "NEW",
+            "match_id": match_id,
+            "messages": msgs_shaped,
+        }
+    
+        
         # Return the Response
-        return jsonify({"NEW": response}), 200
+        return jsonify({message_return}),200
     
     except SQLAlchemyError as e:
         return jsonify({"error": "Database error occurred."}), 500

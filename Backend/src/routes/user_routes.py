@@ -328,6 +328,12 @@ def get_profile_pictures():
     if user is None:
         return jsonify({"error": "User not found."}), 404
     
+    # Handle Case where QueryArg is a user_id
+    # Get Profile Pictures of Another User Instead
+    alt_user_id = request.args.get('user_id')
+    if alt_user_id:
+        user_id = alt_user_id
+    
     try:
         # Main Profile Picture
         main_photo = db.session.query( 

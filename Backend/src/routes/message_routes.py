@@ -179,12 +179,21 @@ def get_conversation():
     #for message in messages_list:
         #logging.info(f"Message: {message} -")
         
+    msgs_shaped = []
+    for m in messages_list:
+        msgs_shaped.append({
+            "kind":            "text",                   # always text for now
+            "content":         m.message_content,        # rename field
+            "sentFromClient":  (m.messager_id == user_id)  # Bool
+        })
+            
     # Construct the Response, Base Message Return
     message_return = {
         "match_id": match_id,
-        "messages": messages_list,
+        "messages": msgs_shaped,
         "total_messages": conversation_data["total_messages"],
     }
+    
 
     # Add Pagination Metadata if not getting all messages
     if not get_all:

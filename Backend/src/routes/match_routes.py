@@ -28,7 +28,7 @@ def match_response_helper(matches):
         last_message = user_match.get_last_message()
         
         # Get the Matched User Id
-        matched_user_id = user_match.matchee_id if user_match.matcher_id == user.id else user_match.matcher_id
+        matched_user_id = user_match.matchee_id if user_match.matcher_id == user_match.id else user_match.matcher_id
         
         # Get the Matched User Object
         matched_user = models.user.User.query.get(matched_user_id)
