@@ -5,12 +5,13 @@
 //  Created by Harry Sho on 4/20/25.
 //
 
+
 import SwiftUI
 import UIKit
 
 struct UIViewContainer: UIViewRepresentable {
     
-    let view: UIView
+    var view: UIView
 
     func makeUIView(context: Context) -> UIView {
         return view

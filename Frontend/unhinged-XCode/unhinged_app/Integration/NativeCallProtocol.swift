@@ -7,7 +7,12 @@
 
 import UnityFramework
 
-class NativeCallProtocol : NativeCallsProtocol, ObservableObject {
+class NativeCallProtocol : NativeCallsProtocol {
+    
+    static let shared = NativeCallProtocol()
+    
     func showHostMainWindow(_ color: String!) {
     }
+    
 }
+

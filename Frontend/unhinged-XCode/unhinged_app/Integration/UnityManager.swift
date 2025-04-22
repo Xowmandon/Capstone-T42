@@ -7,12 +7,14 @@
 //  Reference: https://github.com/bdeweygit/unity-swiftui/blob/main/SwiftUIProject/UnitySwiftUI/Unity.swift
 //
 
+
 import Foundation
 import UnityFramework
 
-@objc class Unity : UnityFramework {
+class Unity {
     
     static let shared = Unity()
+    
     //private let dataBundleId: String = "com.unity3d.framework"
     //private let frameworkPath: String = "/Frameworks/UnityFramework.framework"
     
@@ -23,38 +25,72 @@ import UnityFramework
     // Expose Unity's UIView while loaded
     var view: UIView? { loaded ? framework.appController().rootView : nil }
     
-    private override init(){
+    private init(){
         // Load framework and get the singleton instance
+        
         let bundle = Bundle(path: "\(Bundle.main.bundlePath)/Frameworks/UnityFramework.framework")!
         bundle.load()
         framework = bundle.principalClass!.getInstance()!
         
+        
         /* Send our executable's header data to Unity's CrashReporter.
            Using _mh_execute_header might be more correct, but this is broken on
            Xcode 16. See forum discussion: forums.developer.apple.com/forums/thread/760543 */
+        
         let executeHeader = #dsohandle.assumingMemoryBound(to: MachHeader.self)
         framework.setExecuteHeader(executeHeader)
-
+        
         // Set bundle containing Unity's data folder
         framework.setDataBundleId("com.unity3d.framework")
 
         // Register native call protocol
-        let proxy: NativeCallProtocol = NativeCallProtocol()
-        nativeCall = proxy
+        nativeCall = NativeCallProtocol.shared
         FrameworkLibAPI.registerAPIforNativeCalls(nativeCall)
+        print("Did Initialize Unity Singleton")
     }
+    
+    /*
+    private func loadUnityFramework() -> UnityFramework? {
+        let frameworkPath: String = "/Frameworks/UnityFramework.framework"
+        let bundlePath: String = Bundle.main.bundlePath + frameworkPath
+        
+        let bundle = Bundle(path: bundlePath)
+        if bundle?.isLoaded == false {
+            bundle?.load()
+        }
+        
+        let ufw = bundle?.principalClass?.getInstance()
+        if ufw?.appController() == nil {
+            let machineHeader = UnsafeMutablePointer<MachHeader>.allocate(capacity: 1)
+            machineHeader.pointee = _mh_execute_header
+            
+            ufw?.setExecuteHeader(machineHeader)
+        }
+        return ufw
+    }
+     */
 
     func start() {
-        framework.runEmbedded(withArgc: CommandLine.argc, argv: CommandLine.unsafeArgv, appLaunchOpts: nil)
-        loaded = true
-        print("Started Unity Instance")
+        if !loaded {
+            framework.runEmbedded(withArgc: CommandLine.argc, argv: CommandLine.unsafeArgv, appLaunchOpts: nil)
+            framework.appController()?.rootView.becomeFirstResponder()
+            loaded = true
+            print("Started Unity Instance")
+        } else {
+            print("Unity already loaded.")
+        }
     }
     
     func stop() {
         // docs.unity3d.com/ScriptReference/Application.Unload.html
-        framework.unloadApplication()
-        loaded = false
-        print("Unloaded Unity Instance")
+        if loaded {
+            framework.unloadApplication()
+            framework.appController()?.rootView.resignFirstResponder()
+            loaded = false
+            print("Unloaded Unity Instance")
+        } else {
+            print("Unity already unloaded.")
+        }
     }
     
 }
@@ -172,3 +208,5 @@ extension Unity: UnityFrameworkListener {
     }
 }
 */
+
+

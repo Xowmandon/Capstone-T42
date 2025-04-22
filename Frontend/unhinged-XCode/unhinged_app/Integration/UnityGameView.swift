@@ -5,8 +5,11 @@
 //  Created by Harry Sho on 4/20/25.
 //
 
+
 import Foundation
 import SwiftUI
+
+
 
 struct UnityGameView: View {
     private var unity = Unity.shared
@@ -15,12 +18,10 @@ struct UnityGameView: View {
     
     var body: some View {
         ZStack {
-            Text("Unity Game View")
             if loading {
                 // Unity is starting up or shutting down
-                ProgressView("Loading...").tint(.white).foregroundStyle(.white)
+                ProgressView("Loading...").foregroundStyle(.primary)
             } else if let UnityContainer = unity.view.flatMap({ UIViewContainer(view: $0) }) {
-                
                 UnityContainer
             } else {
                 Button("Start Unity", systemImage: "play", action: {

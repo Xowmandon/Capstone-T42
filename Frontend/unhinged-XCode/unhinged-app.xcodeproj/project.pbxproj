@@ -133,10 +133,21 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		DF730BA72DB6D145008C4A94 /* Exceptions for "unhinged_app" folder in "Compile Sources" phase from "unhinged app" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = DF12F1822CDD3FB3006A0DC2 /* Sources */;
+			membershipExceptions = (
+				"Integration/unhinged_app-Bridging-Header.h",
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		DF12F1882CDD3FB3006A0DC2 /* unhinged_app */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				DF730BA72DB6D145008C4A94 /* Exceptions for "unhinged_app" folder in "Compile Sources" phase from "unhinged app" target */,
 				DF8C8CF02D6835B800C85EF7 /* Exceptions for "unhinged_app" folder in "unhinged appTests" target */,
 				DF8C8CF12D6835B800C85EF7 /* Exceptions for "unhinged_app" folder in "unhinged appUITests" target */,
 			);
