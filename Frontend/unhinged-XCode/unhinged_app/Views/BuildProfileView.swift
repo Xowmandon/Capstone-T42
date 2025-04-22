@@ -18,10 +18,10 @@ enum BuildProfileFocusedField: Hashable {
 
 struct BuildProfileView: View {
     
-    //TODO: confirm changes upon dismiss
     //TODO: extract subviews
     let isFirstTimeCreation : Bool
     @State var hasMadeChanges : Bool = true
+    @State var shouldGoToMatchView : Bool = false
     
     @EnvironmentObject var appModel : AppModel
     @FocusState private var focusedField : BuildProfileFocusedField?
@@ -32,17 +32,19 @@ struct BuildProfileView: View {
     
     @State var showAddObjectSheet : Bool = false
     @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
+    
     @State var attributes : [Attribute] = []
     @State var biographyText : String = ""
     @State var prompts : [PromptItem] = []
     
+    @State var isShowingExitConfirmation : Bool = false //TODO: exit confirmation
     @State var isShowingPromptDeleteConfirmation: Bool = false
     @State var promptItemIDToDelete: UUID?
     
     public var body: some View {
         NavigationStack {
             ZStack {
-            // Profile Content
+            // MARK: Profile Content
                 ScrollView {
                     Text("My Profile")
                         .font(Theme.titleFont)
@@ -215,7 +217,7 @@ struct BuildProfileView: View {
                 }
                 .padding()
                 
-                //UI Overlay
+                // MARK: UI Overlay
                 VStack {
                     //navbar
                     HStack{
@@ -234,13 +236,18 @@ struct BuildProfileView: View {
                             }
                         } else {
                             Spacer()
-                            NavigationLink(destination: MatchView().navigationBarBackButtonHidden(), label: {
+                            Button {
+                                isShowingExitConfirmation = true
+                                shouldGoToMatchView = true
+                            } label: {
                                 Image(systemName: "checkmark")
                                     .padding()
                                     .background{
                                         CardBackground()
                                     }
-                            })
+                            }
+                            
+                            NavigationLink(destination: MatchView().navigationBarBackButtonHidden(), isActive: $shouldGoToMatchView){}
                         }
                     }
                     Spacer()
@@ -287,9 +294,12 @@ struct BuildProfileView: View {
     
     func saveProfile() {
         self.profile.biography = biographyText
+        
         appModel.profile = self.profile
         //TODO: Push new profile data to server
-        APIClient.shared.initProfile(profile: appModel.profile)
+        Task {
+            await APIClient.shared.initProfile(profile: appModel.profile)
+        }
         
     }
 }
@@ -316,7 +326,7 @@ struct AddObjectSheet : View {
                                 .font(Theme.headerFont)
                                 .padding()
                             
-                            NavigationLink(destination: PromptFormView().navigationBarBackButtonHidden()) {
+                            NavigationLink(destination: PromptFormView(promptList: $prompts).navigationBarBackButtonHidden()) {
                                 /*
                                 Image(systemName: "plus")
                                     .imageScale(.large)

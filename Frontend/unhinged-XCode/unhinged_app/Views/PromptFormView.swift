@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PromptFormView: View {
+    @Binding var promptList : [PromptItem]
     @State private var question: String = ""
     @State private var correctAnswer: String = ""
     @State private var incorrectAnswers: [String] = [""]
@@ -78,10 +79,21 @@ struct PromptFormView: View {
     
     func finishCreatingPrompt(){
         
+        var choices : [PromptChoice] = []
+        for incorrectAnswer in incorrectAnswers {
+            choices.append(PromptChoice(choice: incorrectAnswer))
+        }
+        
+        let correctChoice = PromptChoice(choice: correctAnswer)
+        let correctID = correctChoice.id
+        choices.append(correctChoice)
+        
+        PromptItem(question: question, choices: choices, correctChoiceUUID: correctID)
         
     }
 }
 
 #Preview {
-    PromptFormView()
+    
+    //PromptFormView(promptList: State(initialValue: [PromptItem.examplePrompt]))
 }

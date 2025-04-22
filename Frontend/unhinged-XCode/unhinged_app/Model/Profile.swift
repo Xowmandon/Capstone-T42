@@ -9,16 +9,16 @@ import Foundation
 import SwiftUI
 
 enum ProfileGender : String, Equatable {
-    case male = "Male"
-    case female = "Female"
-    case other = "Any"
+    case male = "male"
+    case female = "female"
+    case other = "any"
 }
 
 class Profile : Identifiable {
     
     var id : UUID = UUID()
     
-    var profile_id : Int = 0
+    var profile_id : String = "0000"
     
     var name : String = "John Doe"
     
@@ -30,7 +30,7 @@ class Profile : Identifiable {
     
     var state : USState = .nevada
     
-    var city : String = "Reno"
+    var city : String = "reno"
     
     var attributes : [Attribute] = [Attribute(customName: "He/Him", symbolName: "person")]
     
@@ -49,10 +49,14 @@ class Profile : Identifiable {
         self.name = name
     }
     
-    init(id: Int = 0, name: String, age: Int, image: Image = Image(systemName: "person.fill"), gender: ProfileGender, state: USState, city: String, bio: String = "No Bio") {
+    init(id: String = "0000", name: String, age: Int, image: Image = Image(systemName: "person.fill"), gender: ProfileGender, state: USState, city: String, bio: String = "No Bio") {
         self.profile_id = id
         self.name = name
         self.image = image
+        self.gender = gender
+        self.state = state
+        self.city = city
+        self.biography = bio
     }
     
     func addPrompts(promptList : [PromptItem]){

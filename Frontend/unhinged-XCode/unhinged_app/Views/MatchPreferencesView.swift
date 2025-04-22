@@ -147,7 +147,9 @@ struct MatchPreferencesView: View {
         let preference = MatchPreference(minAge: Int(self.minAge), maxAge: Int(self.maxAge), interestedIn: interestedInString)
             
         //Push preferences to AccountData Singleton
-        APIClient.shared.pushPreference(preference: preference)
+        Task {
+            await APIClient.shared.pushPreference(preference: preference)
+        }
     }
     
     static func determineInterestFromOrientation(orientation: SexualOrientation, gender: ProfileGender) -> ProfileGender {

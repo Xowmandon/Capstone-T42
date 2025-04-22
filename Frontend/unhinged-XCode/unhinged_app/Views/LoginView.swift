@@ -114,7 +114,9 @@ struct LoginView: View {
             //Send identity token to backend server and save JWT to keychain
             let identityTokenString = String(data: identityToken!, encoding: .utf8)
             print("Identity Token String: \(String(describing: identityTokenString))")
-            APIClient.shared.sendIdentityToken(token: identityTokenString!)
+            Task {
+                await APIClient.shared.sendIdentityToken(token: identityTokenString!)
+            }
             
             //Assert Apple Credential State
             let provider = ASAuthorizationAppleIDProvider()

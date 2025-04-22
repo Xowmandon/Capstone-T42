@@ -12,21 +12,16 @@ import SwiftData
 public struct ConversationsView: View {
     
     @EnvironmentObject var appModel: AppModel
-    
-    @State private var conversations : [Conversation]
-    
-    init(){
-        self.conversations = [Conversation(), Conversation(), Conversation()]
-    }
+    @State var loading = true
     
     @ViewBuilder
     func conversationRow(conversation: Conversation) -> some View {
         
-        NavigationLink(destination: MessageView(profile: conversation.recipient)){
+        NavigationLink(destination: MessageView(profile: conversation.matchedProfile, matchId: conversation.matchId ?? "")){
             
             VStack(alignment: .leading){
                 HStack{
-                    conversation.recipient.image
+                    conversation.matchedProfile.image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 70, height: 70)
@@ -36,12 +31,12 @@ public struct ConversationsView: View {
                     
                     VStack (alignment: .leading, spacing: 5){
                         
-                        Text(conversation.recipient.name)
+                        Text(conversation.matchedName ?? "No name")
                             .font(Theme.headerFont)
                         HStack {
                             Image(systemName: "bubble.left.and.text.bubble.right.fill")
                                 .font(.caption2)
-                            Text(conversation.messages.last?.content ?? "No Messages")
+                            Text(conversation.lastMessage ?? "No messages")
                                 .font(Theme.captionFont)
                         }
                         .foregroundStyle(.secondary)
@@ -62,24 +57,34 @@ public struct ConversationsView: View {
     
     public var body: some View {
         
-        HStack{
-            BackButton()
-                .padding(.horizontal)
-            Text("My Matches")
-                .font(Theme.titleFont)
-            Spacer()
+        if loading {
+            HStack{
+                BackButton()
+                    .padding(.horizontal)
+                Text("My Matches")
+                    .font(Theme.titleFont)
+                Spacer()
+            }
+            List(appModel.conversations){conversation in
+                conversationRow(conversation: conversation)
+            }
+            .scrollContentBackground(.hidden)
+            .navigationBarHidden(true)
+            .onAppear{
+                getConversations()
+            }
+        } else {
+            ProgressView("Loading...").foregroundStyle(.primary)
         }
-        List(conversations){conversation in
-            conversationRow(conversation: conversation)
-        }
-        .scrollContentBackground(.hidden)
-        .navigationBarHidden(true)
     }
     
     // Query database for conversations associated with client account
-    private func getConversations() -> [Conversation] {
+    private func getConversations() {
         
-        return []
+        Task {
+            await appModel.getConversations()
+        }
+        return
         
     }
     
@@ -88,6 +93,6 @@ public struct ConversationsView: View {
 
 #Preview {
     NavigationStack{
-        ConversationsView()
+        //ConversationsView()
     }
 }

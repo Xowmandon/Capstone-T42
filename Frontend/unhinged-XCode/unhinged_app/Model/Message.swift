@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Message : Identifiable {
+struct Message : Identifiable, Codable {
     
     enum Kind : String, Codable {
         case text
@@ -20,5 +20,20 @@ struct Message : Identifiable {
     var sentFromClient : Bool = false
     
     //private var gameState : GameState?
+    
+}
+
+struct MessageResponse: Codable {
+    
+    let matchId : String
+    let messages: [Message]
+    let totalMessages: Int
+    
+    enum CodingKeys: String, CodingKey {
+        case matchId = "match_id"
+        case messages
+        case totalMessages = "total_messages"
+    }
+    
     
 }

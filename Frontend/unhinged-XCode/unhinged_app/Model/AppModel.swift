@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 final class AppModel : ObservableObject {
     
     @Published var profile : Profile
@@ -18,40 +19,29 @@ final class AppModel : ObservableObject {
     
     init() {
         
-        self.prospectiveMatches = AppModel.getMatches()
+        self.prospectiveMatches = []
         self.conversations = []
-        self.profile = AppModel.getProfile()
+        self.profile = Profile()
         
     }
     
-    static func getProfile() -> Profile {
+    func getSwipeProfiles() async {
         //API call returns profile data
-        return Profile()
+        let pulledSwipeProfiles = await APIClient.shared.getSwipes(limit: 5)
+        guard !pulledSwipeProfiles.isEmpty else {
+            print("No profiles found.")
+            return
+        }
+        self.prospectiveMatches.append(contentsOf: pulledSwipeProfiles)
     }
     
-    static func getMatches() -> [Profile] {
-        /*
-        //Fetch
-        let test_prompt_choices : [PromptChoice] = [
-            PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
-            PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
-            PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1")
-        ]
-        
-        let test_prompt = PromptItem(question: "Test Prompt", choices: test_prompt_choices, correctChoice: test_prompt_choices[0].id)
-        let test_prompt2 = PromptItem(question: "Test Prompt", choices: test_prompt_choices, correctChoice: test_prompt_choices[2].id)
-        
-        let prompt_profile = Profile(name: "John Doesington", imageName: "stockPhoto")
-        
-        prompt_profile.addPrompts(promptList: [test_prompt, test_prompt2])
-        
-        let matches = [prompt_profile, Profile(), Profile(name: "john doe1", imageName: "stockPhoto"), Profile(name: "john doe2", imageName: "stockPhoto")]
-        
-        return matches
-         
-         */
-        
-        return [Profile(name: "Joe Doe")]
+    func getConversations() async {
+        let pulledConversations = await APIClient.shared.getMatches()
+        guard !pulledConversations.isEmpty else {
+            print("No conversations found.")
+            return
+        }
+        self.conversations = pulledConversations
     }
     
 }

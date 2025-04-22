@@ -44,10 +44,6 @@ struct unhinged_appApp: App {
          */
         
         WindowGroup {
-            ZStack {
-                UnityGameView()
-            }
-            /*
             NavigationStack {
                 if userIsAuthenticated {
                     if isFirstLogin {
@@ -65,7 +61,6 @@ struct unhinged_appApp: App {
                 }
             }
             .environmentObject(appModel)
-             */
         }
         
     }

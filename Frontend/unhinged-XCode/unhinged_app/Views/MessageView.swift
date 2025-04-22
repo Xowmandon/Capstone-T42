@@ -12,16 +12,20 @@ import SwiftUI
 
 struct MessageView : View {
     let profile : Profile
+    let matchId : String
     //@EnvironmentObject var appModel : AppModel
     @State private var messages : [Message]
     @State private var messageText : String = ""
     @State private var showOptionsSheet : Bool = false
     @State private var showGameSheet : Bool = false
     
+    @FocusState var focusedOnKeyboard : Bool
+    
     let games : [GameObject] = GameObject.gameList
     
-    init(profile: Profile){
+    init(profile: Profile, matchId: String){
         self.profile = profile
+        self.matchId = matchId
         _messages = State(initialValue: MessageView.fetchMessages())
     }
     
@@ -49,25 +53,28 @@ struct MessageView : View {
     
     @ViewBuilder
     func gameSelect(games: [GameObject]) -> some View {
-        
-        VStack{
-            Text("Select a Game!")
-                .font(Theme.titleFont)
-            
-            ForEach(games){gameObject in
-                HStack{
-                    Text("\(gameObject.name)")
-                        .font(Theme.headerFont)
-                    Spacer()
-                    Image(systemName: "\(gameObject.imageName)")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(maxWidth: 50)
-                        .foregroundStyle(.blue)
-                }
-                .padding()
-                .background{
-                    CardBackground()
+        NavigationStack {
+            VStack{
+                Text("Select a Game!")
+                    .font(Theme.titleFont)
+                
+                List(games){gameObject in
+                    NavigationLink(destination: UnityGameView()){
+                        HStack{
+                            Text("\(gameObject.name)")
+                                .font(Theme.headerFont)
+                            Spacer()
+                            Image(systemName: "\(gameObject.imageName)")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxWidth: 50)
+                                .foregroundStyle(.blue)
+                        }
+                        .padding()
+                        .background{
+                            CardBackground()
+                        }
+                    }
                 }
             }
         }
@@ -86,9 +93,8 @@ struct MessageView : View {
                 }
                 ScrollView{
                     VStack{
-                        ForEach(messages) {message in
+                        ForEach(messages.reversed()) {message in
                             messageBubble(message: message, sentFromClient: message.sentFromClient)
-                            
                         }
                     }
                     
@@ -111,6 +117,7 @@ struct MessageView : View {
                 }
                 HStack{
                     TextField("Send a message", text: $messageText)
+                        .focused($focusedOnKeyboard, equals: true)
                         .textFieldStyle(.roundedBorder)
                         .padding()
                     Button(action: {
@@ -139,6 +146,17 @@ struct MessageView : View {
                     Image(systemName: "ellipsis")
                         .foregroundStyle(.primary)
                 }
+            }
+            ToolbarItem(placement: .keyboard) {
+                HStack{
+                    Spacer()
+                    Button() {
+                        focusedOnKeyboard = false // Dismiss keyboard
+                    } label: {
+                        Image(systemName: "checkmark.circle.fill")
+                    }
+                }
+                .fixedSize()
             }
         }
         .sheet(isPresented: $showOptionsSheet) {
@@ -189,8 +207,10 @@ struct MessageView : View {
     }
     private func sendMesage() {
         // push message
-        messageText = ""
-        //APIClient.shared.sendMesage(text: messageText)
+        Task {
+            await APIClient.shared.pushConversationMessage(match_id: matchId , type: Message.Kind.text, content: messageText)
+        }
+        
     }
     private static func fetchMessages() -> [Message]{
         //
@@ -200,7 +220,7 @@ struct MessageView : View {
 }
 
 #Preview {
-    MessageView(profile: Profile())
+    MessageView(profile: Profile(), matchId: "")
 }
 
 

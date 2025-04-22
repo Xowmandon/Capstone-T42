@@ -12,16 +12,23 @@ struct MatchView : View {
     @EnvironmentObject var appModel : AppModel
     
     @State private var showAccountConfigSheet : Bool = false
+    @State private var didCreateNewMatch : Bool = false //TODO: new match banner notification
+    @State private var shouldShowProfile : Bool = false
     
     @State private var offsetX: CGFloat = 0       // For sliding the card horizontally
     @State private var opacity: Double = 1.0     // For fading in and out
     @State private var shouldAnimateProfileCard: Bool = true
     
+    
     private var theme : Theme = Theme.shared // TODO: Add theme settings for profile, change style depending on profile data
     
-    var currentProfile: Profile? {
-            //TODO: if profile buffer empty -> alert user
-            return appModel.prospectiveMatches.first
+    var currentProfile : Profile? {
+        guard !swipeBufferIsEmpty else {
+            return nil }
+        return appModel.prospectiveMatches.first
+    }
+    var swipeBufferIsEmpty : Bool {
+        appModel.prospectiveMatches.isEmpty
     }
     
     //TODO: change values with profile instance
@@ -52,7 +59,7 @@ struct MatchView : View {
                             //.font(.system(.largeTitle, weight: .bold))
                             //.offset(x: -2)
                         Spacer()
-                        Text("21")
+                        Text(String(profile.age))
                             .font(Theme.titleFont)
                     }
                 }
@@ -102,6 +109,7 @@ struct MatchView : View {
                     }
                  */
             }
+            .disabled(swipeBufferIsEmpty)
             Button {
                 Match()
             } label: {
@@ -131,6 +139,7 @@ struct MatchView : View {
                     }
                  */
             }
+            .disabled(swipeBufferIsEmpty)
         }
     }
     
@@ -164,9 +173,10 @@ struct MatchView : View {
         .padding(.horizontal)
     }
     
+    //MARK: Body
     var body: some View {
         
-        //Navigation Buttons
+        // MARK: Navigation Buttons
         HStack{
             Text("Find a Match")
                 .font(Theme.titleFont)
@@ -196,40 +206,54 @@ struct MatchView : View {
         NavigationStack {
             
             ZStack {
-                // Profile Content
+                // MARK: Profile Content
                 ScrollView{
-                    
-                    ProfileCard(profile: currentProfile!)
-                        .padding(.horizontal)
-                        .frame(minHeight: 400)
-                    
-                    // Attribute Section
-                    
-                    /*
-                    VStack (spacing: 5){
-                        ForEach(currentProfile!.attributes, id: \.self) { attribute in
-                            AttributeRow(attribute:attribute)
+                    if swipeBufferIsEmpty {
+                        ProgressView("Getting your Swipes...").foregroundStyle(.primary)
+                            .padding(.top, 300)
+                            .onAppear{
+                                refreshMatches()
+                            }
+                        Button("Refresh Swipes", systemImage: "arrow.clockwise", action: {
+                            refreshMatches()
+                        })
+                    } else {
+                        ProfileCard(profile: currentProfile ?? Profile(name: "NULL PROFILE"))
+                            .padding(.horizontal)
+                            .frame(minHeight: 400)
+                        
+                        // Attribute Section
+                        
+                        /*
+                        VStack (spacing: 5){
+                            ForEach(currentProfile!.attributes, id: \.self) { attribute in
+                                AttributeRow(attribute:attribute)
+                            }
                         }
-                    }
-                    .padding()
-                    .frame(maxWidth:.infinity)
-                    .background{
-                        CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                    }
-                    .padding()
-                    */
-                    
-                    // Biography Section
-                    AboutMeSection(bio: currentProfile?.biography ?? "No bio provided")
-                    
-                    //TODO: Image Gallery
-                    
-                    
-                    //Prompts
-                    
-                    ForEach(currentProfile!.prompts ?? []){prompt in
-                        PromptView(prompt: prompt)
-                            .padding()
+                        .padding()
+                        .frame(maxWidth:.infinity)
+                        .background{
+                            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                        }
+                        .padding()
+                        */
+                        
+                        // MARK: Biography Section
+                        AboutMeSection(bio: currentProfile?.biography ?? "No bio provided")
+                        
+                        //TODO: Image Gallery
+                        
+                        
+                        // MARK: Prompts
+                        /*
+                        if !appModel.prospectiveMatches.first!.prompts.isEmpty {
+                            ForEach(appModel.prospectiveMatches.first!.prompts){prompt in
+                                PromptView(prompt: prompt)
+                                    .padding()
+                            }
+                        }
+                         */
+                        
                     }
                     //Main buttons spacing
                     Spacer()
@@ -240,10 +264,8 @@ struct MatchView : View {
                 .opacity(opacity)
                 .offset(x: offsetX)
                 
-                //Overlay
+                // MARK: Overlay
                 VStack {
-                    
-                    
                     Spacer()
                     MainButtons()
                         .frame(maxWidth: 100)
@@ -255,51 +277,12 @@ struct MatchView : View {
             AccountConfigSheet()
         }
         .onAppear(){
-            //refreshMatches()
+            refreshMatches()
         }
         
     }
     
-    //Reject a Match
-    func Pass(){
-        
-        //Left swipe animation
-        withAnimation(){
-            offsetX = -UIScreen.main.bounds.width // Slide to the right
-            opacity = 0
-        }
-        
-        //Add profile to user's disliked list
-        
-        //Refresh match prospects
-        refreshMatches()
-    }
-    
-    //Accept a Match
-    func Match(){
-        
-        //Right Swipe animation
-        withAnimation (.snappy) {
-            offsetX = UIScreen.main.bounds.width // Slide to the right
-            opacity = 0
-        }
-        
-        //add matched profile to matches list
-            
-        
-        //refresh conversations
-        //Create conversation with matched profile
-            
-        //Push changes to DB
-        
-        //Refresh match prospects
-        refreshMatches()
-        
-    }
-    
-    func refreshMatches(){
-        
-        //animate card
+    func removeTopCardWithAnimation(){
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1){
             
             shouldAnimateProfileCard = false
@@ -314,12 +297,71 @@ struct MatchView : View {
                 }
             }
         }
+    }
+    
+    //Reject a Match
+    func Pass(){
         
-        //API.getMatches
-        //check size of profile buffer
-        //query for appropriate
-        appModel.prospectiveMatches.append(Profile())
-        appModel.prospectiveMatches.append(appModel.profile)
+        //Left swipe animation
+        withAnimation(){
+            offsetX = -UIScreen.main.bounds.width // Slide to the right
+            opacity = 0
+        }
+        
+        guard let swipedProfile = currentProfile else {
+            shouldShowProfile = false
+            refreshMatches()
+            return
+        }
+        
+        //animate card
+        removeTopCardWithAnimation()
+        //Add profile to user's disliked list
+        Task {
+            await APIClient.shared.pushSwipe(swipedUserId: swipedProfile.profile_id, accepted: false)
+        }
+        //refresh
+        refreshMatches()
+    }
+    
+    //Accept a Match
+    func Match(){
+        
+        //Right Swipe animation
+        withAnimation (.snappy) {
+            offsetX = UIScreen.main.bounds.width // Slide to the right
+            opacity = 0
+        }
+        guard let swipedProfile = currentProfile else {
+            shouldShowProfile = false
+            refreshMatches()
+            return
+        }
+        removeTopCardWithAnimation()
+        
+        
+        //add matched profile to matches list
+        Task {
+            let status = await APIClient.shared.pushSwipe(swipedUserId: swipedProfile.profile_id, accepted: true)
+            if status == "NEW" {
+                didCreateNewMatch = true
+            }
+        }
+        //refresh
+        refreshMatches()
+        
+    }
+    
+    func refreshMatches() {
+        //MARK: Get Swipe Pool
+        if appModel.prospectiveMatches.isEmpty || appModel.prospectiveMatches.count < 2{
+            shouldShowProfile = false
+            Task{
+                await appModel.getSwipeProfiles()
+            }
+            print("Swipe buffer: \(appModel.prospectiveMatches)")
+        }
+        shouldShowProfile = true
     }
 
     func didDismissAccountConfigSheet(){

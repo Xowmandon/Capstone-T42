@@ -8,7 +8,6 @@
 import Foundation
 
 struct PromptItem : Identifiable {
-    
     static let examplePromptChoices : [PromptChoice] = [PromptChoice(choice: "Duck"),
                                                         PromptChoice(choice: "Duck"),
                                                         PromptChoice(choice: "Goose")]
@@ -17,7 +16,7 @@ struct PromptItem : Identifiable {
         
         question: "Two Truths and a Lie",
         choices: examplePromptChoices,
-        correctChoice: examplePromptChoices.last!.id
+        correctChoiceUUID: examplePromptChoices.last!.id
     
     )
     
@@ -26,13 +25,14 @@ struct PromptItem : Identifiable {
     let choices: [PromptChoice]
     let correctChoice: PromptChoice.ID
     
-    init(question: String, choices: [PromptChoice], correctChoice: UUID){
+    init(question: String, choices: [PromptChoice], correctChoiceUUID: UUID){
         self.id = UUID()
         self.question = question
         self.choices = choices
-        self.correctChoice = correctChoice
+        self.correctChoice = correctChoiceUUID
         
     }
+    
 }
 
 struct PromptChoice : Identifiable {
