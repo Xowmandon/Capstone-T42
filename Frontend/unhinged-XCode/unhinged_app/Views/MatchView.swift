@@ -86,28 +86,7 @@ struct MatchView : View {
                     .background{
                         CardBackground(borderColor: .gray, innerColor: .red)
                             .offset(y:2)
-                        /*
-                        RoundedRectangle(cornerRadius: 15)
-                            .fill(.red)
-                            .shadow(radius:shadowSize)
-                            .offset(y:2)
-                         */
                     }
-                /*
-                Image(systemName: "xmark")
-                    .imageScale(.large)
-                    .symbolRenderingMode(.monochrome)
-                    .foregroundStyle(.primary)
-                    .font(.system(.title, weight: .black))
-                    .foregroundStyle(.pink)
-                    .padding()
-                    .background{
-                        
-                        Circle()
-                            .fill(.ultraThickMaterial)
-                            .shadow(radius:shadowSize)
-                    }
-                 */
             }
             .disabled(swipeBufferIsEmpty)
             Button {
@@ -118,26 +97,7 @@ struct MatchView : View {
                     .background{
                         CardBackground(borderColor: .gray, innerColor: .green)
                             .offset(y:2)
-                        /*
-                        RoundedRectangle(cornerRadius: 15)
-                            .fill(.green)
-                            .shadow(radius:shadowSize)
-                            .offset(y:2)
-                         */
                     }
-                /*
-                Image(systemName: "heart.fill")
-                    .imageScale(.large)
-                    .symbolRenderingMode(.monochrome)
-                    .font(.system(.title, weight: .black))
-                    .foregroundStyle(.green)
-                    .padding()
-                    .background{
-                        Circle()
-                            .fill(.ultraThickMaterial)
-                            .shadow(radius:shadowSize)
-                    }
-                 */
             }
             .disabled(swipeBufferIsEmpty)
         }

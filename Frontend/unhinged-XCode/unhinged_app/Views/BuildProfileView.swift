@@ -33,13 +33,21 @@ struct BuildProfileView: View {
     @State var showAddObjectSheet : Bool = false
     @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
     
-    @State var attributes : [Attribute] = []
     @State var biographyText : String = ""
     @State var prompts : [PromptItem] = []
+    @State var galleryItems : [ImageGalleryItem] = []
+    
     
     @State var isShowingExitConfirmation : Bool = false //TODO: exit confirmation
-    @State var isShowingPromptDeleteConfirmation: Bool = false
+    @State var isShowingDeleteConfirmation: Bool = false
+    
+    enum DeleteType {
+        case prompt
+        case gallery
+    }
+    @State var deleteType : DeleteType?
     @State var promptItemIDToDelete: UUID?
+    @State var galleryItemIDToDelete: UUID?
     
     public var body: some View {
         NavigationStack {
@@ -49,6 +57,7 @@ struct BuildProfileView: View {
                     Text("My Profile")
                         .font(Theme.titleFont)
                     
+                    /*
                     //Avatar Customization
                     VStack (alignment: .leading) {
                         Text("Avatar")
@@ -69,6 +78,8 @@ struct BuildProfileView: View {
                             }
                         }
                     }
+                    */
+                    
                     ProfileCard(profileImage: $profile.image, name: $profile.name, age: $profile.age, isEditable: true, focusedField: $focusedField)
                         .frame(minHeight: 400)
                     
@@ -175,7 +186,34 @@ struct BuildProfileView: View {
                     }
                     
                     
-                    //TODO: Image Gallery
+                    // MARK: Image gallery
+                    
+                    ForEach(galleryItems.indices, id: \.self) { index in
+                        let photo = galleryItems[index]
+                        ZStack(alignment: .topTrailing){
+                            ImageGalleryCard(isEditable: true,
+                                             galleryItem: $galleryItems[index],
+                                             image: photo.image,
+                                             title: photo.title,
+                                             description: photo.description)
+                            Button{
+                                
+                                galleryItemIDToDelete = galleryItems[index].id
+                                deleteType = .gallery
+                                isShowingDeleteConfirmation = true
+                                                                 
+                            } label: {
+                                Image(systemName: "trash.fill")
+                                    .foregroundStyle(.red)
+                                    .padding()
+                                    .background{
+                                        CardBackground()
+                                    }
+                                    .padding()
+                            }
+                        }
+                    }
+                    
                     //Prompts
                     ForEach(prompts){ prompt in
                         ZStack (alignment:.topTrailing){
@@ -183,7 +221,8 @@ struct BuildProfileView: View {
                             Button{
                                 
                                 promptItemIDToDelete = prompt.id
-                                isShowingPromptDeleteConfirmation = true
+                                deleteType = .prompt
+                                isShowingDeleteConfirmation = true
                                  
                             } label: {
                                 Image(systemName: "trash.fill")
@@ -196,26 +235,38 @@ struct BuildProfileView: View {
                             }
                         }
                     }
-                    .confirmationDialog(
-                        "Delete this Prompt Item?",
-                        isPresented: $isShowingPromptDeleteConfirmation,
-                        titleVisibility: .visible
-                    ){
-                        Button("Delete", role: .destructive) {
-                            if let id = promptItemIDToDelete {
-                                DispatchQueue.main.async {
-                                    prompts.removeAll { $0.id == id }
-                                }
-                            }
-                        }
-                        Button("Cancel", role: .cancel) {}
-                    } message: {
-                       Text("You will not be able to undo this action.")
-                    }
+                    
                     Spacer()
                         .padding(.vertical, 60)
                 }
                 .padding()
+                .confirmationDialog(
+                    "Delete this Item?",
+                    isPresented: $isShowingDeleteConfirmation,
+                    titleVisibility: .visible
+                ){
+                    Button("Delete", role: .destructive) {
+                        DispatchQueue.main.async {
+                            switch deleteType {
+                            case .prompt:
+                                if let id = promptItemIDToDelete {
+                                    prompts.removeAll { $0.id == id }
+                                }
+                                break
+                            case .gallery:
+                                if let id = galleryItemIDToDelete {
+                                    galleryItems.removeAll { $0.id == id }
+                                }
+                                break
+                            case nil:
+                                print("Profile Item delete type == NIL ")
+                            }
+                        }
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                   Text("You will not be able to undo this action.")
+                }
                 
                 // MARK: UI Overlay
                 VStack {
@@ -283,7 +334,7 @@ struct BuildProfileView: View {
             }
             //Add Object Sheet
             .sheet(isPresented: $showAddObjectSheet){
-                AddObjectSheet(profile: $profile, prompts: $prompts)
+                AddObjectSheet(profile: $profile, prompts: $prompts, galleryItems: $galleryItems)
             }
         }
         .onAppear{
@@ -307,15 +358,21 @@ struct BuildProfileView: View {
 
 struct AddObjectSheet : View {
     
+    @Environment(\.presentationMode) var presentationMode
+    
     @Binding var profile : Profile
     @Binding var prompts : [PromptItem]
+    @Binding var galleryItems: [ImageGalleryItem]
+    
+    @State var dummyGalleryCard : ImageGalleryItem = ImageGalleryItem()
     
     var body: some View {
         NavigationStack{
             HStack(spacing: 10){
                 BackButton()
+                Spacer()
                 Text("Customize My Profile")
-                    .font(Theme.titleFont)
+                    .font(Theme.headerFont)
             }
             .padding()
             List {
@@ -326,18 +383,7 @@ struct AddObjectSheet : View {
                                 .font(Theme.headerFont)
                                 .padding()
                             
-                            NavigationLink(destination: PromptFormView(promptList: $prompts).navigationBarBackButtonHidden()) {
-                                /*
-                                Image(systemName: "plus")
-                                    .imageScale(.large)
-                                    .symbolRenderingMode(.hierarchical)
-                                    .padding()
-                                    .background{
-                                        CardBackground()
-                                    }
-                                    .padding()
-                                */
-                            }
+                            NavigationLink(destination: PromptFormView(presentationMode: presentationMode, promptList: $prompts).navigationBarBackButtonHidden()) {}
                         }
                         Text("Keep your matches guessing with a custom prompt - be creative!")
                             .font(Theme.bodyFont)
@@ -356,20 +402,11 @@ struct AddObjectSheet : View {
                             Text("Add A Photo")
                                 .padding()
                                 .font(Theme.headerFont)
-                            Spacer()
-                            Image(systemName: "plus")
-                                .imageScale(.large)
-                                .symbolRenderingMode(.hierarchical)
-                                .padding()
-                                .background{
-                                    CardBackground()
-                                }
-                                .padding()
+                            NavigationLink(destination: CreateGalleryItem(presentationMode: presentationMode, gallery: $galleryItems).navigationBarBackButtonHidden()) {}
                         }
                         Text("Decorate your profile with a photo.")
                     }
-                    ImageGalleryCard()
-                        .padding()
+                    ImageGalleryCard(isEditable: false, galleryItem: $dummyGalleryCard)
                 }
             }
         }

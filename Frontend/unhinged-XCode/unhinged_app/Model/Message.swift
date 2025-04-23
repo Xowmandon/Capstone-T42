@@ -13,13 +13,19 @@ struct Message : Identifiable, Codable {
         case text
         case game
     }
+    let id : String = UUID().uuidString
     
     var kind : Kind = Kind.text
-    var id : String = UUID().uuidString
     var content : String = "Hello world"
     var sentFromClient : Bool = false
     
     //private var gameState : GameState?
+    
+    enum CodingKeys: String, CodingKey {
+        case kind
+        case content
+        case sentFromClient = "sentFromClient"
+    }
     
 }
 
@@ -27,12 +33,12 @@ struct MessageResponse: Codable {
     
     let matchId : String
     let messages: [Message]
-    let totalMessages: Int
+    //let totalMessages: Int
     
     enum CodingKeys: String, CodingKey {
         case matchId = "match_id"
         case messages
-        case totalMessages = "total_messages"
+        //case totalMessages = "total_messages"
     }
     
     

@@ -7,12 +7,16 @@
 //
 
 import Foundation
+import Alamofire
+import AlamofireImage
+import SwiftUI
 
 class APIClient {
     
-    //TODO: create websocket task manager, endpoint: <socket.io/>
     static let shared = APIClient()
+    let imageCache = AutoPurgingImageCache()
     private init() {}
+    
     enum TaskType {
         case get
         case post
@@ -69,72 +73,7 @@ class APIClient {
         return data
     }
     
-    /*
-    private func apiTask(type: TaskType, endpoint: String, hasHeader:Bool, headerValue: String?  = "", headerField: String? = "", queryItems: [URLQueryItem]? = nil,  payload: Data?, completion: @escaping (Result<Data, Error>) -> Void) async {
-        // Construct the URL
-        var urlComponents = URLComponents(string: "https://cowbird-expert-exactly.ngrok-free.app/\(endpoint)")!
-        urlComponents.queryItems = queryItems ?? []
-        guard let url = urlComponents.url else {
-            completion(.failure(NSError(domain: "Invalid URL", code: 0, userInfo: nil)))
-            return
-        }
-        
-        // Create the request
-        var request = URLRequest(url: url)
-        request.httpMethod = type == .get ? "GET" : "POST"
-        
-        
-        if (hasHeader){
-            request.setValue(headerValue ?? "", forHTTPHeaderField: headerField ?? "")
-        }
-        
-        // Set headers and body for POST requests
-        if type == .post {
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = payload
-        }
-
-        else if type == .postForm {
-            request.httpMethod = "POST"
-            request.setValue("multipart/form-data", forHTTPHeaderField: "Content-Type")
-            request.httpBody = payload
-        }
-        
-        // Create the data task
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            // Handle errors
-            if let error = error {
-                completion(.failure(error))
-                return
-            }
-            
-            // Check for a valid HTTP response
-            guard let httpResponse = response as? HTTPURLResponse else {
-                completion(.failure(NSError(domain: "Invalid Response", code: 0, userInfo: nil)))
-                return
-            }
-            print("Response String: \(httpResponse)")
-            
-            // Check for a successful status code (e.g., 200-299)
-            guard (200...299).contains(httpResponse.statusCode) else {
-                completion(.failure(NSError(domain: "Server Error", code: httpResponse.statusCode, userInfo: nil)))
-                return
-            }
-            
-            // Handle the response data
-            if let data = data {
-                completion(.success(data))
-            } else {
-                completion(.failure(NSError(domain: "No Data", code: 0, userInfo: nil)))
-            }
-        }
-        
-        // Start the task
-        task.resume()
-    }
-    */
-    
-    //send identity token
+    // MARK: send identity token
     struct IdentityTokenResponse : Codable {
         let message : String
         let token : String
@@ -165,7 +104,7 @@ class APIClient {
 
     }
     
-    //verify JWT Token
+    // MARK: verify JWT Token
     func verifyJWTToken() async throws {
         let token : String = KeychainHelper.load(key: "JWTToken")!
         print(token as String)
@@ -230,6 +169,8 @@ class APIClient {
     // MARK: GetSwipes
     //Get Swipe profiles for MatchView()
     func decodeProfile (person: [String:String]) throws -> Profile  {
+        
+        //get attributes
         guard let idString  = person["userID"] else {
             throw TaskError.invalidValue("idstring")
         }
@@ -266,7 +207,27 @@ class APIClient {
             throw TaskError.invalidValue("bioString")
         }
         
-        return Profile(id: idString, name: name, age: age , gender: gender, state: stateCode, city: cityString, bio: bioString)
+        //get photos
+        var mainPhoto : SwiftUI.Image = SwiftUI.Image(systemName: "")
+        var galleryItems : [ImageGalleryItem] = []
+        
+        Task {
+            let imgs = await getProfileImgs(userId: idString)
+            if let mainPhotoURL = imgs["main_photo"]?.first {
+                let mainPhotoUIImage = self.imageCache.image(/*for: URLRequest(url: URL(string: mainPhotoURL)!),*/ withIdentifier: mainPhotoURL)
+                mainPhoto = Image(uiImage: mainPhotoUIImage!)
+            }
+            
+            if let userPhotoUrls = imgs["gallery_photos"] {
+                for url in userPhotoUrls {
+                    let galleryPhotoUIImage = self.imageCache.image(withIdentifier: url) //may need URLRequest
+                    let galleryImg = Image(uiImage: galleryPhotoUIImage!)
+                    galleryItems.append(ImageGalleryItem(image: galleryImg, title: "", description: ""))
+                }
+            }
+        }
+        
+        return Profile(id: idString, name: name, age: age, gender: gender, state: stateCode, city: cityString, bio: bioString, image: mainPhoto, galleryItems: galleryItems,)
     }
     
     func getSwipes (limit: Int) async -> [Profile] {
@@ -311,6 +272,8 @@ class APIClient {
         let profile : [String:String]
     }
      */
+    
+    // MARK: Get Matches (Conversations)
     func getMatches () async -> [Conversation] {
         
         var pulledConversations : [Conversation] = []
@@ -350,13 +313,11 @@ class APIClient {
         }
         return pulledConversations
     }
-    
+    // MARK: Get message
     //Get messages associated with a match (Conversation)
-    func getConversationMessages (match_id: String,limit: Int?, page: Int?, all_messages: Bool?) async -> [Message] {
+    func getConversationMessages (match_id: String, limit: Int?, page: Int?, all_messages: Bool?) async -> [Message] {
         // Author: Joshua Ferguson (Xowmandon)
-
         var pulledMessages : [Message] = []
-        
         
         print("Attmepting to pull messages for match_id: \(match_id)")
         guard let token = KeychainHelper.load(key: "JWTToken") else {
@@ -377,7 +338,6 @@ class APIClient {
             queryItems.append(URLQueryItem(name: "all_messages", value: String(all_messages_opt)))
         }
         
-        
         do {
             let data = try await apiTask(
                 type: .get,
@@ -392,15 +352,15 @@ class APIClient {
             let resp = try decoder.decode(MessageResponse.self, from: data)
             let messages = resp.messages
             pulledMessages = messages
-            print("Total \(messages.count) messages for match \(resp.matchId): Queried So Far \(resp.totalMessages)")
+            print("Total \(messages.count) messages for match \(resp.matchId)")
         }
         catch {
-            print("⚠️ decode failed:", error)
+            print("⚠️ Get Messages failed:", error)
         }
         return pulledMessages
     }
-        //TODO: additional backend routes
         
+    // MARK: Push Message
     //Send message to conversation associated with match
     func pushConversationMessage (match_id: String, type: Message.Kind?, content: String) async {
         // Author: Joshua Ferguson (Xowmandon)
@@ -424,7 +384,7 @@ class APIClient {
         }
 
         do {
-            let data = try await apiTask(
+            let _ = try await apiTask(
                 type: .post,
                 endpoint: "users/messages",
                 hasHeader: true,
@@ -493,6 +453,8 @@ class APIClient {
         return ""
     }
     
+    
+    // MARK: Poll Matches
     func pollMatches() async {
         // Author: Joshua Ferguson (Xowmandon)
         
@@ -540,6 +502,7 @@ class APIClient {
         
     }
     
+    // MARK: poll messages
     func pollMessages(matchId: String? = nil) async {
         // Author: Joshua Ferguson (Xowmandon)
 
@@ -627,143 +590,88 @@ class APIClient {
         return profile
     }
     
-    
-/*
-    func postProfileImg(mainPhoto: Bool =  false, image: UIImage ) {
-     // Author: Joshua Ferguson (Xowmandon)
-    //Post profile image to server, mainPhoto is defaulted to false
-        //var endpoint = "users/profile_picture"
-        //var contentType = "multipart/form-data"
-
-        guard let token = KeychainHelper.load(key: "JWTToken") else {
-            print("❌ No JWT token found")
-            return
-        }
-
-        print("Attempting to post profile image...")
-
-        // Salt for FileName, Str of Length 8?
-        var fileNameSalt = NSUUID().uuidString
-        print("FileName Salt: \(fileNameSalt)")
-
-        // COnstruct Form Data
-        let multipartFormData = MultipartFormData()
-
-        // Append the image data
-        // Convert UIImage to JPEG data
-        // Append the image data to the multipart form data
-        multipartFormData.append(
-            image.jpegData(compressionQuality: 0.8)!,
-            withName: "profile_picture",
-            fileName: "\(fileNameSalt).jpg",
-            mimeType: "image/jpeg"
-        )
-
-        //Append is_main_photo Bool to Form Data
-        multipartFormData.append(
-            Data("\(mainPhoto)".utf8), // Convert Bool to String
-            withName: "is_main_photo"
-        )
-
-        // COnstruct Request
-        apiTask(
-            type: .postForm,
-            endpoint:  "users/profile_picture",
-            hasHeader: true,
-            headerValue: "Bearer \(token)",
-            headerField: "X-Authorization",
-            queryItems: nil,
-            payload: multipartFormData.data
-        ) { result in
-            switch result {
-            case .success:
-                print("✅ Profile image posted successfully")
-                // Py - return jsonify({"success": "Profile Uploaded", "url": url}), 201
-
-                // Decode Response
-                let decoder = JSONDecoder()
-                do {
-                    let resp = try decoder.decode([String: String].self, from: data)
-                    print("postProfileImg Response: \(resp)")
-                    
-                    let imgURL = resp["url"] // S3 URL
-                    print("Image URL: \(imgURL ?? "No URL")")
-
-                } catch {
-                    print("⚠️ Could not parse response:", error)
-                }
-
-
-            case .failure(let error):
-                print("❌ postProfileImg failed:", error.localizedDescription)
-            }
-        }
-
-
-    }
-    func getProfileImgs(userId: String? = nil) {
-        // Author: Joshua Ferguson (Xowmandon)
-
-        // Get profile images from server
-        // Make GET Request, with JWT Token
-        guard let token = KeychainHelper.load(key: "JWTToken") else {
-            print("❌ No JWT token found")
-            return
-        }
-
-        print("Attempting to get profile images...")
-
-        // If userId is nil, then get ProfileImg for Current User
-        // else get ProfileImg for that userId
-        let queryItems = (userId != nil) ? [URLQueryItem(name: "user_id", value: userID)] : nil
-
-        // Construct Request for Profile Imgs of UserID
-        apiTask(
-            type: .get,
-            endpoint: "users/profile_picture",
-            hasHeader: true,
-            headerValue: "Bearer \(token)",
-            headerField: "X-Authorization",
-            queryItems: queryItems,
-            payload: nil
-        ) { result in
-            switch result {
-            case .success:
-                print("✅ getProfileImgs Success")
-                // Decode Response
-                let decoder = JSONDecoder()
-                do {
-                    // Decode the Python response S3 URLS
-                    let resp = try decoder.decode([String: [String]].self, from: data)
-                    mainPhoto = resp["main_photo"] // S3 URL
-                    additionalPhotos = resp["user_photos"] // S3 URL
-                    
-                    // Validation Print
-                    print("Main Photo URL: \(mainPhoto ?? "No URL")")
-                    print("Additional Photos URLs: \(additionalPhotos ?? ["No URL"])")
-                    
-                } catch {
-                    print("⚠️ Could not parse response:", error)
-                }
-            case .failure(let error):
-                print("❌ getProfileImgs failed:", error.localizedDescription)
-            }
-        }
+    // MARK: Get Profile Images (Gallery)
+    private func getProfileImgs(userId: String? = nil) async -> [String:[String]] {
         
+        var mainPhotoURL : [String] = []
+        var userPhotoURLs : [String] = []
+        
+        // Author: Joshua Ferguson (Xowmandon), harry
+        guard let token = KeychainHelper.load(key: "JWTToken") else {
+            print("❌ No JWT token found")
+            return [:]
+        }
+        print("📥 Fetching profile images...")
+
+        // If userId is nil, then Fetch Current User's Profile Images
+        let queryItems: [URLQueryItem]? = userId != nil ? [URLQueryItem(name: "user_id", value: userId)] : nil
+
+        // Make GET Request for Main and Additional Profile Picture S3 URLS
+        do {
+            let data = try await apiTask(
+                type: .get,
+                endpoint: "users/profile_picture",
+                hasHeader: true,
+                headerValue: "Bearer \(token)",
+                headerField: "X-Authorization",
+                queryItems: queryItems,
+                payload: nil
+            )
+            print("✅ getProfileImgs Success")
+            let decoder = JSONDecoder()
+            let resp = try decoder.decode([String: [String]].self, from: data)
+            
+            
+            // Decode Main Photo
+            //var pulledProfileImageURLReqs : [URLRequest] = []
+            if let pulledPfp = resp["main_photo"],
+               let pfpImgURLString = pulledPfp.first,
+               let pfpImgURL = URL(string: pfpImgURLString) {
+                mainPhotoURL = pulledPfp
+                let pfpImgURLRequest = URLRequest(url: pfpImgURL)
+                AF.request(pfpImgURL).responseImage { response in
+                    switch response.result {
+                        case .success(let image):
+                        self.imageCache.add(image, for: pfpImgURLRequest, withIdentifier: pfpImgURLString)
+                            print("✅ Cached image: \(pfpImgURL)")
+                        case .failure(let error):
+                            print("❌ Failed to fetch image:", error.localizedDescription)
+                        }
+                }
+                
+            }
+            
+            // Decode Additional Photos
+            var pulledGalleryImageURLReqs : [URLRequest] = []
+            if let pulledGallery = resp["user_photos"],
+               let pulledTitles = resp["titles"],
+               let pulledDescs = resp["descriptions"] {
+                userPhotoURLs = pulledGallery
+                for urlString in pulledGallery {
+                    if let url = URL(string: urlString){
+                        let galleryItemRequest = URLRequest(url: url)
+                        pulledGalleryImageURLReqs.append(galleryItemRequest)
+                    }
+                }
+                for (urlString, urlReq) in zip(pulledGallery, pulledGalleryImageURLReqs) {
+                    AF.request(urlString).responseImage { response in
+                        switch response.result {
+                            case .success(let image):
+                            self.imageCache.add(image, for: urlReq, withIdentifier: urlString)
+                                print("✅ Cached image: \(urlString)")
+                            case .failure(let error):
+                                print("❌ Failed to fetch image:", error.localizedDescription)
+                            }
+                    }
+                }
+                
+            }
+        } catch {
+            print("⚠️ Get Profile Imgs failed with error:", error)
+        }
+        return ["main_photo" : mainPhotoURL,
+                "user_photos" : userPhotoURLs]
     }
-    */
-    
-    /*
-     
-     func pushProfileItem() -> Bool {
-     
-     
-     }
-     
-     */
-    
-    
-    
 }
 
 

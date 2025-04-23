@@ -57,7 +57,7 @@ public struct ConversationsView: View {
     
     public var body: some View {
         
-        if loading {
+        if !loading {
             HStack{
                 BackButton()
                     .padding(.horizontal)
@@ -70,22 +70,22 @@ public struct ConversationsView: View {
             }
             .scrollContentBackground(.hidden)
             .navigationBarHidden(true)
-            .onAppear{
-                getConversations()
-            }
         } else {
             ProgressView("Loading...").foregroundStyle(.primary)
+                .onAppear{
+                    getConversations()
+                }
+            
         }
     }
     
     // Query database for conversations associated with client account
     private func getConversations() {
-        
         Task {
             await appModel.getConversations()
+            loading = false
         }
         return
-        
     }
     
 }

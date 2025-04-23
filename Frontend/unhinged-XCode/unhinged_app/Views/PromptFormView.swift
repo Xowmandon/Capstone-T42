@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct PromptFormView: View {
+    
+    
+    @Binding var presentationMode : PresentationMode
     @Binding var promptList : [PromptItem]
     @State private var question: String = ""
     @State private var correctAnswer: String = ""
@@ -88,7 +91,10 @@ struct PromptFormView: View {
         let correctID = correctChoice.id
         choices.append(correctChoice)
         
-        PromptItem(question: question, choices: choices, correctChoiceUUID: correctID)
+        let newPrompt = PromptItem(question: question, choices: choices, correctChoiceUUID: correctID)
+        
+        promptList.append(newPrompt)
+        presentationMode.dismiss()
         
     }
 }

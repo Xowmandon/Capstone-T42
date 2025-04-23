@@ -18,6 +18,7 @@ struct MessageView : View {
     @State private var messageText : String = ""
     @State private var showOptionsSheet : Bool = false
     @State private var showGameSheet : Bool = false
+    @State private var shouldUpdateScrollPosition : Bool = false
     
     @FocusState var focusedOnKeyboard : Bool
     
@@ -26,7 +27,7 @@ struct MessageView : View {
     init(profile: Profile, matchId: String){
         self.profile = profile
         self.matchId = matchId
-        _messages = State(initialValue: MessageView.fetchMessages())
+        messages = []
     }
     
     @ViewBuilder
@@ -82,38 +83,43 @@ struct MessageView : View {
     var body: some View {
         ZStack {
             VStack {
-                HStack{
-                    profile.image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                    Text(profile.name)
-                        .font(Theme.headerFont)
-                }
-                ScrollView{
-                    VStack{
-                        ForEach(messages.reversed()) {message in
-                            messageBubble(message: message, sentFromClient: message.sentFromClient)
-                        }
-                    }
-                    
-                }
-                HStack{
-                    Button(action: {
+                // MARK: Message Bubbles
+                ScrollViewReader { proxy in
+                    ScrollView{
                         
-                        showGameSheet.toggle()
-                        // assert unity instance
-                        // prepare game state message
-                        // Present unity window to windowgroup using Unity framework
-                        // pass game state to Unity instance
-                    }, label: {
-                        Text("Press Start!")
-                            .padding()
-                            .background{
-                                CardBackground()
+                        if !messages.isEmpty {
+                            VStack{
+                                ForEach(messages.reversed()) {message in
+                                    messageBubble(message: message, sentFromClient: message.sentFromClient)
+                                }
+                                Color.clear.id("bottom")
+                                    .frame(maxHeight: 1)
                             }
-                    })
+                        } else {
+                            Image(uiImage: UIImage(named: "Speech_bubble")!.withRenderingMode(.alwaysTemplate))
+                                .foregroundColor(.gray)
+                                .foregroundStyle(.tertiary)
+                            Text("No messages yet!")
+                                .foregroundStyle(.secondary)
+                            
+                        }
+                        
+                    }
+                     .onAppear {
+                        fetchMessages()
+                        proxy.scrollTo("bottom", anchor: .bottom)
+                    }
+                     .onChange(of: shouldUpdateScrollPosition) {
+                         // Auto-scroll when new messages appear
+                         DispatchQueue.main.async {
+                             if shouldUpdateScrollPosition {
+                                 withAnimation {
+                                     proxy.scrollTo("bottom", anchor: .bottom)
+                                 }
+                             }
+                         }
+                         shouldUpdateScrollPosition.toggle()
+                    }
                 }
                 HStack{
                     TextField("Send a message", text: $messageText)
@@ -135,30 +141,56 @@ struct MessageView : View {
                 }
                 .frame(maxHeight: 100)
             }
+            .onTapGesture {
+                focusedOnKeyboard = false
+            }
         }
         .toolbar{
-            ToolbarItem(placement:.topBarLeading){
-                BackButton()
-            }
-            ToolbarItem(placement: .topBarTrailing){
-                //present options sheet
-                Button(action: {showOptionsSheet.toggle()} ){
-                    Image(systemName: "ellipsis")
-                        .foregroundStyle(.primary)
-                }
-            }
-            ToolbarItem(placement: .keyboard) {
+            ToolbarItem(placement: .principal){
                 HStack{
+                    BackButton()
+                    Spacer()
+                    profile.image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                    Text(profile.name)
+                        .font(Theme.headerFont)
+                    Spacer()
+                    //present options sheet
+                    Button(action: {showOptionsSheet.toggle()} ){
+                        Image(systemName: "ellipsis")
+                            .foregroundStyle(.primary)
+                    }
+                }
+                .padding()
+                .background{
+                    CardBackground()
+                }
+                .offset(y: 20)
+            }
+            ToolbarItemGroup (placement: .keyboard) {
+                HStack {
+                    Button{
+                        showGameSheet.toggle()
+                    } label: {
+                        Text("Press Start!")
+                            .font(Theme.bodyFont)
+                        Image(systemName: "gamecontroller.fill")
+                        Spacer()
+                    }
                     Spacer()
                     Button() {
                         focusedOnKeyboard = false // Dismiss keyboard
                     } label: {
+                        Spacer()
                         Image(systemName: "checkmark.circle.fill")
                     }
                 }
-                .fixedSize()
             }
         }
+        // MARK: Options
         .sheet(isPresented: $showOptionsSheet) {
             
             VStack{
@@ -200,6 +232,7 @@ struct MessageView : View {
             }
             
         }
+        // MARK: Game Entry Point
         .sheet(isPresented: $showGameSheet){
             gameSelect(games: games)
         }
@@ -207,15 +240,20 @@ struct MessageView : View {
     }
     private func sendMesage() {
         // push message
-        Task {
-            await APIClient.shared.pushConversationMessage(match_id: matchId , type: Message.Kind.text, content: messageText)
+        if !messageText.isEmpty {
+            Task {
+                await APIClient.shared.pushConversationMessage(match_id: matchId , type: Message.Kind.text, content: messageText)
+                messageText = ""
+                fetchMessages();
+            }
         }
         
     }
-    private static func fetchMessages() -> [Message]{
-        //
-        //APIClient.shared
-        return [Message(), Message(), Message(sentFromClient: true), Message()]
+    private func fetchMessages() {
+        Task{
+            messages = await APIClient.shared.getConversationMessages(match_id: self.matchId, limit: nil, page: nil, all_messages: true)
+            shouldUpdateScrollPosition.toggle()
+        }
     }
 }
 
@@ -375,8 +413,8 @@ struct MessageView : View {
 }
 
 
-#Preview {
-    MessageView(profile: Profile())
-}
-
 */
+
+#Preview {
+    MessageView(profile: Profile(), matchId: "1")
+}

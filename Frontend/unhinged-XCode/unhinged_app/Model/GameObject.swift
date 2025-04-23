@@ -9,9 +9,15 @@ import Foundation
 
 struct GameObject : Identifiable {
     
-    static let gameList : [GameObject] = [GameObject(name: "Red Flag Racing"), GameObject(name: "Heartfall"), GameObject(name: "RPG Battle"), GameObject(name: "Flag Match") ]
+    static let gameList : [GameObject] = [GameObject(name: "Red Flag Racing"), GameObject(name: "Heartfall"), GameObject(name: "Tic-Tac-Toe"), GameObject(name: "RPG Battle")]
         let id : UUID = UUID()
         let name : String
         let imageName : String = "gamecontroller.circle.fill"
         
+}
+
+struct GameState : Codable {
+    
+    let gameName : String
+    
 }

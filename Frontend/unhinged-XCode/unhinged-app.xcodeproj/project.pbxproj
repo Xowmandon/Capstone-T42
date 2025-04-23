@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		DF5828A62DB6417400EAA2E2 /* UnityFramework.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DF5828A42DB6417400EAA2E2 /* UnityFramework.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DF730D7F2DB8EC3A008C4A94 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = DF730D7E2DB8EC3A008C4A94 /* Alamofire */; };
+		DF730D822DB8F875008C4A94 /* AlamofireImage in Frameworks */ = {isa = PBXBuildFile; productRef = DF730D812DB8F875008C4A94 /* AlamofireImage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +76,7 @@
 				Model/Avatar.swift,
 				Model/Conversation.swift,
 				Model/GameObject.swift,
+				Model/ImageGalleryItem.swift,
 				Model/MatchPreference.swift,
 				Model/Message.swift,
 				Model/Profile.swift,
@@ -88,6 +91,7 @@
 				Views/BuildProfileView.swift,
 				Views/CardBackground.swift,
 				Views/ConversationsView.swift,
+				Views/CreateGalleryItem.swift,
 				Views/ImageGalleryCard.swift,
 				Views/LoginView.swift,
 				Views/MatchPreferencesView.swift,
@@ -108,6 +112,7 @@
 				Model/Avatar.swift,
 				Model/Conversation.swift,
 				Model/GameObject.swift,
+				Model/ImageGalleryItem.swift,
 				Model/MatchPreference.swift,
 				Model/Message.swift,
 				Model/Profile.swift,
@@ -122,6 +127,7 @@
 				Views/BuildProfileView.swift,
 				Views/CardBackground.swift,
 				Views/ConversationsView.swift,
+				Views/CreateGalleryItem.swift,
 				Views/ImageGalleryCard.swift,
 				Views/LoginView.swift,
 				Views/MatchPreferencesView.swift,
@@ -177,6 +183,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DF730D7F2DB8EC3A008C4A94 /* Alamofire in Frameworks */,
+				DF730D822DB8F875008C4A94 /* AlamofireImage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,6 +257,8 @@
 			);
 			name = "unhinged app";
 			packageProductDependencies = (
+				DF730D7E2DB8EC3A008C4A94 /* Alamofire */,
+				DF730D812DB8F875008C4A94 /* AlamofireImage */,
 			);
 			productName = "unhinged app";
 			productReference = DF12F1862CDD3FB3006A0DC2 /* unhinged app.app */;
@@ -332,6 +342,8 @@
 			mainGroup = DF12F17D2CDD3FB2006A0DC2;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				DF730D7D2DB8EC3A008C4A94 /* XCRemoteSwiftPackageReference "Alamofire" */,
+				DF730D802DB8F875008C4A94 /* XCRemoteSwiftPackageReference "AlamofireImage" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = DF12F1872CDD3FB3006A0DC2 /* Products */;
@@ -731,6 +743,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		DF730D7D2DB8EC3A008C4A94 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+		DF730D802DB8F875008C4A94 /* XCRemoteSwiftPackageReference "AlamofireImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/AlamofireImage.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.3.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DF730D7E2DB8EC3A008C4A94 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF730D7D2DB8EC3A008C4A94 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+		DF730D812DB8F875008C4A94 /* AlamofireImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = DF730D802DB8F875008C4A94 /* XCRemoteSwiftPackageReference "AlamofireImage" */;
+			productName = AlamofireImage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = DF12F17E2CDD3FB2006A0DC2 /* Project object */;
 }

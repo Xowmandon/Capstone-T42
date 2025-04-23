@@ -38,7 +38,7 @@ class Profile : Identifiable {
     
     var prompts : [PromptItem] = [PromptItem.examplePrompt]
     
-    var gallery : [Image]? = [Image(systemName: "pencil.tip.crop.circle.fill")]
+    var gallery : [ImageGalleryItem]? = [ImageGalleryItem()]
     
     init(){
         
@@ -49,14 +49,15 @@ class Profile : Identifiable {
         self.name = name
     }
     
-    init(id: String = "0000", name: String, age: Int, image: Image = Image(systemName: "person.fill"), gender: ProfileGender, state: USState, city: String, bio: String = "No Bio") {
+    init(id: String = "0000", name: String, age: Int, gender: ProfileGender, state: USState, city: String, bio: String = "No Bio", image: Image = Image(systemName: "person.fill"), galleryItems: [ImageGalleryItem]? = nil) {
         self.profile_id = id
         self.name = name
-        self.image = image
         self.gender = gender
         self.state = state
         self.city = city
         self.biography = bio
+        self.image = image
+        self.gallery = galleryItems
     }
     
     func addPrompts(promptList : [PromptItem]){
