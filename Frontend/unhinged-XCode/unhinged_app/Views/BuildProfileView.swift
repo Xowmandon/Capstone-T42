@@ -14,6 +14,7 @@ enum BuildProfileFocusedField: Hashable {
     case name
     case biography
     case attribute
+    case gallery
 }
 
 struct BuildProfileView: View {
@@ -24,15 +25,17 @@ struct BuildProfileView: View {
     @State var shouldGoToMatchView : Bool = false
     
     @EnvironmentObject var appModel : AppModel
+
     @FocusState private var focusedField : BuildProfileFocusedField?
     var editButtonImage : String = "pencil.circle.fill"
     
-    @State var profile : Profile
+    @StateObject var profile : Profile
     var theme : Theme = Theme.shared
     
     @State var showAddObjectSheet : Bool = false
     @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
     
+    @State var mainPhoto : Image = Image("default_avatar")
     @State var biographyText : String = ""
     @State var prompts : [PromptItem] = []
     @State var galleryItems : [ImageGalleryItem] = []
@@ -85,23 +88,7 @@ struct BuildProfileView: View {
                     
                     // Basic Info (Attributes)
                     VStack (spacing : 10){
-                        /*
-                        HStack{
-                            Text("Attributes")
-                                .font(Theme.headerFont)
-                                .padding()
-                            Spacer()
-                            //Edit Attributes Button
-                            Button(action: {
-                                profile.attributes.append(Attribute(customName: "ABC", symbolName: "house.fill"))
-                                print("added attribute to profile")
-                            }, label: {
-                                Image(systemName: "plus.circle.fill").padding(.horizontal).font(.title2)
-                            })
-                        }
-                        .padding(.top)
-                        .padding(.horizontal)
-                         */
+
                         //Location
                         VStack {
                             HStack {
@@ -191,7 +178,7 @@ struct BuildProfileView: View {
                     ForEach(galleryItems.indices, id: \.self) { index in
                         let photo = galleryItems[index]
                         ZStack(alignment: .topTrailing){
-                            ImageGalleryCard(isEditable: true,
+                            ImageGalleryCard(isEditable: false,
                                              galleryItem: $galleryItems[index],
                                              image: photo.image,
                                              title: photo.title,
@@ -297,12 +284,11 @@ struct BuildProfileView: View {
                                         CardBackground()
                                     }
                             }
-                            
                             NavigationLink(destination: MatchView().navigationBarBackButtonHidden(), isActive: $shouldGoToMatchView){}
                         }
                     }
                     Spacer()
-                    if focusedField == nil {
+                    if focusedField == nil || focusedField == .none {
                         Button(action: {showAddObjectSheet.toggle()}){
                             Image(systemName: "plus")
                                 .imageScale(.large)
@@ -334,13 +320,19 @@ struct BuildProfileView: View {
             }
             //Add Object Sheet
             .sheet(isPresented: $showAddObjectSheet){
-                AddObjectSheet(profile: $profile, prompts: $prompts, galleryItems: $galleryItems)
+                AddObjectSheet(prompts: $prompts, galleryItems: $galleryItems)
             }
         }
         .onAppear{
             prompts = appModel.profile.prompts
+            mainPhoto = profile.image
         }
         .onDisappear(perform: saveProfile)
+    }
+    
+    func getProfile() {
+        
+        
     }
     
     func saveProfile() {
@@ -360,11 +352,12 @@ struct AddObjectSheet : View {
     
     @Environment(\.presentationMode) var presentationMode
     
-    @Binding var profile : Profile
+    //@Binding var profile : Profile
     @Binding var prompts : [PromptItem]
     @Binding var galleryItems: [ImageGalleryItem]
     
     @State var dummyGalleryCard : ImageGalleryItem = ImageGalleryItem()
+    @State var dummyFocus : BuildProfileFocusedField = .none
     
     var body: some View {
         NavigationStack{

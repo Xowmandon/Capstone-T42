@@ -121,7 +121,7 @@ class APIClient {
     
     //TODO: implement gallery data flow
     //TODO: implement prompts data flow
-    //Push Profile
+    // MARK: Push Profile
     func initProfile(profile: Profile) async {
         let token : String = KeychainHelper.load(key: "JWTToken")!
         let profileData : [String:String] = ["age":"\(profile.age)",
@@ -143,7 +143,7 @@ class APIClient {
         
     }
     
-    //Push Preferences
+    // MARK: Push Preferences
     func pushPreference(preference: MatchPreference) async {
         print("attempting to push preference")
         let token : String = KeychainHelper.load(key: "JWTToken")!
@@ -166,8 +166,8 @@ class APIClient {
         
     }
     
-    // MARK: GetSwipes
-    //Get Swipe profiles for MatchView()
+    // MARK: Get Swipes
+    // Get Swipe profiles for MatchView()
     func decodeProfile (person: [String:String]) throws -> Profile  {
         
         //get attributes
@@ -213,16 +213,19 @@ class APIClient {
         
         Task {
             let imgs = await getProfileImgs(userId: idString)
+            
             if let mainPhotoURL = imgs["main_photo"]?.first {
                 let mainPhotoUIImage = self.imageCache.image(/*for: URLRequest(url: URL(string: mainPhotoURL)!),*/ withIdentifier: mainPhotoURL)
                 mainPhoto = Image(uiImage: mainPhotoUIImage!)
             }
             
-            if let userPhotoUrls = imgs["gallery_photos"] {
-                for url in userPhotoUrls {
+            if let userPhotoUrls = imgs["user_photos"],
+               let galleryItemTitles = imgs["titles"],
+               let galleryItemDescs = imgs["descriptions"] {
+                for ((url, title), desc) in zip(zip(userPhotoUrls, galleryItemTitles), galleryItemDescs) {
                     let galleryPhotoUIImage = self.imageCache.image(withIdentifier: url) //may need URLRequest
                     let galleryImg = Image(uiImage: galleryPhotoUIImage!)
-                    galleryItems.append(ImageGalleryItem(image: galleryImg, title: "", description: ""))
+                    galleryItems.append(ImageGalleryItem(image: galleryImg, title: title, description: desc))
                 }
             }
         }
@@ -596,6 +599,9 @@ class APIClient {
         var mainPhotoURL : [String] = []
         var userPhotoURLs : [String] = []
         
+        var userPhotoTitles : [String] = []
+        var userPhotoDescs : [String] = []
+        
         // Author: Joshua Ferguson (Xowmandon), harry
         guard let token = KeychainHelper.load(key: "JWTToken") else {
             print("❌ No JWT token found")
@@ -643,10 +649,13 @@ class APIClient {
             
             // Decode Additional Photos
             var pulledGalleryImageURLReqs : [URLRequest] = []
+            
             if let pulledGallery = resp["user_photos"],
                let pulledTitles = resp["titles"],
                let pulledDescs = resp["descriptions"] {
                 userPhotoURLs = pulledGallery
+                userPhotoTitles = pulledTitles
+                userPhotoDescs = pulledDescs
                 for urlString in pulledGallery {
                     if let url = URL(string: urlString){
                         let galleryItemRequest = URLRequest(url: url)
@@ -670,7 +679,9 @@ class APIClient {
             print("⚠️ Get Profile Imgs failed with error:", error)
         }
         return ["main_photo" : mainPhotoURL,
-                "user_photos" : userPhotoURLs]
+                "user_photos" : userPhotoURLs,
+                "titles" : userPhotoTitles,
+                "descriptions" : userPhotoDescs]
     }
 }
 

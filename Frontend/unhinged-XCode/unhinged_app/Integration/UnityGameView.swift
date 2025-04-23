@@ -23,6 +23,7 @@ struct UnityGameView: View {
                 ProgressView("Loading...").foregroundStyle(.primary)
             } else if let UnityContainer = unity.view.flatMap({ UIViewContainer(view: $0) }) {
                 UnityContainer
+                    .ignoresSafeArea()
                 VStack{
                     Spacer()
                     Button("Stop Unity", systemImage: "stop", action: {

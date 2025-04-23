@@ -14,23 +14,23 @@ enum ProfileGender : String, Equatable {
     case other = "any"
 }
 
-class Profile : Identifiable {
+class Profile : Identifiable, ObservableObject {
     
     var id : UUID = UUID()
     
     var profile_id : String = "0000"
     
-    var name : String = "John Doe"
+    @Published var name : String = "John Doe"
     
-    var age : Int = 18
+    @Published var age : Int = 18
     
-    var image : Image = Image("stockPhoto")
+    @Published var image : Image = Image("stockPhoto")
     
-    var gender : ProfileGender = .male
+    @Published var gender : ProfileGender = .male
     
-    var state : USState = .nevada
+    @Published var state : USState = .nevada
     
-    var city : String = "reno"
+    @Published var city : String = "reno"
     
     var attributes : [Attribute] = [Attribute(customName: "He/Him", symbolName: "person")]
     

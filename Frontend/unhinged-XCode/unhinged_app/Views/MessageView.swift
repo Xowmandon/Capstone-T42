@@ -146,7 +146,7 @@ struct MessageView : View {
             }
         }
         .toolbar{
-            ToolbarItem(placement: .principal){
+            ToolbarItemGroup(placement: .principal){
                 HStack{
                     BackButton()
                     Spacer()
@@ -174,6 +174,7 @@ struct MessageView : View {
                 HStack {
                     Button{
                         showGameSheet.toggle()
+                        focusedOnKeyboard = false
                     } label: {
                         Text("Press Start!")
                             .font(Theme.bodyFont)

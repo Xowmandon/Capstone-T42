@@ -20,6 +20,7 @@ struct ImageGalleryCard : View {
     
     @State var imageItem: PhotosPickerItem?
     @State var isLoadingImage : Bool = false
+    //@Binding var isFocused: BuildProfileFocusedField?
     
     var body: some View {
         VStack (spacing: 5) {
@@ -74,12 +75,14 @@ struct ImageGalleryCard : View {
                             .foregroundStyle(.secondary)
                         TextField("Title",text: $galleryItem.title)
                             .font(Theme.titleFont)
+                            //.focused($isFocused, equals: BuildProfileFocusedField.gallery)
                     }
                     HStack {
                         Image(systemName: "pencil")
                             .foregroundStyle(.secondary)
                         TextField("Describe your gallery item...", text: $galleryItem.description)
                             .font(Theme.bodyFont)
+                            //.focused($isFocused, equals: BuildProfileFocusedField.gallery)
                     }
                 } else {
                     Text(galleryItem.title)

@@ -16,10 +16,15 @@ final class AccountData {
     var fullName: String {
         let defaults = UserDefaults.standard
         
-        let first = defaults.string(forKey: "UserFirstName")
-        let last = defaults.string(forKey: "UserLastName")
+        if  let first = defaults.string(forKey: "UserFirstName"),
+            let last = defaults.string(forKey: "UserLastName") {
+         
+            return String("\(first) \(last)")
+            
+        }
         
-        return String("\(first) \(last)")
+        return "No Name"
+        
     }
     
     var isFirstLogin: Bool {
