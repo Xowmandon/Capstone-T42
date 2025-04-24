@@ -4,7 +4,7 @@
 //
 //  Created by Harry Sho on 1/23/25.
 //
-//  Reference: https://github.com/bdeweygit/unity-swiftui/blob/main/SwiftUIProject/UnitySwiftUI/Unity.swift
+//  Reference project: https://github.com/bdeweygit/unity-swiftui/blob/main/SwiftUIProject/UnitySwiftUI/Unity.swift
 //
 
 
@@ -27,16 +27,13 @@ class Unity {
     
     private init(){
         // Load framework and get the singleton instance
-        
         let bundle = Bundle(path: "\(Bundle.main.bundlePath)/Frameworks/UnityFramework.framework")!
         bundle.load()
         framework = bundle.principalClass!.getInstance()!
         
-        
         /* Send our executable's header data to Unity's CrashReporter.
            Using _mh_execute_header might be more correct, but this is broken on
            Xcode 16. See forum discussion: forums.developer.apple.com/forums/thread/760543 */
-        
         let executeHeader = #dsohandle.assumingMemoryBound(to: MachHeader.self)
         framework.setExecuteHeader(executeHeader)
         
@@ -48,49 +45,39 @@ class Unity {
         FrameworkLibAPI.registerAPIforNativeCalls(nativeCall)
         print("Did Initialize Unity Singleton")
     }
-    
-    /*
-    private func loadUnityFramework() -> UnityFramework? {
-        let frameworkPath: String = "/Frameworks/UnityFramework.framework"
-        let bundlePath: String = Bundle.main.bundlePath + frameworkPath
-        
-        let bundle = Bundle(path: bundlePath)
-        if bundle?.isLoaded == false {
-            bundle?.load()
-        }
-        
-        let ufw = bundle?.principalClass?.getInstance()
-        if ufw?.appController() == nil {
-            let machineHeader = UnsafeMutablePointer<MachHeader>.allocate(capacity: 1)
-            machineHeader.pointee = _mh_execute_header
-            
-            ufw?.setExecuteHeader(machineHeader)
-        }
-        return ufw
-    }
-     */
 
     func start() {
         if !loaded {
             framework.runEmbedded(withArgc: CommandLine.argc, argv: CommandLine.unsafeArgv, appLaunchOpts: nil)
-            //framework.appController()?.rootView.becomeFirstResponder()
             framework.appController().window.isHidden = true
             loaded = true
             print("Started Unity Instance")
         } else {
+            startMiniGame(launchMessage: nativeCall.startingState)
             print("Unity already loaded.")
         }
     }
-    
     func stop() {
         // docs.unity3d.com/ScriptReference/Application.Unload.html
         if loaded {
             framework.unloadApplication()
-            framework.appController()?.rootView.resignFirstResponder()
             loaded = false
             print("Unloaded Unity Instance")
         } else {
             print("Unity already unloaded.")
+        }
+    }
+    
+    let rootControllerGO: String = "SceneLauncher"
+    let rootLaunchMethodName: String = "LaunchGameFromJSON"
+    func startMiniGame(launchMessage: GameMessageData){
+        do {
+            let jsonData = try JSONEncoder().encode(launchMessage)
+            let jsonString = String(data: jsonData, encoding: .utf8)
+            framework.sendMessageToGO(withName: rootControllerGO, functionName: rootLaunchMethodName, message: jsonString)
+            print("JSON Output:", jsonString!)
+        } catch {
+            print("Encoding failed:", error)
         }
     }
     

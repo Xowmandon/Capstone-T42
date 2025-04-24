@@ -113,6 +113,38 @@ struct MatchView : View {
     }
     
     @ViewBuilder
+    func LocationSection (city: String , state: String) -> some View {
+        VStack {
+            HStack {
+                Image(systemName: "mappin")
+                    .foregroundStyle(.secondary)
+                Text("Location")
+                    .font(Theme.headerFont)
+                Spacer()
+            }
+            VStack (alignment: .leading){
+                HStack {
+                    Text("City:")
+                    Text(city)
+                    Spacer()
+                }
+                HStack{
+                    Text("State:")
+                    Text(state)
+                    Spacer()
+                }
+            }
+            .padding(.leading)
+        }
+        .padding()
+        .font(Theme.bodyFont)
+        .background{
+            CardBackground()
+        }
+        
+    }
+    
+    @ViewBuilder
     func AboutMeSection(bio: String) -> some View {
         VStack{
             HStack{
@@ -130,7 +162,6 @@ struct MatchView : View {
         .background{
             CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
         }
-        .padding(.horizontal)
     }
     
     //MARK: Body
@@ -178,41 +209,50 @@ struct MatchView : View {
                             refreshMatches()
                         })
                     } else {
-                        ProfileCard(profile: currentProfile ?? Profile(name: "NULL PROFILE"))
-                            .padding(.horizontal)
-                            .frame(minHeight: 400)
-                        
-                        // Attribute Section
-                        
-                        /*
                         VStack (spacing: 5){
-                            ForEach(currentProfile!.attributes, id: \.self) { attribute in
-                                AttributeRow(attribute:attribute)
+                            ProfileCard(profile: currentProfile ?? Profile(name: "NULL PROFILE"))
+                                .frame(minHeight: 400)
+                            
+                            // Attribute Section
+                            /*
+                            VStack (spacing: 5){
+                                ForEach(currentProfile!.attributes, id: \.self) { attribute in
+                                    AttributeRow(attribute:attribute)
+                                }
+                            }
+                            .padding()
+                            .frame(maxWidth:.infinity)
+                            .background{
+                                CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
+                            }
+                            .padding()
+                            */
+                            // MARK: Location
+                            
+                            LocationSection(city: currentProfile?.city ?? "No City", state: currentProfile?.state.fullName ?? "No State")
+                            
+                            // MARK: Biography Section
+                            AboutMeSection(bio: currentProfile?.biography ?? "No bio provided")
+                            
+                            // MARK: Gallery
+                            
+                            if let gallery = currentProfile?.gallery {
+                                
+                                ForEach(gallery) { card in
+                                    GalleryCard(image: card.image, title: card.title, description: card.description)
+                                }
+                                    
+                            }
+                            
+                            // MARK: Prompts
+                            
+                            if let prompts = currentProfile?.prompts {
+                                ForEach(prompts) { prompt in
+                                    PromptView(prompt: prompt)
+                                }
                             }
                         }
-                        .padding()
-                        .frame(maxWidth:.infinity)
-                        .background{
-                            CardBackground(borderColor: theme.cardBorderColor, innerColor: theme.cardInnerColor)
-                        }
-                        .padding()
-                        */
-                        
-                        // MARK: Biography Section
-                        AboutMeSection(bio: currentProfile?.biography ?? "No bio provided")
-                        
-                        //TODO: Image Gallery
-                        
-                        
-                        // MARK: Prompts
-                        /*
-                        if !appModel.prospectiveMatches.first!.prompts.isEmpty {
-                            ForEach(appModel.prospectiveMatches.first!.prompts){prompt in
-                                PromptView(prompt: prompt)
-                                    .padding()
-                            }
-                        }
-                         */
+                        .padding(.horizontal)
                         
                     }
                     //Main buttons spacing
@@ -235,6 +275,7 @@ struct MatchView : View {
         }
         .sheet(isPresented: $showAccountConfigSheet){
             AccountConfigSheet()
+                .interactiveDismissDisabled(true)
         }
         .onAppear(){
             refreshMatches()

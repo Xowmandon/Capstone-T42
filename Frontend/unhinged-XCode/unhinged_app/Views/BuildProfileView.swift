@@ -21,28 +21,29 @@ struct BuildProfileView: View {
     
     //TODO: extract subviews
     let isFirstTimeCreation : Bool
-    @State var hasMadeChanges : Bool = true
+    let theme : Theme = Theme.shared
+    //@State var hasMadeChanges : Bool = true
+    
     @State var shouldGoToMatchView : Bool = false
+    @State var showAddObjectSheet : Bool = false
+    @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
+    @State var isShowingExitConfirmation : Bool = false
+    @State var isShowingDeleteConfirmation: Bool = false
     
     @EnvironmentObject var appModel : AppModel
+    @Environment(\.dismiss) var dismiss
 
     @FocusState private var focusedField : BuildProfileFocusedField?
     var editButtonImage : String = "pencil.circle.fill"
     
-    @StateObject var profile : Profile
-    var theme : Theme = Theme.shared
+    @StateObject var profile : Profile = Profile(name: "asdf")
     
-    @State var showAddObjectSheet : Bool = false
-    @State var showAvatarBuilderSheet : Bool = false // TODO: Avatar Builder
     
-    @State var mainPhoto : Image = Image("default_avatar")
-    @State var biographyText : String = ""
+    //@State var mainPhoto : Image = Image("default_avatar")
+    //@State var biographyText : String = ""
     @State var prompts : [PromptItem] = []
     @State var galleryItems : [ImageGalleryItem] = []
     
-    
-    @State var isShowingExitConfirmation : Bool = false //TODO: exit confirmation
-    @State var isShowingDeleteConfirmation: Bool = false
     
     enum DeleteType {
         case prompt
@@ -158,12 +159,12 @@ struct BuildProfileView: View {
                         }
                         .padding()
                         
-                        TextEditor(text: $biographyText)
+                        TextEditor(text: $profile.biography)
                             .focused($focusedField, equals: .biography)
                             .font(Theme.bodyFont)
                             .padding(.horizontal)
                             .padding(.bottom)
-                            .onAppear(perform: {biographyText = profile.biography})
+                            //.onAppear(perform: {biographyText = profile.biography})
                             .frame(minHeight: 150)
                             
                     }
@@ -227,7 +228,7 @@ struct BuildProfileView: View {
                         .padding(.vertical, 60)
                 }
                 .padding()
-                .confirmationDialog(
+                .confirmationDialog( //MARK: delete confirmation
                     "Delete this Item?",
                     isPresented: $isShowingDeleteConfirmation,
                     titleVisibility: .visible
@@ -259,36 +260,20 @@ struct BuildProfileView: View {
                 VStack {
                     //navbar
                     HStack{
-                        if !isFirstTimeCreation {
-                            BackButton()
-                            Spacer()
-                            Button {
-                                saveProfile()
-                                hasMadeChanges = false
-                            } label: {
-                                Image(systemName: "checkmark")
-                                    .padding()
-                                    .background{
-                                        CardBackground()
-                                    }
-                            }
-                        } else {
-                            Spacer()
-                            Button {
-                                isShowingExitConfirmation = true
-                                shouldGoToMatchView = true
-                            } label: {
-                                Image(systemName: "checkmark")
-                                    .padding()
-                                    .background{
-                                        CardBackground()
-                                    }
-                            }
-                            NavigationLink(destination: MatchView().navigationBarBackButtonHidden(), isActive: $shouldGoToMatchView){}
+                        Spacer()
+                        Button {
+                            isShowingExitConfirmation = true
+                        } label: {
+                            Image(systemName: "checkmark")
+                                .padding()
+                                .background{
+                                    CardBackground()
+                                }
                         }
+                        NavigationLink(destination: MatchView().navigationBarBackButtonHidden(), isActive: $shouldGoToMatchView){}
                     }
                     Spacer()
-                    if focusedField == nil || focusedField == .none {
+                    if focusedField == nil || focusedField == BuildProfileFocusedField?.none {
                         Button(action: {showAddObjectSheet.toggle()}){
                             Image(systemName: "plus")
                                 .imageScale(.large)
@@ -318,32 +303,90 @@ struct BuildProfileView: View {
                     .fixedSize()
                 }
             }
+            .confirmationDialog(
+                "Unsaved Changes",
+                isPresented: $isShowingExitConfirmation,
+                titleVisibility: .visible
+            ){
+                Button("Exit and Save Changes") {
+                    saveProfile()
+                    if isFirstTimeCreation {shouldGoToMatchView = true}
+                    dismiss()
+                }
+                Button("Exit Without Saving", role: .destructive) {
+                    dismiss()
+                }
+                .disabled(isFirstTimeCreation)
+                Button("Cancel", role: .cancel) {
+                    isShowingExitConfirmation.toggle()
+                }
+            } message: {
+               Text("Save your edits before exiting?")
+            }
             //Add Object Sheet
             .sheet(isPresented: $showAddObjectSheet){
                 AddObjectSheet(prompts: $prompts, galleryItems: $galleryItems)
             }
+            
         }
         .onAppear{
-            prompts = appModel.profile.prompts
-            mainPhoto = profile.image
+            getProfile()
         }
-        .onDisappear(perform: saveProfile)
     }
     
     func getProfile() {
         
-        
-    }
-    
-    func saveProfile() {
-        self.profile.biography = biographyText
-        
-        appModel.profile = self.profile
-        //TODO: Push new profile data to server
         Task {
-            await APIClient.shared.initProfile(profile: appModel.profile)
+            await appModel.getClientUserProfile()
         }
         
+        profile.name = appModel.profile.name ?? ""
+        profile.biography = appModel.profile.biography ?? ""
+        profile.gender  = appModel.profile.gender ?? .other
+        profile.image = appModel.profile.image
+        profile.age = appModel.profile.age ?? 0
+        profile.city = appModel.profile.city ?? ""
+        profile.state = appModel.profile.state
+        
+        prompts = appModel.profile.prompts ?? []
+        galleryItems = appModel.profile.gallery ?? []
+    }
+    func saveProfile() {
+        self.profile.prompts = prompts
+        self.profile.gallery = galleryItems
+        appModel.profile = self.profile
+
+        Task {
+            await APIClient.shared.initProfile(profile: appModel.profile)
+
+            // Kick off the main image upload
+            async let main = APIClient.shared.pushProfileImg(
+                isMainPhoto: true,
+                title: "",
+                description: "",
+                image: profile.image
+            )
+
+            // Launch gallery uploads in parallel
+            let galleryTasks = galleryItems.map { item in
+                Task {
+                    await APIClient.shared.pushProfileImg(
+                        isMainPhoto: false,
+                        title: item.title,
+                        description: item.description,
+                        image: item.image
+                    )
+                }
+            }
+
+            // Await all gallery uploads
+            for task in galleryTasks {
+                await task.value
+            }
+
+            // Ensure main image upload is awaited too
+            _ = await main
+        }
     }
 }
 
@@ -417,7 +460,7 @@ private extension PhotosPickerItem {
 
 #Preview{
     
-    BuildProfileView(isFirstTimeCreation: false,profile: Profile())
+    BuildProfileView(isFirstTimeCreation: false,profile: Profile(name: "asdfjdsi"))
         .environmentObject(AppModel())
     
 }

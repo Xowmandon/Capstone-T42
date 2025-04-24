@@ -25,11 +25,14 @@ struct AccountConfigSheet : View {
             List{
                 
                 //Build Profile
-                NavigationLink(destination: BuildProfileView(isFirstTimeCreation: false, profile: appModel.profile)) {
+                NavigationLink(destination: BuildProfileView(isFirstTimeCreation: false)) {
                     HStack{
                         
                         //Avatar
-                        Circle()
+                        appModel.profile.image
+                            .resizable()
+                            .scaledToFit()
+                            .mask(Circle())
                             .frame(maxHeight: 100)
                         Spacer()
                         Text("\(AccountData.shared.fullName)")
@@ -77,6 +80,11 @@ struct AccountConfigSheet : View {
             }
             .frame(alignment: .leading)
             .scrollContentBackground(.hidden)
+        }
+        .onAppear{
+            Task {
+                await appModel.getClientUserProfile()
+            }
         }
         .navigationBarBackButtonHidden()
     }

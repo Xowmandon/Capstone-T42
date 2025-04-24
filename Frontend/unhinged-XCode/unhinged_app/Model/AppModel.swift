@@ -17,12 +17,29 @@ final class AppModel : ObservableObject {
     @Published var prospectiveMatches : [Profile]
     @Published var conversations : [Conversation]
     
+    private var poller : ServerPollingRepeater?
+    
     init() {
         
         self.prospectiveMatches = []
         self.conversations = []
-        self.profile = Profile()
+        self.profile = Profile(name: AccountData.shared.fullName)
+        self.startPolling()
         
+    }
+    
+    func startPolling() {
+        poller = ServerPollingRepeater()
+        self.poller?.start()
+    }
+    func stopPolling(){
+        self.poller?.stop()
+    }
+    
+    func getClientUserProfile() async {
+        let profile = await APIClient.shared.getProfile(userID: nil)
+        self.profile = profile!
+        return
     }
     
     func getSwipeProfiles() async {

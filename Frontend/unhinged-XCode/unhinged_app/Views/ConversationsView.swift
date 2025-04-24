@@ -65,6 +65,17 @@ public struct ConversationsView: View {
                     .font(Theme.titleFont)
                 Spacer()
             }
+            if appModel.conversations.isEmpty {
+                VStack{
+                    Spacer()
+                    Image(systemName: "heart.fill")
+                        .foregroundColor(.gray)
+                        .foregroundStyle(.tertiary)
+                    Text("No Matches yet!")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                }
+            }
             List(appModel.conversations){conversation in
                 conversationRow(conversation: conversation)
             }
@@ -77,6 +88,7 @@ public struct ConversationsView: View {
                 }
             
         }
+        
     }
     
     // Query database for conversations associated with client account

@@ -16,7 +16,7 @@ struct Message : Identifiable, Codable {
     let id : String = UUID().uuidString
     
     var kind : Kind = Kind.text
-    var content : String = "Hello world"
+    var content : String = ""
     var sentFromClient : Bool = false
     
     //private var gameState : GameState?

@@ -13,16 +13,18 @@ import SwiftUI
 struct MessageView : View {
     let profile : Profile
     let matchId : String
-    //@EnvironmentObject var appModel : AppModel
+    @EnvironmentObject var appModel : AppModel
+    @ObservedObject var unityProxy : NativeCallProtocol = NativeCallProtocol.shared
+    
     @State private var messages : [Message]
     @State private var messageText : String = ""
     @State private var showOptionsSheet : Bool = false
     @State private var showGameSheet : Bool = false
+    @State private var showUnityPlayer : Bool = false
     @State private var shouldUpdateScrollPosition : Bool = false
+    @State var loading : Bool = true
     
     @FocusState var focusedOnKeyboard : Bool
-    
-    let games : [GameObject] = GameObject.gameList
     
     init(profile: Profile, matchId: String){
         self.profile = profile
@@ -31,96 +33,197 @@ struct MessageView : View {
     }
     
     @ViewBuilder
-    func messageBubble(message : Message, sentFromClient: Bool) -> some View{
+    func messageBubble(message : Message, sentFromClient: Bool) -> some View {
         HStack {
             if sentFromClient{
                 Spacer()
             }
-            Text(message.content)
-                .padding()
-                .foregroundStyle(.white)
+            if message.kind == .text{
+                Text(message.content)
+                    .padding()
+                    .foregroundStyle(.white)
+                    .background{
+                        RoundedRectangle(cornerRadius: 10)
+                            .foregroundStyle( sentFromClient ? .blue : .gray)
+                    }
+                
+            } else if message.kind == .game{
+                VStack{
+                    Image(systemName: "gamecontroller.fill")
+                    Button{
+                        showUnityPlayer = true
+                    } label: {
+                        Text("Play Game")
+                    }
+                    .disabled(sentFromClient)
+                }
                 .background{
                     RoundedRectangle(cornerRadius: 10)
-                        .foregroundStyle( sentFromClient ? .blue : .gray)
+                        .foregroundStyle( message.sentFromClient ? .blue : .gray)
                 }
-                .padding()
+            }
             if !sentFromClient {
                 
                 Spacer()
                 
             }
         }
+        .sheet(isPresented: $showUnityPlayer){
+            UnityGameView(message: message, gameType: .none, matchedProfile: profile, matchId: matchId)
+                .interactiveDismissDisabled(true)
+        }
     }
     
+    /*
     @ViewBuilder
-    func gameSelect(games: [GameObject]) -> some View {
+    func gameBubble(message : Message) -> some View {
+        
+        let sentFromClient = message.sentFromClient
+        
+        HStack{
+            if sentFromClient{
+                Spacer()
+            }
+            VStack{
+                Image(systemName: "gamecontroller.fill")
+                Button{
+                    showUnityPlayer = true
+                } label: {
+                    Text("Play Game")
+                }
+                .disabled(sentFromClient)
+            }
+            .background{
+                RoundedRectangle(cornerRadius: 10)
+                    .foregroundStyle( message.sentFromClient ? .blue : .gray)
+            }
+            if !sentFromClient {
+                
+                Spacer()
+                
+            }
+        }
+        
+    }
+    */
+    @ViewBuilder
+    func gameSelect() -> some View {
         NavigationStack {
             VStack{
-                Text("Select a Game!")
-                    .font(Theme.titleFont)
-                
-                List(games){gameObject in
-                    NavigationLink(destination: UnityGameView()){
-                        HStack{
-                            Text("\(gameObject.name)")
-                                .font(Theme.headerFont)
-                            Spacer()
-                            Image(systemName: "\(gameObject.imageName)")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(maxWidth: 50)
-                                .foregroundStyle(.blue)
-                        }
+                HStack {
+                    BackButton()
                         .padding()
-                        .background{
-                            CardBackground()
+                    Text("Select a Game!")
+                        .font(Theme.titleFont)
+                        .padding(.vertical)
+                    Spacer()
+                }
+                List {
+                    ForEach(GameType.activeGames, id: \.self){game in
+                        NavigationLink(destination: UnityGameView(message: Message(kind:.game, content: "", sentFromClient: true),
+                                                                  gameType: game.self,
+                                                                  matchedProfile: profile,
+                                                                  matchId: matchId).navigationBarBackButtonHidden())
+                        {
+                            HStack{
+                                Text("\(game.displayName)")
+                                    .font(Theme.headerFont)
+                                Spacer()
+                                Image(systemName: "\(game.imageName)")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(maxWidth: 50)
+                                    .foregroundStyle(.blue)
+                            }
+                            .padding()
+                            .background{
+                                CardBackground()
+                            }
                         }
                     }
                 }
+                
             }
         }
     }
     var body: some View {
         ZStack {
             VStack {
-                // MARK: Message Bubbles
-                ScrollViewReader { proxy in
-                    ScrollView{
-                        
-                        if !messages.isEmpty {
-                            VStack{
-                                ForEach(messages.reversed()) {message in
-                                    messageBubble(message: message, sentFromClient: message.sentFromClient)
-                                }
-                                Color.clear.id("bottom")
-                                    .frame(maxHeight: 1)
-                            }
-                        } else {
-                            Image(uiImage: UIImage(named: "Speech_bubble")!.withRenderingMode(.alwaysTemplate))
-                                .foregroundColor(.gray)
-                                .foregroundStyle(.tertiary)
-                            Text("No messages yet!")
-                                .foregroundStyle(.secondary)
-                            
-                        }
-                        
-                    }
-                     .onAppear {
-                        fetchMessages()
-                        proxy.scrollTo("bottom", anchor: .bottom)
-                    }
-                     .onChange(of: shouldUpdateScrollPosition) {
-                         // Auto-scroll when new messages appear
-                         DispatchQueue.main.async {
-                             if shouldUpdateScrollPosition {
-                                 withAnimation {
-                                     proxy.scrollTo("bottom", anchor: .bottom)
-                                 }
-                             }
-                         }
-                         shouldUpdateScrollPosition.toggle()
+                // MARK: Top Bar
+                HStack{
+                    BackButton()
+                    Spacer()
+                    //NavigationLink(destination: ProfileView()){ }
+                    profile.image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                    Text(profile.name)
+                        .font(Theme.headerFont)
+                    Spacer()
+                    //present options sheet
+                    Button(action: {showOptionsSheet.toggle()} ){
+                        Image(systemName: "ellipsis")
+                            .foregroundStyle(.primary)
                     }
                 }
+                .frame(maxHeight: 50)
+                .padding()
+                .background{
+                    CardBackground()
+                }
+                // MARK: Message Bubbles
+                if !loading {
+                    ScrollViewReader { proxy in
+                        ScrollView{
+                            
+                            if !messages.isEmpty {
+                                VStack{
+                                    ForEach(messages.reversed()) {message in
+                                        messageBubble(message: message, sentFromClient: message.sentFromClient)
+                                    }
+                                    Color.clear.id("bottom")
+                                        .frame(maxHeight: 1)
+                                }
+                            } else {
+                                Image(uiImage: UIImage(named: "Speech_bubble")!.withRenderingMode(.alwaysTemplate))
+                                    .foregroundColor(.gray)
+                                    .foregroundStyle(.tertiary)
+                                Text("No messages yet!")
+                                    .foregroundStyle(.secondary)
+                                
+                            }
+                            
+                        }
+                        .padding(.horizontal)
+                        .onChange(of: focusedOnKeyboard) {
+                            if focusedOnKeyboard {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
+                                    shouldUpdateScrollPosition = true
+                                }
+                            }
+                        }
+                        .onChange(of: shouldUpdateScrollPosition) {
+                             // Auto-scroll when new messages appear
+                             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
+                                 if shouldUpdateScrollPosition {
+                                     withAnimation {
+                                         proxy.scrollTo("bottom", anchor: .bottom)
+                                     }
+                                     shouldUpdateScrollPosition = false
+                                 }
+                             }
+                        }
+                    }
+                } else {
+                    VStack {
+                        Spacer()
+                        ProgressView("Getting your messages...")
+                        Spacer()
+                    }
+                }
+                // MARK: Message Field
                 HStack{
                     TextField("Send a message", text: $messageText)
                         .focused($focusedOnKeyboard, equals: true)
@@ -142,43 +245,22 @@ struct MessageView : View {
                 .frame(maxHeight: 100)
             }
             .onTapGesture {
-                focusedOnKeyboard = false
+                DispatchQueue.main.async{
+                    focusedOnKeyboard = false
+                    shouldUpdateScrollPosition = true
+                }
             }
         }
         .toolbar{
-            ToolbarItemGroup(placement: .principal){
-                HStack{
-                    BackButton()
-                    Spacer()
-                    profile.image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                    Text(profile.name)
-                        .font(Theme.headerFont)
-                    Spacer()
-                    //present options sheet
-                    Button(action: {showOptionsSheet.toggle()} ){
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(.primary)
-                    }
-                }
-                .padding()
-                .background{
-                    CardBackground()
-                }
-                .offset(y: 20)
-            }
             ToolbarItemGroup (placement: .keyboard) {
                 HStack {
                     Button{
                         showGameSheet.toggle()
                         focusedOnKeyboard = false
                     } label: {
+                        Image(systemName: "gamecontroller.fill")
                         Text("Press Start!")
                             .font(Theme.bodyFont)
-                        Image(systemName: "gamecontroller.fill")
                         Spacer()
                     }
                     Spacer()
@@ -203,9 +285,9 @@ struct MessageView : View {
                             .font(.headline)
                         Text("Conversation with \(profile.name)")
                         //Metrics
-                        Text("You matched on November 17, 2024")
-                        Text("27 Messages")
-                        Text("5 Games Played")
+                        Text("You matched on <DATE>")
+                        Text("X Messages")
+                        Text("X Games Played")
                         Spacer()
                         // Report Button
                         HStack(alignment: .firstTextBaseline) {
@@ -233,9 +315,12 @@ struct MessageView : View {
             }
             
         }
+        .onAppear{
+            fetchMessages()
+        }
         // MARK: Game Entry Point
-        .sheet(isPresented: $showGameSheet){
-            gameSelect(games: games)
+        .fullScreenCover(isPresented: $showGameSheet){
+            gameSelect()
         }
         .navigationBarBackButtonHidden()
     }
@@ -252,14 +337,18 @@ struct MessageView : View {
     }
     private func fetchMessages() {
         Task{
+            loading = true
             messages = await APIClient.shared.getConversationMessages(match_id: self.matchId, limit: nil, page: nil, all_messages: true)
-            shouldUpdateScrollPosition.toggle()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
+                shouldUpdateScrollPosition = true
+            }
+            loading = false
         }
     }
 }
 
 #Preview {
-    MessageView(profile: Profile(), matchId: "")
+    //MessageView(profile: Profile(), matchId: "")
 }
 
 
@@ -417,5 +506,5 @@ struct MessageView : View {
 */
 
 #Preview {
-    MessageView(profile: Profile(), matchId: "1")
+    //MessageView(profile: Profile(), matchId: "1")
 }

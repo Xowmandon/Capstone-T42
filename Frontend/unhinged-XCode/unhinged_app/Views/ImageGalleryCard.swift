@@ -100,3 +100,41 @@ struct ImageGalleryCard : View {
     }
     
 }
+
+struct GalleryCard : View {
+
+    let image : Image
+    let title : String
+    let description : String
+    
+    var body: some View {
+        VStack (spacing: 5) {
+        
+            VStack {
+                GeometryReader { geometry in
+                    image
+                        .resizable()
+                        .scaledToFill()
+                        .clipped()
+                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .mask(Rectangle())
+                }
+                .frame(minHeight: 300)
+            }
+            .padding()
+            VStack {
+                Text(title)
+                    .font(Theme.headerFont)
+                Text(description)
+                    .font(Theme.captionFont)
+            }
+            .padding(.horizontal)
+            .padding(.bottom)
+        }
+        .background{
+            CardBackground()
+        }
+        
+    }
+
+}

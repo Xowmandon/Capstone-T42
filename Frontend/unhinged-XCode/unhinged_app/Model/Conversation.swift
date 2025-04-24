@@ -21,7 +21,7 @@ struct Conversation : Identifiable {
     
     //Local Fields
     var id : UUID = UUID()
-    var matchedProfile: Profile = Profile()
+    var matchedProfile: Profile
     var messages : [Message] = []
     
     var hasUnreadMessages : Bool = false

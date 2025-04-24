@@ -21,11 +21,9 @@ struct MatchPreferencesView: View {
     @State private var orientation: SexualOrientation = .straight
     @State private var minAge: Double = 18
     @State private var maxAge: Double = 50
-    @State private var preferredGame: String = GameObject.gameList[0].name
+    @State private var preferredGame: GameType = .ghosted
     @State private var minHeight: Double = 150
     @State private var location: String = "New York"
-
-    let games : [GameObject] = GameObject.gameList
 
     var body: some View {
         
@@ -82,10 +80,12 @@ struct MatchPreferencesView: View {
                         .font(Theme.bodyFont)
                     Spacer()
                     Picker("", selection: $preferredGame) {
-                        ForEach(games, id: \.id) { game in
-                            Text(game.name).tag(game.name)
+                        
+                        ForEach(GameType.allCases, id: \.self) { game in
+                            Text(game.displayName).tag(game.displayName)
                                 .font(Theme.bodyFont)
                         }
+                        
                     }
                     .pickerStyle(MenuPickerStyle())
                 }

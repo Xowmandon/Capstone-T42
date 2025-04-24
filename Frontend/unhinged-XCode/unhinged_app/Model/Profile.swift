@@ -20,11 +20,11 @@ class Profile : Identifiable, ObservableObject {
     
     var profile_id : String = "0000"
     
-    @Published var name : String = "John Doe"
+    @Published var name : String
     
     @Published var age : Int = 18
     
-    @Published var image : Image = Image("stockPhoto")
+    @Published var image : Image = Image("person.fill")
     
     @Published var gender : ProfileGender = .male
     
@@ -32,18 +32,13 @@ class Profile : Identifiable, ObservableObject {
     
     @Published var city : String = "reno"
     
-    var attributes : [Attribute] = [Attribute(customName: "He/Him", symbolName: "person")]
+    //var attributes : [Attribute] = [Attribute(customName: "He/Him", symbolName: "person")]
     
-    var biography : String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+    @Published var biography : String = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
     
-    var prompts : [PromptItem] = [PromptItem.examplePrompt]
+    var prompts : [PromptItem] = []
     
-    var gallery : [ImageGalleryItem]? = [ImageGalleryItem()]
-    
-    init(){
-        
-        
-    }
+    var gallery : [ImageGalleryItem]? = []
     
     init(name: String){
         self.name = name
