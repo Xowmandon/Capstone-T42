@@ -5,9 +5,15 @@ Author: Joshua Ferguson
 - Used to Store and Retrieve Profile Images of Users by URLs of Objects stored on AWS s3
 """
 
+from datetime import datetime, timezone
+import logging
+import os
+from urllib.parse import urlparse
+from uuid import uuid4
 import boto3
 from botocore.exceptions import ClientError
 from marshmallow import ValidationError
+from sqlalchemy.exc import SQLAlchemyError
 from Backend.src.extensions import db
 from Backend.src.models.photo import UserPhoto
 from Backend.src.models.user import User
@@ -106,7 +112,7 @@ class MediaStorageService(BucketService):
             folders=folders
             )
 
-    def upload_user_photo(self, file, user_id, file_name, db_save=True, is_main_photo=False,folder=None):
+    def upload_user_photo(self, file, user_id, file_name, db_save=True, is_main_photo=False,folder=None,title=None,description=None, content_type="image/jpeg"):
         """
         Uploads a file to the media storage service.
 
@@ -122,7 +128,8 @@ class MediaStorageService(BucketService):
         Raises:
             ClientError: If an error occurs during the upload process.
         """
-        
+        # Add UUID_ to the Start OFfile name to ensure uniqueness
+        #file_name = str(uuid4()) + "_" + file_name # Append UUID to the file name (prefix)
         file_path = self._make_file_path(user_id=user_id, file_name=file_name, folder=folder)
         file_url = self.retrieve_file_url(user_id=user_id, file_name=file_name, folder=folder)
         print(f"File Path: {file_path}")
@@ -142,8 +149,9 @@ class MediaStorageService(BucketService):
                     file,
                     self.bucket_name, 
                     file_path,
-                    ExtraArgs={"ContentType": 'image/jpeg'}
+                    ExtraArgs={"ACL": "public-read","ContentType": content_type}, 
                 )
+   
                 print(f"File uploaded to S3: {file_path}")
               
                 #file_url = self.retrieve_file_url(user_id=user_id, file_name=file_name, folder=folder)
@@ -156,9 +164,59 @@ class MediaStorageService(BucketService):
             
             # If Saving to DB, create new UserPhoto, add the File URL, and decide if its a Primary Photo
             if db_save and file_url:
-                                    
+                
+                # Check if the user already has a main photo
+                # If the user already has a main photo, Remove Record
+                existing_main_photo = UserPhoto.query.filter_by(user_id=user_id, is_main_photo=True).first()
+                
+                # If the user already has a main photo, Update URL
+                # Remove S3 Object  from Bucket
+                if existing_main_photo and is_main_photo:
+                    
+                
+                    # Get the old URL and filename TO Delete Old Object from S3
+                    old_url = existing_main_photo.url
+                    old_parsed_url = urlparse(old_url)
+                    old_filename = os.path.basename(old_parsed_url.path)
+                    
+                    # Update the existing main photo URL and upload date
+                    existing_main_photo.url = file_url
+                    existing_main_photo.upload_date = datetime.now(timezone.utc)
+                    db.session.commit()
+                    
+                    # Delete Old Object from S3
+                    file_path = self._make_file_path(user_id=user_id, file_name=old_filename, folder=folder)
+                    super().delete_file(file_path)
+                    return file_url
+                
+                # LIMITS 1 GALLERY PHOTO
+                # If the user already has a gallery photo, Update URL and Upload_date
+                TESTING_EXISTING_GALLERY_PHOTO = UserPhoto.query.filter_by(user_id=user_id, is_main_photo=False).first()
+                if TESTING_EXISTING_GALLERY_PHOTO and not is_main_photo:
+                    
+                    # Get the old URL and filename TO Delete Old Object from S3
+                    old_url = TESTING_EXISTING_GALLERY_PHOTO.url
+                    old_parsed_url = urlparse(old_url)
+                    old_filename = os.path.basename(old_parsed_url.path)
+                    
+                    TESTING_EXISTING_GALLERY_PHOTO.url = file_url
+                    db.session.commit()
+                    
+                    # Delete Old Object from S3
+                    file_path = self._make_file_path(user_id=user_id, file_name=old_filename, folder=folder)
+                    super().delete_file(file_path)
+                    return file_url
+                
+                
                 # Save to PostgreSQL
-                new_photo = UserPhoto(user_id=user_id, url=file_url,is_main_photo=is_main_photo)
+                new_photo = UserPhoto(
+                    user_id=user_id, 
+                    url=file_url,
+                    is_main_photo=is_main_photo,
+                    title=title,
+                    description=description
+                )
+                
                 db.session.add(new_photo)
                 db.session.commit()
      
@@ -167,6 +225,11 @@ class MediaStorageService(BucketService):
         
         except ClientError as e:
             print(f"Error uploading file to S3: {e}")
+            return None
+        except SQLAlchemyError as e:
+            # Rollback the session in case of an error
+            db.session.rollback()
+            print(f"Error saving file to database: {e}")
             return None
         except Exception as e:
             print(f"Error uploading file to S3: {e}")
@@ -286,3 +349,76 @@ class MediaStorageService(BucketService):
             print(e)
             return []
     
+    
+    class PhotoManager:
+        """
+        A class for managing user photos.
+        """
+        def __init__(self):
+            
+            self.USER_PHOTOS_BASE_PATH = "./Data/Uploads/"
+            self.USER_PHOTOS_MAIN_PATH = self.USER_PHOTOS_BASE_PATH + "MainPhotos/"
+            self.USER_PHOTOS_GALLERY_PATH = self.USER_PHOTOS_BASE_PATH + "GalleryPhotos/"
+            
+            self.FAKE_PHOTOS_MAIN_PATH= self.USER_PHOTOS_BASE_PATH + "FakeMainPhotos/"
+            self.FAKE_PHOTOS_GALLERY_PATH = self.USER_PHOTOS_BASE_PATH + "FakeGalleryPhotos/"
+            
+            self._validate_directories([
+                self.USER_PHOTOS_BASE_PATH, 
+                self.USER_PHOTOS_MAIN_PATH, 
+                self.USER_PHOTOS_GALLERY_PATH,
+                self.FAKE_PHOTOS_MAIN_PATH,
+                self.FAKE_PHOTOS_GALLERY_PATH
+                ]
+            )
+            
+        def get_path(self,filename,is_main_photo, is_fake_photo=False):
+            """Return the appropriate path based on the photo type."""
+            full_path = ""
+            if is_main_photo and is_fake_photo:
+                full_path = self.FAKE_PHOTOS_MAIN_PATH
+            elif is_main_photo:
+                full_path = self.USER_PHOTOS_MAIN_PATH
+            elif is_fake_photo:
+                full_path = self.FAKE_PHOTOS_GALLERY_PATH
+            else:
+                full_path = self.USER_PHOTOS_GALLERY_PATH
+          
+            # Construct the full path
+            full_path = os.path.join(full_path, filename)
+            return full_path
+        
+        def _validate_directories(self, directories):
+            """Validate the existence of required directories."""
+            
+            for directory in directories:
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                    logging.info(f"PhotoManager: Directory created: {directory}")
+         
+        def locally_upload_user_photo(self,profile_photo, is_main_photo, is_fake_photo=False):
+            """Construct the upload path for User Photo Upload file."""
+                
+            save_path =  self.get_path(
+                filename=profile_photo.filename,
+                is_main_photo=is_main_photo, 
+                is_fake_photo=is_fake_photo
+            )
+        
+            # Save the file locally
+            profile_photo.save(save_path)
+            profile_photo.close()
+            
+            logging.info(f"Profile Picture Saved Locally at: {save_path}")
+            # Return the path to the saved file
+            return save_path
+        
+        def locally_delete_user_photo(file_path):
+            """Delete the locally saved user photo."""
+            try:
+                os.remove(file_path)
+                logging.info(f"Successfully deleted User Photo: {file_path}")
+                return True
+            except OSError as e:
+                logging.error(f"Error deleting User Photo {file_path}: {e}")
+                return False
