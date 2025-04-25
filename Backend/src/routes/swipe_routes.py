@@ -3,6 +3,7 @@
 #-----Swipe Routes-----
 
 
+from datetime import datetime, timezone
 from flask import request, jsonify, Blueprint
 from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
@@ -78,23 +79,41 @@ def create_swipe():
    
     # Create New Match, Push to DB, and Emit MSG Back to Client
     if processed_swipe.swipe_result == "ACCEPTED":
-        print(f"New Match Detected from Swipe - {str(processed_swipe)}")
+        print(f"New Match Detected from Swipe - {processed_swipe.swiper_id} <--> {processed_swipe.swipee_id}")
         
         try:
+            
+                        
+            # Set Online Status to Now
+            current_user = models.user.User.query.get(swiper_id)
+            current_user.last_online = datetime.now(timezone.utc)
+            db.session.commit()
+            
             # Create a new match event
             new_match = models.match.Match().create_match(matcher_id=swiper_id,matchee_id=swipee_id)
             if new_match is None:
                 return jsonify({"error": "Failed to create a new match."}), 500
             
-            # Notify Users of the New Match
-            notify_new_match([swiper_id, swipee_id], new_match)
+            matched_user = models.user.User.query.get(swipee_id)
+            if matched_user is None:
+                return jsonify({"error": "Matched user not found."}), 404
+            
+    
+            # b59f1987-2943-4cdb-be0e-c0b60a13a025
+            #H - 000519.f1637da8f2c14d39b61d3653a8797532.1310
+            
+             # Notify Users of the New Match
+            return jsonify({"status": "NEW", "match_id": str(new_match.id)}), 201
+        
+            # FCM Notifs
+            #notify_new_match([swiper_id, swipee_id], new_match)
 
         except Exception as e:
             return jsonify({"error": "Failed to create a new match.", "details": str(e)}), 500
 
     # Log the success and return the message
     #logging.info(f"Swipe created successfully! - {swipe}")
-    return "Swipe created successfully!", 201
+    return jsonify({"status": "SUCCESS"}), 201
 
     
 @swipe_bp.route('/users/swipes>', methods=['GET'])
