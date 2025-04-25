@@ -1,11 +1,13 @@
 # Author: Joshua Ferguson
 
+import os
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy.exc import SQLAlchemyError
 from marshmallow import ValidationError
 import logging
 
+from Backend.generators.photo_factory import PhotoFactory
 from Backend.src import services
 from Backend.src.extensions import db # Import the DB Instance
 import Backend.src.models as models
@@ -14,6 +16,10 @@ from Backend.src.extensions import media_storage_service, AWS_MEDIA_MAIN_PHOTO_F
 from Backend.src.models.user import UserSchema, UserProfileSchema
 
 user_bp = Blueprint('user_bp', __name__)
+
+import logging
+
+logger = logging.getLogger("unhinged_api")
 
 # -----User Routes-----
 
@@ -75,7 +81,12 @@ def init_preferences():
     dating_pref_exists = db.session.query(models.datingPreference.DatingPreference).filter_by(user_id=user_id).first()
     if dating_pref_exists is not None:
         print("User Dating Preferences Already Initialized.")
-        return jsonify({"msg": "User Dating Preferences Already Initialized."}), 200
+        # Update the existing preferences
+        dating_pref_exists.age_preference_lower = request.json.get('minAge')
+        dating_pref_exists.age_preference_upper = request.json.get('maxAge')
+        dating_pref_exists.interested_in = request.json.get('interestedIn').lower()
+        db.session.commit()
+        return jsonify({"success": "User Dating Preferences Updated."}), 200
     
     try:
         # Create a new Dating Preference Object, Validate and Add to the Database
@@ -136,7 +147,7 @@ def init_profile():
         auth_user.age = profile_data['age']
         auth_user.name = profile_data['name']
         auth_user.gender = profile_data['gender'].lower()
-        auth_user.state_code = profile_data['state_code'].lower()
+        auth_user.state = profile_data['state'].upper()
         auth_user.city = profile_data['city'].lower()
         auth_user.bio = profile_data['bio']
         
@@ -154,6 +165,20 @@ def init_profile():
     
     return jsonify({"success": "User Profile Initialized."}), 201
 
+
+# GET /users/profile?user_id=<user_id>
+#Header Parameters:
+    #X-Authorization: Bearer <JWT-Token>
+        
+#Return Payload: 
+#   JSON object of Basic User Profile Information:
+#       - age: int
+#       - name: str
+#       - gender: str
+#       - state: str
+#       - city: str
+#       - bio: str
+
 @user_bp.route('/users/profile', methods=['GET'])
 @jwt_required()
 def get_profile():
@@ -165,16 +190,23 @@ def get_profile():
         
     Return Payload: 
     JSON object of Basic User Profile Information:
-        - age: int
+        - id: str
+        - age: str
         - name: str
         - gender: str
-        - state_code: str
+        - state: str
         - city: str
         - bio: str
     """
     user_id = get_jwt_identity()
     if user_id is None:
         return jsonify({"error": "Invalid JWT Token."}), 400
+    
+    # Check for user id in Arguments
+    alt_user_id = request.args.get('user_id')
+    if alt_user_id:
+        user_id = alt_user_id
+
     user = models.user.User.query.get(user_id)
     if user is None:
         return jsonify({"error": "User not found."}), 404
@@ -183,9 +215,18 @@ def get_profile():
     if user.age is None or user.name is None or user.gender is None:
         return jsonify({"error": "User Profile Not Initialized."}), 400
 
-    # Use the profile schema to serialize the data
-    profile_schema = UserProfileSchema()
-    return jsonify(profile_schema.dump(user)), 200
+    profile = {
+        "userID": user.id,
+        "age": str(user.age),
+        "name": user.name,
+        "gender": user.gender,
+        "state": user.state,
+        "city": user.city,
+        "bio": user.bio,
+    }
+    return jsonify(profile), 200
+
+
 
 @user_bp.route('/users/profile', methods=['PATCH'])
 @jwt_required()
@@ -197,6 +238,7 @@ def update_profile():
         X-Authorization: Bearer <JWT-Token>
         
     Payload: JSON object with any of the following fields:
+        - id : str
         - age: int
         - name: str
         - gender: str
@@ -221,7 +263,7 @@ def update_profile():
         
         # Update only the provided fields, Ensure Proper Fields are Lowercase
         for field, value in profile_data.items():
-            if field in ['gender', 'city', 'state_code']:
+            if field in ['gender', 'city', 'state']:
                 setattr(auth_user, field, value.lower())
             else:
                 setattr(auth_user, field, value)
@@ -264,46 +306,79 @@ def upload_profile_picture():
     user = db.session.query(models.user.User).get(user_id)
     if user is None:
         return jsonify({"error": "User not found."}), 404
-    
-    # Check if a file is in the request
-    #if 'profile_picture' not in request.files:
-        #return jsonify({"error": "No Profile Picture Provided."}), 400
+
     
     profile_picture = request.files['profile_picture']
  
     if profile_picture.filename == '':
-        return jsonify({"error": "Invalid file name."}), 400
-
-   
-    # Check if is_main_photo was sent, default to False
-    is_main_photo = request.form.get('is_main_photo',type=bool,default= False)
+        return jsonify({"error": "Invalid file name or Missing File."}), 400
     
-    # Retrieve the Profile Picture from the Request, Convert to BLOB
-    #profile_picture = request.files.get('profile_picture',type=bytes)
-    #if profile_picture is None:
-        #return jsonify({"error": "No Profile Picture Provided."}), 400
+   
+    is_main_photo = (request.form.get('is_main_photo'))
+    
+    if is_main_photo.lower() == 'false':
+        is_main_photo = False
+    elif is_main_photo.lower() == 'true':
+        is_main_photo = True
+
+    print(f"Is Main Photo-Alt: {is_main_photo}")
+
+    # Check if is_main_photo was sent, default to False
+    #is_main_photo = request.form.get('is_main_photo',type=bool,default= False)
+    print(f"Is Main Photo: {is_main_photo}")
+    print(type(is_main_photo))
+
+    
+    # Get Form Data for Title and Description
+    title = request.form.get('title',type=str,default="Default Title")
+    description = request.form.get('description',type=str,default="Default Description")
+
+    print(f"----Title: {title}")
+    print(f"----Description: {description}")
 
     if is_main_photo:
         folder = AWS_MEDIA_MAIN_PHOTO_FOLDER
     else:
         folder = AWS_MEDIA_USER_PHOTO_FOLDER
-        
+            
+        print(f"----Title(F): {title}")
+        print(f"----Description(F): {description}")
+            
+    
+    # Save the Profile Picture Locally
     pic_saved_path = "./Data/" + profile_picture.filename
     profile_picture.save(pic_saved_path)
+    
+    if pic_saved_path is None:
+        return jsonify({"error": "UserPhoto Local Save Failed..Exiting"}), 500
+    
+    print(f"Profile Picture Saved Locally at: {pic_saved_path}")
+    #logging.log.info(f"Profile Picture Saved Locally at: {pic_saved_path}")
+    
     # Upload the Profile Picture to S3 with Media Storage Service
+    # Persist in DB
     url = media_storage_service.upload_user_photo(
         file=pic_saved_path,
         file_name=profile_picture.filename,
         user_id=user_id,
         folder=folder,
-        is_main_photo=is_main_photo
+        is_main_photo=is_main_photo,
+        title=title,
+        description=description,
+        content_type=profile_picture.content_type # NEW
     )
     
     profile_picture.close()
+    # Delete the local file after upload
+    #_ = photo_manager.locally_delete_user_photo(pic_saved_path)
+        
+    # Check if the URL was returned successfully
     if url is None:
         # Return Form 
         return jsonify({"error": "Profile Picture S3 Upload Failed."}), 500
     
+    print(f"Profile Picture Saved at S3 URLS: {url}")
+    #logging.log.info(f"Profile Picture Saved at S3 URL : {url}")
     return jsonify({"success": "Profile Uploaded", "url": url}), 201
     
 
@@ -324,40 +399,72 @@ def get_profile_pictures():
     user_id = get_jwt_identity()
     if user_id is None:
         return jsonify({"error": "Invalid JWT Token}"}), 400
-    user = db.session.query(models.user.User).get(user_id)
-    if user is None:
-        return jsonify({"error": "User not found."}), 404
     
     # Handle Case where QueryArg is a user_id
     # Get Profile Pictures of Another User Instead
     alt_user_id = request.args.get('user_id')
     if alt_user_id:
         user_id = alt_user_id
+        
+    # Check if the User has a Profile
+    user = db.session.query(models.user.User).get(user_id)
+    if user is None:
+        return jsonify({"error": "User not found."}), 404
     
     try:
         # Main Profile Picture
         main_photo = db.session.query( 
             models.photo.UserPhoto) \
-        .filter_by(user_id=user_id, is_main_photo=True) \
-        .first()
+        .filter_by(
+            user_id=user_id, is_main_photo=True
+        ).order_by(
+            models.photo.UserPhoto.upload_date.desc()
+        ).first()
         
         # Additional Profile Pictures
         additional_photos = db.session.query( 
             models.photo.UserPhoto) \
-        .filter_by(user_id=user_id, is_main_photo=False) \
-        .all()
+        .filter_by(user_id=user_id, is_main_photo=False
+        ).order_by(
+            models.photo.UserPhoto.upload_date.desc()
+        ).all()
+        
+        
 
-    except db.exc.SQLAlchemyError as e: # Database Errors
-        db.session.rollback()
-        return jsonify({f"error": "Database Error - {e}"}), 500
+    
+    except db.exc.SQLAlchemyError as e:  # Database Errors
+        return jsonify({"error": "Database Error", "details": str(e)}), 500
+    except Exception as e:  # Other Errors
+        return jsonify({"error": "An unexpected error occurred", "details": str(e)}), 500
+    
+    
+    # Check if Gallery is Empty
+    if additional_photos:
+        
+        titles = [photo.title for photo in additional_photos]
+        descriptions = [photo.description for photo in additional_photos]
+        print(f"Additional Photos: {titles} - {descriptions}")
+        logging.info(f"Additional Photos: {titles} - {descriptions}")
+
+    else:
+        
+        print("No Additional Photos Found.")
+        logging.info("No Additional Photos Found.")
+        titles = None
+        descriptions = None
     
     # Success Response
     return jsonify({
-        "main_photo": main_photo.url if main_photo else None,
+        "main_photo": str(main_photo.url) if main_photo else None,
         # Convert additional_photos to a list of URLs
-        "user_photos": [photo.url for photo in additional_photos] if additional_photos else None,
+        "user_photos": [photo.url for photo in additional_photos] if additional_photos else [],
+        
+        # TODO PARSE CLIENT SIDE
+        "titles": titles, 
+        
+        # TODO PARSE CLIENT SIDE
+        "descriptions": descriptions
     }), 200
-
 
 @user_bp.route('/users/profile_picture', methods=['DELETE'])
 @jwt_required()
@@ -441,3 +548,5 @@ def delete_user():
     except Exception as e:
         return jsonify({"error": "An unexpected error occurred.", "details": str(e)}), 500
     
+    
+## HELPER FUNCTIONS
