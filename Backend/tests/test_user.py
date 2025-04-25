@@ -18,7 +18,7 @@ from  Backend.src.utils import TestingConfig
 # Import the Models and Schemas
 from  Backend.src.models.user import  User, UserSchema
 from Backend.src.utils import EnvManager
-from Backend.scripts.gen_fake import GenFake
+from Backend.scripts.Generators.gen_fake import GenFake
 from Backend.tests.utils_for_tests import pytest_start_test_display, pytest_assertion_success, pytest_test_success, pytest_assertion_failure
 
 # TODO- assert JSON reponse is in the correct format returned from get_user() route for the test_get_user_route
