@@ -29,7 +29,7 @@ class Message(db.Model):
     # On Delete of User - Cascade to Remove Associated Messages
     messager_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
     #messagee_id = db.Column(db.String(64), db.ForeignKey('users.id'), nullable=False)
-    match_id = db.Column(db.Integer, db.ForeignKey('matches.id'), nullable=False)
+    match_id = db.Column(db.Integer, db.ForeignKey('matches.id',ondelete="CASCADE"), nullable=False)
 
     # Message Content as String
     message_content = db.Column(db.String(MESSAGE_CONTENT_LENGTH), nullable=False)
@@ -39,7 +39,7 @@ class Message(db.Model):
 
 
     message_read = db.Column(db.Boolean, nullable=False, default=False) #Indicate if Message has been Read
-    
+    kind = db.Column(db.String(10), nullable=False, default="text") # Type of Message - Text, Image, Video, etc.
 
 # Marshmallow Base Schema for the Message
 class MessageSchema(ma.SQLAlchemyAutoSchema):
