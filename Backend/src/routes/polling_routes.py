@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 
 from flask import request, jsonify, Blueprint
@@ -32,11 +33,16 @@ def poll_matches():
         
         helper = models.user.UserModelHelper(user_id)
         new_matches = helper.get_new_matches()
+                
+        # Update Last Online on Polling Matches
+        # Needed to Prevent Infinite Loop of Sending Messages
+        user.last_online = datetime.now(timezone.utc)
+        db.session.commit()
         
         if not new_matches:
             return jsonify({"status": "NONE"}), 200
         
-        response = match_response_helper(new_matches)     
+        response = match_response_helper(new_matches,user_id)     
         # Return the Response
         return jsonify({"status": "NEW", **response}), 200
     
@@ -56,8 +62,7 @@ def poll_messages():
         return jsonify({"error": "User not found."}), 404
 
     # Get the optional match_id from the query parameters
-    match_id = request.args.get('match_id', None)
-    
+    match_id = request.args.get('match_id', type=str)
     try:
         helper = models.match.MatchModelHelper()
         
@@ -68,9 +73,15 @@ def poll_messages():
             # Otherwise, get all new messages
             new_messages = helper.get_new_messages(user)
         
+        
+        # Update Last Online on Polling Messages
+        # Needed to Prevent Infinite Loop of Sending Messages
+        user.last_online = datetime.now(timezone.utc)
+        db.session.commit()
+        
         if not new_messages:
             return jsonify({"status": "NONE"}), 200
-        
+
         response = models.message.MessageSchema(many=True).dump(new_messages)
         
         msgs_shaped = []
@@ -97,4 +108,4 @@ def poll_messages():
     except ValidationError as e:
         return jsonify({"error": "Validation error occurred."}), 400
     except Exception as e:
-        return jsonify({"error": "An unexpected error occurred."}), 500
+        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
