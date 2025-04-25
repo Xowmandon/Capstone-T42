@@ -3,6 +3,10 @@
 # Last Updated: March 2025
 # Aided by https://www.toptal.com/developers/gitignore/api/vscode,macos,swift,python
 
+# Custom Ignore for Data Generation from Py 
+/Backend/Data
+/Data
+
 
 ### VisualStudioCode ####
 .vscode/*
