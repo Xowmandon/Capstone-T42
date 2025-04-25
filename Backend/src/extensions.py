@@ -21,7 +21,6 @@ from flask_jwt_extended import JWTManager
 from flask_bcrypt import Bcrypt
 import redis
 
-
 from Backend.src.utils import EnvManager
 
 # Load Environment Variables
@@ -65,3 +64,10 @@ media_storage_service = MediaStorageService(
 from Backend.src.services.messaging_service import GCPService
 # Instantiate GCPManager and initialize the Firebase app
 firebase_app = GCPService().get_app()
+
+
+# OpenAI Service
+
+
+from Backend.src.services.llm_service import LLMService
+llm_service = LLMService()
