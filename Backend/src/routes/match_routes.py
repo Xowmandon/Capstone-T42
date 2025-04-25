@@ -17,31 +17,43 @@ match_bp = Blueprint('match_bp', __name__)
 match_schema = models.match.MatchSchema()
 
 #-----Match Routes-----
-def match_response_helper(matches):
+def match_response_helper(matches,current_user_id):
     """
     Helper function to create a response for a match.
     """
+    helper = MatchModelHelper()
     matches_response = []
     for user_match in matches:
-            
+        
+        helper = MatchModelHelper(user_match.id)
         # Get the Last Message in the Match
-        last_message = user_match.get_last_message()
+        last_message = helper.get_last_message()
+        
+        if last_message:
+            if last_message.kind == "game":
+                last_message = "Active Game - Play Now! 🎮"
+            else:
+                last_message = last_message.message_content
+        else:
+            last_message = "No Messages - Be the First! 🐔"
         
         # Get the Matched User Id
-        matched_user_id = user_match.matchee_id if user_match.matcher_id == user_match.id else user_match.matcher_id
+        if user_match.matcher_id == current_user_id:
+            matched_user_id = user_match.matchee_id
+        else:
+            matched_user_id = user_match.matcher_id
         
         # Get the Matched User Object
         matched_user = models.user.User.query.get(matched_user_id)
-        
-        # TODO Get the Unread Count for the Match
+
         
         # Serialize the Match Data and Add to the Response
         match_data = {
-            "match_id": user_match.id,
+            "match_id": str(user_match.id),
             "matched_user_id": matched_user_id,
             "matched_user_name": matched_user.name,
             "match_date": user_match.match_date.isoformat(),
-            "last_message": last_message.message_content,
+            "last_message": last_message,
             #"unread_count": 0
         }
         
@@ -61,9 +73,7 @@ def get_matches():
         - match_id: str
         - matched_user_id: str
         - matched_user_name: str
-        - match_date: str
         - last_message: str 
-        - unread_count: int 
     """
     # Get current user and validate
     user_id = get_jwt_identity()
@@ -79,7 +89,7 @@ def get_matches():
             return jsonify({"error": "No matches found."}), 404
         
         # Create the response
-        matches_response = match_response_helper(matches)
+        matches_response = match_response_helper(matches,user_id)
         # Return the response
         
         # Return the response
@@ -162,8 +172,8 @@ def delete_match():
         
         # Get the ID from the request
         data = request.get_json()
-        matcher = data.get('matcher')
-        matchee = data.get('matchee')
+        matcher = data.get('matcher_id')
+        matchee = data.get('matchee_id')
         
         # Get the match from the database - According to Matcher and Matchee
         match = models.match.Match.query.filter_by(matcher=matcher, matchee=matchee).first()
