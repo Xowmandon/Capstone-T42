@@ -41,6 +41,13 @@ struct BuildProfileView: View {
     
     //@State var mainPhoto : Image = Image("default_avatar")
     //@State var biographyText : String = ""
+    @State var avatar : Avatar = Avatar(
+        body: .skin3,
+        hair: .shortBrown,
+        top: .hoodie,
+        bottom: .jeans,
+        face: .plain
+    )
     @State var prompts : [PromptItem] = []
     @State var galleryItems : [ImageGalleryItem] = []
     
@@ -91,7 +98,27 @@ struct BuildProfileView: View {
                     ProfileCard(profileImage: $profile.image, name: $profile.name, age: $profile.age, isEditable: true, focusedField: $focusedField)
                         .frame(minHeight: 400)
                     
-                    // Basic Info (Attributes)
+                    // MARK: Avatar Builder
+                    
+                    VStack {
+                        Text("My Avatar")
+                            .font(Theme.headerFont)
+                        HStack {
+                            AvatarPreview(avatar: avatar)
+                                .frame(maxHeight: 200)
+                            NavigationLink(destination: AvatarCreator(profileAvatar: $avatar).navigationBarBackButtonHidden()){
+                                VStack {
+                                    Image(systemName: "theatermask.and.paintbrush.fill")
+                                    Text("Edit avatar")
+                                }
+                            }
+                        }
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background{CardBackground()}
+                    
+                    // MARK: Basic Info (Attributes)
                     VStack (spacing : 10){
 
                         //Location

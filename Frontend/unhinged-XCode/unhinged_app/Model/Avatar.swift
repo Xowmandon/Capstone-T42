@@ -9,6 +9,7 @@ import SwiftUI
 import Foundation
 
 // Author: Allison Tang
+// edited by harry
 struct Avatar: Codable {
     var body: BodyType
     var hair: HairType
@@ -52,6 +53,7 @@ struct Avatar: Codable {
 }
 
 struct AvatarCreator: View {
+    @Binding var profileAvatar : Avatar
     @State private var avatar = Avatar(
         body: .skin3,
         hair: .shortBrown,
@@ -59,52 +61,75 @@ struct AvatarCreator: View {
         bottom: .jeans,
         face: .plain
     )
+    @Environment(\.dismiss) var dismiss
     
     var body: some View {
-        ScrollView {
+        ZStack {
             VStack(spacing: 20) {
                 AvatarPreview(avatar: avatar)
                     .padding()
                 
-                AvatarSection(title: "Body") {
-                    ForEach(Avatar.BodyType.allCases, id: \.self) { body in
-                        AvatarOption(imageName: body.rawValue, isSelected: avatar.body == body) {
-                            avatar.body = body
+                ScrollView {
+                    AvatarSection(title: "Body") {
+                        ForEach(Avatar.BodyType.allCases, id: \.self) { body in
+                            AvatarOption(imageName: body.rawValue, isSelected: avatar.body == body) {
+                                avatar.body = body
+                            }
+                        }
+                    }
+                    
+                    AvatarSection(title: "Hair") {
+                        ForEach(Avatar.HairType.allCases, id: \.self) { hair in
+                            AvatarOption(imageName: hair.rawValue, isSelected: avatar.hair == hair) {
+                                avatar.hair = hair
+                            }
+                        }
+                    }
+                    
+                    AvatarSection(title: "Top") {
+                        ForEach(Avatar.TopType.allCases, id: \.self) { top in
+                            AvatarOption(imageName: top.rawValue, isSelected: avatar.top == top) {
+                                avatar.top = top
+                            }
+                        }
+                    }
+                    
+                    AvatarSection(title: "Bottom") {
+                        ForEach(Avatar.BottomType.allCases, id: \.self) { bottom in
+                            AvatarOption(imageName: bottom.rawValue, isSelected: avatar.bottom == bottom) {
+                                avatar.bottom = bottom
+                            }
+                        }
+                    }
+                    
+                    AvatarSection(title: "Face") {
+                        ForEach(Avatar.FaceType.allCases, id: \.self) { face in
+                            AvatarOption(imageName: face.rawValue, isSelected: avatar.face == face) {
+                                avatar.face = face
+                            }
                         }
                     }
                 }
-                
-                AvatarSection(title: "Hair") {
-                    ForEach(Avatar.HairType.allCases, id: \.self) { hair in
-                        AvatarOption(imageName: hair.rawValue, isSelected: avatar.hair == hair) {
-                            avatar.hair = hair
-                        }
-                    }
+                Button {
+                    profileAvatar = avatar
+                    dismiss()
+                } label: {
+                    Text("Save")
+                        .font(Theme.bodyFont)
                 }
-                
-                AvatarSection(title: "Top") {
-                    ForEach(Avatar.TopType.allCases, id: \.self) { top in
-                        AvatarOption(imageName: top.rawValue, isSelected: avatar.top == top) {
-                            avatar.top = top
-                        }
-                    }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background{CardBackground()}
+                .padding(.top)
+            }
+            .padding()
+            VStack {
+                HStack {
+                    BackButton()
+                    Spacer()
                 }
-                
-                AvatarSection(title: "Bottom") {
-                    ForEach(Avatar.BottomType.allCases, id: \.self) { bottom in
-                        AvatarOption(imageName: bottom.rawValue, isSelected: avatar.bottom == bottom) {
-                            avatar.bottom = bottom
-                        }
-                    }
-                }
-                
-                AvatarSection(title: "Face") {
-                    ForEach(Avatar.FaceType.allCases, id: \.self) { face in
-                        AvatarOption(imageName: face.rawValue, isSelected: avatar.face == face) {
-                            avatar.face = face
-                        }
-                    }
-                }
+                .padding()
+                Spacer()
             }
         }
     }
@@ -124,7 +149,7 @@ struct AvatarPreview: View {
             Image(avatar.face.rawValue).resizable()
         }
         .frame(width: 128, height: 128)
-        .scaledToFit()
+        .scaledToFill()
     }
 }
 

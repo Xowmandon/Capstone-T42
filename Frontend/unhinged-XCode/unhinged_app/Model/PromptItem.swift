@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PromptItem : Identifiable {
+struct PromptItem : Identifiable, Codable {
     static let examplePromptChoices : [PromptChoice] = [PromptChoice(choice: "Duck"),
                                                         PromptChoice(choice: "Duck"),
                                                         PromptChoice(choice: "Goose")]
@@ -20,7 +20,7 @@ struct PromptItem : Identifiable {
     
     )
     
-    let id: UUID
+    var id: UUID = UUID()
     let question: String
     let choices: [PromptChoice]
     let correctChoice: PromptChoice.ID
@@ -35,11 +35,16 @@ struct PromptItem : Identifiable {
     
 }
 
-struct PromptChoice : Identifiable {
+struct PromptChoice : Identifiable, Codable {
     
     var id: UUID = UUID()
-    var isSelected: Bool = false
     let choice: String
+    var isSelected: Bool = false
+    
+    enum CodingKeys: CodingKey {
+        case id
+        case choice
+    }
     
 }
 

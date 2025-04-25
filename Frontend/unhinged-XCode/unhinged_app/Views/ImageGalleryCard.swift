@@ -74,6 +74,7 @@ struct ImageGalleryCard : View {
                         Image(systemName: "pencil")
                             .foregroundStyle(.secondary)
                         TextField("Title",text: $galleryItem.title)
+                            .lineLimit(1)
                             .font(Theme.titleFont)
                             //.focused($isFocused, equals: BuildProfileFocusedField.gallery)
                     }
@@ -81,13 +82,16 @@ struct ImageGalleryCard : View {
                         Image(systemName: "pencil")
                             .foregroundStyle(.secondary)
                         TextField("Describe your gallery item...", text: $galleryItem.description)
+                            .lineLimit(3, reservesSpace: true) // Always reserves space for 3 lines
                             .font(Theme.bodyFont)
                             //.focused($isFocused, equals: BuildProfileFocusedField.gallery)
                     }
                 } else {
                     Text(galleryItem.title)
+                        .lineLimit(1)
                         .font(Theme.headerFont)
                     Text(galleryItem.description)
+                        .lineLimit(3, reservesSpace: true)
                         .font(Theme.captionFont)
                 }
             }

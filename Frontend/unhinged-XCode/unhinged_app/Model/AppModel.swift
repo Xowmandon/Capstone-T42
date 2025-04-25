@@ -51,6 +51,7 @@ final class AppModel : ObservableObject {
             return
         }
         self.conversations = pulledConversations
+        self.conversations.append(Conversation(matchId: "", matchedUserId: "", matchedName: "", matchDate: "", lastMessage: "", id: UUID(), matchedProfile: Profile(name: "DEBUG"), messages: [], hasUnreadMessages: false))
     }
     
 }

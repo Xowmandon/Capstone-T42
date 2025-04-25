@@ -16,6 +16,9 @@ struct UnityGameView: View {
     private var unity = Unity.shared
     
     @Binding var showGameSheet : Bool
+
+    @Environment(\.dismiss) var dismiss
+    
     @ObservedObject var proxy : NativeCallProtocol = NativeCallProtocol.shared
     @EnvironmentObject var appModel : AppModel
     
@@ -42,6 +45,7 @@ struct UnityGameView: View {
             } else if let UnityContainer = unity.view.flatMap({ UIViewContainer(view: $0) }) {
                 UnityContainer
                     .ignoresSafeArea()
+                /*
                 VStack{
                     Spacer()
                     Button("Stop Game", systemImage: "stop", action: {
@@ -51,17 +55,26 @@ struct UnityGameView: View {
                             loading = false
                         })
                     })
-                    
                 }
+                 */
             } else {
-                Button("Start Game", systemImage: "play", action: {
-                    launchGame()
-                })
+                if !proxy.didFinishGame {
+                    Button("Start Game", systemImage: "play", action: {
+                        launchGame()
+                    })
+                } else {
+                    Text("Finished Game")
+                        .onAppear{
+                            dismiss()
+                        }
+                }
             }
             VStack{
                 HStack{
                     BackButton()
                         .padding()
+                        .padding(.horizontal)
+                        .offset(x: 30)
                         .frame(maxWidth: 30)
                     Spacer()
                 }
@@ -71,6 +84,9 @@ struct UnityGameView: View {
         .onDisappear{
             print("send message if finished game")
             finishGame()
+            DispatchQueue.main.async{
+                showGameSheet = false
+            }
         }
     }
     
@@ -80,6 +96,7 @@ struct UnityGameView: View {
         do {
             if !message.sentFromClient{ // Get game state from message data
                 gameData = try JSONDecoder().decode(GameMessageData.self, from: Data(message.content.utf8))
+                print("Decoded gameData: \(gameData)")
             } else { // Create game state structure and encode
                 let stateStruct = GameType.createGameStateStructure(gameType: gameType,
                                                                     clientPlayerProfile: appModel.profile,
@@ -108,14 +125,16 @@ struct UnityGameView: View {
             Task{
                 var gameData : GameMessageData = GameMessageData(gameIdentifier: gameType, stateJSON: "")
                 gameData.game_state = proxy.receivedMessage
+                gameData.game_name = gameType
                 let gameMessageData = try! JSONEncoder().encode(gameData)
                 let gameMessageString = String(data: gameMessageData, encoding: .utf8)!
                 print("SENT GAME STATE MESSAGE: \(gameMessageString)")
                 await APIClient.shared.pushConversationMessage(match_id: matchId, msgType: Message.Kind.game, content: gameMessageString)
             }
-            showGameSheet = false
             proxy.didFinishGame = false
         }
+        unity.stop()
+        dismiss()
+        //showGameSheet = false
     }
-    
 }

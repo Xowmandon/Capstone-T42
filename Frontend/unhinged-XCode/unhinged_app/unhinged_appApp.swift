@@ -54,6 +54,9 @@ struct unhinged_appApp: App {
                     } else {
                         
                         MatchView()
+                            .onAppear {
+                                //serverPoll.start()
+                            }
                         
                     }
                 } else {
@@ -61,6 +64,7 @@ struct unhinged_appApp: App {
                 }
             }
             .environmentObject(appModel)
+            .environmentObject(serverPoll)
         }
         
     }

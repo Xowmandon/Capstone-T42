@@ -44,10 +44,10 @@ enum GameType : String, Codable, CaseIterable {
     }
     
     struct ticTacToeData : Codable {
-        var winner      : String?   = nil
-        var boardState  : [String]  = ["", "", "",
-                                       "", "", "",
-                                       "", "", ""]
+        var winner      : String?   = ""
+        var boardState  : [String]  = ["X", "", "",
+                                       "", "O", "",
+                                       "", "", "X"]
         var nameP1      : String    = ""
         var nameP2      : String    = ""
         var playerNum   : Int       = 0  // 0 or 1

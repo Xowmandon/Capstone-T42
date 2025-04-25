@@ -14,6 +14,7 @@ struct MessageView : View {
     let profile : Profile
     let matchId : String
     @EnvironmentObject var appModel : AppModel
+    @EnvironmentObject var serverPoll : ServerPollingRepeater
     @ObservedObject var unityProxy : NativeCallProtocol = NativeCallProtocol.shared
     
     @State private var messages : [Message]
@@ -24,7 +25,13 @@ struct MessageView : View {
     @State private var shouldUpdateScrollPosition : Bool = false
     @State var loading : Bool = true
     
+    @State var activeGameMessageId : UUID = UUID()
+    private var activeGameMessage : Message {
+        return messages.first(where: {$0.id == activeGameMessageId})!
+    }
+    
     @FocusState var focusedOnKeyboard : Bool
+    
     
     init(profile: Profile, matchId: String){
         self.profile = profile
@@ -32,37 +39,73 @@ struct MessageView : View {
         messages = []
     }
     
+    @State var task: Task<Void, Never>?
+    private func startMessagePoller() {
+        if task == nil {
+            task = Task {
+                while !Task.isCancelled{
+                    print("Polling for new messages in convo with: \(profile.name) \(matchId)")
+                    fetchMessages()
+                    try? await Task.sleep(nanoseconds: 10 * 1_000_000_000)
+                }
+            }
+        }
+    }
+    private func stopMessagePoller() {
+        task?.cancel()
+    }
+    
+    
     @ViewBuilder
-    func messageBubble(message : Message, sentFromClient: Bool) -> some View {
+    func messageBubble(bubbleMessage : Message, sentFromClient: Bool) -> some View {
+        let gameData = try? JSONDecoder().decode(GameMessageData.self, from: Data(bubbleMessage.content.utf8))
         HStack {
             if sentFromClient{
                 Spacer()
             }
-            if message.kind == .text{
-                Text(message.content)
+            if bubbleMessage.kind == .text{
+                Text(bubbleMessage.content)
                     .padding()
                     .foregroundStyle(.white)
                     .background{
                         RoundedRectangle(cornerRadius: 10)
                             .foregroundStyle( sentFromClient ? .blue : .gray)
+                            .shadow(radius: 3)
                     }
                 
-            } else if message.kind == .game{
+            } else if bubbleMessage.kind == .game{
+                
                 VStack{
                     Image(systemName: "gamecontroller.fill")
                         .foregroundStyle(.background)
-                    Button{
+                        .padding()
+                        .font(.largeTitle)
+                    NavigationLink(destination: UnityGameView(message: bubbleMessage,
+                                                              gameType: gameData?.game_name ?? .none,
+                                                              matchedProfile: profile,
+                                                              matchId: matchId,
+                                                              showGameSheet: $showGameSheet,)
+                                                                .navigationBarBackButtonHidden()){
+                        Text("\(sentFromClient ? "Let's" : "Tap to ") Play: \(gameData?.game_name.rawValue ?? "")")
+                            .foregroundStyle(.background)
+                    }
+                    .disabled(sentFromClient)
+                    
+                    /*Button{
                         showUnityPlayer = true
+                        self.activeGameMessageId = bubbleMessage.id
                     } label: {
                         Text("Play Game")
                             .foregroundStyle(.background)
                     }
+                     */
                     //.disabled(sentFromClient)
                 }
                 .padding()
                 .background{
                     RoundedRectangle(cornerRadius: 10)
                         .foregroundStyle( sentFromClient ? .blue : .gray)
+                        .shadow(radius:3)
                 }
             }
             if !sentFromClient {
@@ -70,10 +113,6 @@ struct MessageView : View {
                 Spacer()
                 
             }
-        }
-        .sheet(isPresented: $showUnityPlayer){
-            UnityGameView(message: message, gameType: .none, matchedProfile: profile, matchId: matchId, showGameSheet: $showUnityPlayer)
-                .interactiveDismissDisabled(true)
         }
     }
     
@@ -146,11 +185,29 @@ struct MessageView : View {
                             }
                         }
                     }
+                    
                 }
                 
             }
         }
     }
+    
+    @ViewBuilder
+    func profileContent() -> some View {
+        VStack {
+            HStack{
+                BackButton()
+                    .padding(.horizontal)
+                Text("\(profile.name)'s Profile")
+                    .font(Theme.headerFont)
+                Spacer()
+            }
+            ScrollView{
+                ProfileContentView(currentProfile: profile)
+            }
+        }.navigationBarBackButtonHidden()
+    }
+    
     var body: some View {
         ZStack {
             VStack {
@@ -158,14 +215,15 @@ struct MessageView : View {
                 HStack{
                     BackButton()
                     Spacer()
-                    //NavigationLink(destination: ProfileView()){ }
-                    profile.image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 40, height: 40)
-                        .clipShape(Circle())
-                    Text(profile.name)
-                        .font(Theme.headerFont)
+                    NavigationLink(destination: profileContent()){
+                        profile.image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 40, height: 40)
+                            .clipShape(Circle())
+                        Text(profile.name)
+                            .font(Theme.headerFont)
+                    }
                     Spacer()
                     //present options sheet
                     Button(action: {showOptionsSheet.toggle()} ){
@@ -186,11 +244,17 @@ struct MessageView : View {
                             if !messages.isEmpty {
                                 VStack{
                                     ForEach(messages.reversed(), id: \.id) {message in
-                                        messageBubble(message: message, sentFromClient: message.sentFromClient)
+                                        messageBubble(bubbleMessage: message, sentFromClient: message.sentFromClient)
                                     }
                                     Color.clear.id("bottom")
                                         .frame(maxHeight: 1)
                                 }
+                                /*.sheet(isPresented: $showUnityPlayer){
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1){
+                                        UnityGameView(message: activeGameMessage, gameType: .none, matchedProfile: profile, matchId: matchId, showGameSheet: $showUnityPlayer)
+                                            .interactiveDismissDisabled(true)
+                                    }
+                                }*/
                             } else {
                                 Image(uiImage: UIImage(named: "Speech_bubble")!.withRenderingMode(.alwaysTemplate))
                                     .foregroundColor(.gray)
@@ -325,8 +389,11 @@ struct MessageView : View {
             
         }
         .onAppear{
-            fetchMessages()
+            startMessagePoller()
         }
+        /*.onChange(of: serverPoll.didDetectNewMessages) {
+            fetchMessages()
+        }*/
         // MARK: Game Entry Point
         .fullScreenCover(isPresented: $showGameSheet){
             gameSelect(showGameSheet: $showGameSheet)
@@ -345,9 +412,16 @@ struct MessageView : View {
         
     }
     private func fetchMessages() {
+        let testJsonString = """
+            {
+              "game_name": "TicTacToe",
+              "game_state": "{\\\"boardState\\\":[\\\"X\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"O\\\",\\\"\\\",\\\"\\\",\\\"X\\\",\\\"X\\\"],\\\"nameP1\\\":\\\"Harry Sho\\\",\\\"winner\\\":\\\"\\\",\\\"nameP2\\\":\\\"DEBUG\\\",\\\"playerNum\\\":0}"
+            }
+            """
         Task{
             loading = true
             messages = await APIClient.shared.getConversationMessages(match_id: self.matchId, limit: nil, page: nil, all_messages: true)
+            //messages.append(Message(kind: .game, content: testJsonString, sentFromClient: false))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
                 shouldUpdateScrollPosition = true
             }

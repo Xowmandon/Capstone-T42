@@ -132,6 +132,7 @@ class APIClient {
         guard let payload = try? JSONEncoder().encode(profileData) else {
             fatalError("Failed to encode payload")
         }
+        print("INIT PROFILE PAYLOAD: \(payload)")
         do {
             let data = try await apiTask(type: .post, endpoint: "users/profile", hasHeader: true ,headerValue: "Bearer \(token)", headerField: "X-Authorization", payload: payload)
             let response : [String:String] = try JSONDecoder().decode([String:String].self, from: data)
@@ -176,7 +177,7 @@ class APIClient {
         guard let ageString    = person["age"] else {
             throw TaskError.invalidValue("agestring")
         }
-        let age: Int    = Int(ageString)!
+        let age: Int?    = Int(ageString)
         
         guard let name   = person["name"] else {
             throw TaskError.invalidValue("nameString")
@@ -212,10 +213,17 @@ class APIClient {
         let imgs = await getProfileImgs(userId: idString)
         print("GET IMGS RETURNED: \(imgs)")
         
-        if let mainPhotoURL = imgs["main_photo"]?.first {
-            let mainPhotoUIImage = self.imageCache.image(for: URLRequest(url: URL(string: mainPhotoURL)!), withIdentifier: mainPhotoURL)
-            mainPhoto = Image(uiImage: mainPhotoUIImage!)
-            print("DECODE PROFILE MAIN PHOTO: \(mainPhotoURL)")
+        if let mainPhotoList = imgs["main_photo"], !mainPhotoList.isEmpty,
+           let mainPhotoURL = mainPhotoList.first,  // Safely get first element
+           let url = URL(string: mainPhotoURL) {    // Safely create URL
+            
+            if let cachedImage = self.imageCache.image(for: URLRequest(url: url),
+                                          withIdentifier: mainPhotoURL) {
+                mainPhoto = Image(uiImage: cachedImage)
+                print("DECODE PROFILE MAIN PHOTO: \(mainPhotoURL)")
+            } else {
+                print("DECODE PROFILE MAIN PHOTO: FOUND BUT NOT CACHED - \(mainPhotoURL)")
+            }
         } else {
             print("DECODE PROFILE MAIN PHOTO: NONE")
         }
@@ -223,7 +231,8 @@ class APIClient {
         if let userPhotoUrls = imgs["user_photos"],
            let galleryItemTitles = imgs["titles"],
            let galleryItemDescs = imgs["descriptions"] {
-            for ((url, title), desc) in zip(zip(userPhotoUrls, galleryItemTitles), galleryItemDescs) {
+            for (url, (title, desc)) in zip(userPhotoUrls, zip(galleryItemTitles, galleryItemDescs)) {
+                print("DECODE USER PHOTO: \(url)")
                 let galleryPhotoUIImage = self.imageCache.image(for: URLRequest(url: URL(string: url)!),withIdentifier: url) //may need URLRequest
                 let galleryImg = Image(uiImage: galleryPhotoUIImage!)
                 galleryItems.append(ImageGalleryItem(image: galleryImg, title: title, description: desc))
@@ -232,7 +241,7 @@ class APIClient {
             print("DECODE PROFILE USER PHOTOS: NONE")
         }
     
-        return Profile(id: idString, name: name, age: age, gender: gender, state: stateCode, city: cityString, bio: bioString, image: mainPhoto, galleryItems: galleryItems,)
+        return Profile(id: idString, name: name, age: age ?? -1, gender: gender, state: stateCode, city: cityString, bio: bioString, image: mainPhoto, galleryItems: galleryItems,)
     }
     
     //MARK: Get Swipes
@@ -596,7 +605,7 @@ class APIClient {
             let response : [String:String] = try JSONDecoder().decode([String:String].self, from: data)
             print(response)
             profile = try await decodeProfile(person: response)
-            print("Got profile: \(profile?.name)")
+            print("Got profile: \(String(describing: profile?.name))")
         } catch {
             print("Get Profile failed with error \(error.localizedDescription)")
         }
@@ -606,10 +615,20 @@ class APIClient {
     // MARK: Get Images (Main, Gallery)
     struct ImgResponse : Codable {
         
-        var main_photo : String?
-        var user_photos : [String]?
-        var titles : [String]?
-        var descriptions : [String]?
+        var main_photo : String
+        var user_photos : [String]
+        var titles : [String]
+        var descriptions : [String]
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+
+            // Decode each field with fallback defaults
+            self.main_photo = (try? container.decode(String.self, forKey: .main_photo)) ?? ""
+            self.user_photos = (try? container.decode([String].self, forKey: .user_photos)) ?? []
+            self.titles = (try? container.decode([String].self, forKey: .titles)) ?? []
+            self.descriptions = (try? container.decode([String].self, forKey: .descriptions)) ?? []
+        }
         
     }
     private func getProfileImgs(userId: String? = nil) async -> [String: [String]] {
@@ -649,30 +668,26 @@ class APIClient {
             print("GET PROFILE IMG RESPONSE: \(resp)")
             
             // Process main photo
-            if let mainPhotoURL = resp.main_photo {
-                result["main_photo"] = [mainPhotoURL]
-                await cacheImage(urlString: mainPhotoURL)
-            }
+            let mainPhotoURL = resp.main_photo
+            result["main_photo"] = [mainPhotoURL]
+            await cacheImage(urlString: mainPhotoURL)
             
             // Process user photos
-            if let userPhotos = resp.user_photos,
-               let titles = resp.titles,
-               let descriptions = resp.descriptions {
+            let userPhotos = resp.user_photos
+            let titles = resp.titles
+            let descriptions = resp.descriptions
                 
-                result["user_photos"] = userPhotos
-                result["titles"] = titles
-                result["descriptions"] = descriptions
-                
-                // Cache all user photos
-                await withTaskGroup(of: Void.self) { group in
-                    for urlString in userPhotos {
-                        group.addTask {
-                            await self.cacheImage(urlString: urlString)
-                        }
+            result["user_photos"] = userPhotos
+            result["titles"] = titles
+            result["descriptions"] = descriptions
+            
+            // Cache all user photos
+            await withTaskGroup(of: Void.self) { group in
+                for urlString in userPhotos {
+                    group.addTask {
+                        await self.cacheImage(urlString: urlString)
                     }
                 }
-            } else {
-                print("NO USER IMAGES FOUND")
             }
             
         } catch {
@@ -694,8 +709,8 @@ class APIClient {
                     self.imageCache.add(image, for: request, withIdentifier: urlString)
                     print("✅ Cached image: \(urlString)")
                     let requested = URLRequest(url: URL(string: urlString)!)
-                    guard let imagePullTest = self.imageCache.image(for: requested, withIdentifier: urlString) else {
-                        print("Failed to immediately retrieve image: <\(urlString)> <\(requested)>")
+                    guard let _ = self.imageCache.image(for: requested, withIdentifier: urlString) else {
+                        print("Failed to Retrieve Cached Image: <\(urlString)> <\(requested)>")
                         return
                     }
                 case .failure(let error):
@@ -704,6 +719,17 @@ class APIClient {
                 continuation.resume()
             }
         }
+    }
+    
+    // MARK: Prompts
+    
+    func getPrompts() async -> [PromptItem] {
+        guard let token = KeychainHelper.load(key: "JWTToken") else {
+            print("❌ No JWT token found")
+            return []
+        }
+        
+        return []
     }
     
     /*
@@ -895,8 +921,10 @@ class APIClient {
         DispatchQueue.main.sync{
             let controller = UIHostingController(rootView: image
                 .resizable()
-                .aspectRatio(contentMode: .fit)
+                .aspectRatio(contentMode: .fill)
+                //.offset(y: -20)
                 .frame(width: size.width, height: size.height)
+                .ignoresSafeArea()
             )
 
             let view = controller.view

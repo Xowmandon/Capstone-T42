@@ -105,13 +105,13 @@ struct PromptView : View {
 
 
 #Preview {
-    
+    /*
     let prompt_choices : [PromptChoice] = [
         PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
         PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1"),
         PromptChoice(id: UUID(), isSelected: false, choice: "Choice 1")
     ]
-    
+    */
     //PromptView(prompt: PromptItem(question: "Choose", choices: prompt_choices, correctChoice: prompt_choices[0].id), selectedChoice: prompt_choices[0].id)
                
 }

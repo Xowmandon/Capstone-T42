@@ -99,6 +99,7 @@
 				Views/MatchView.swift,
 				Views/MessageView.swift,
 				Views/ProfileCard.swift,
+				Views/ProfileContentView.swift,
 				Views/PromptFormView.swift,
 				Views/PromptView.swift,
 			);
@@ -136,6 +137,7 @@
 				Views/MatchView.swift,
 				Views/MessageView.swift,
 				Views/ProfileCard.swift,
+				Views/ProfileContentView.swift,
 				Views/PromptFormView.swift,
 				Views/PromptView.swift,
 			);

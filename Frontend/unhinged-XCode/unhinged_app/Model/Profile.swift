@@ -47,6 +47,7 @@ class Profile : Identifiable, ObservableObject {
     init(id: String = "0000", name: String, age: Int, gender: ProfileGender, state: USState, city: String, bio: String = "No Bio", image: Image = Image(systemName: "person.fill"), galleryItems: [ImageGalleryItem]? = nil) {
         self.profile_id = id
         self.name = name
+        self.age = age
         self.gender = gender
         self.state = state
         self.city = city

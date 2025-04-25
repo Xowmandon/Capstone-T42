@@ -27,6 +27,7 @@ class NativeCallProtocol : NativeCallsProtocol, ObservableObject {
     
     func didFinishLoadingInstance() { //callback runs when unity is ready to receive starting state
         Unity.shared.startMiniGame(launchMessage: startingState)
+        print("DidFinishLoadingInstance()")
     }
     
     func sendGameResult(_ result: NSNumber!) {
