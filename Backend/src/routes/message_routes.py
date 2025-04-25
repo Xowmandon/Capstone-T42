@@ -2,6 +2,7 @@
 
 # Routes for Message Resource
 
+from datetime import datetime, timezone
 import logging
 
 from flask import request, jsonify, Blueprint
@@ -28,23 +29,35 @@ message_bp_schema = models.message.MessageSchema()
 #message_schema = models.message.MessageSchema(only = ('messager', 'message_content', 'message_date'))
 
 
-def save_message(message_json):
+def save_message(message_dict):
     
     try:
-        # Extract the values from the data
-        message = message_bp_schema.loads(message_json)
         
          # Validate Match Exists
-        match = models.match.Match.query.get(message_json["match_id"])
+        match = models.match.Match.query.get(message_dict["match_id"])
         # Check if Match Exists
         if not match:
             raise ValidationError("Match not found in database.")
 
-        user = models.user.User.query.get(message_json["messager_id"])
+        user = models.user.User.query.get(message_dict["messager_id"])
         # Check if User Exists
         user_in_match = (user.id == match.matcher_id or user.id == match.matchee_id)
         if not user or not user_in_match:
             raise ValidationError("User not found in Match.")
+        
+        # Extract the values from the data
+        #message = message_bp_schema.load(message_dict)
+        timeDate = datetime.now(timezone.utc)
+        print(f"----Time Date----: {timeDate}")
+        
+        message = models.message.Message(
+            messager_id=message_dict["messager_id"],
+            match_id=message_dict["match_id"],
+            message_content=message_dict["message_content"],
+            kind=message_dict.get("kind"),  # Default to 'text' if not provided
+            message_date = timeDate  # Set to None for now, will be set later
+        )
+        # Set the message date to the current time
         
         # Add the new message to the session
         db.session.add(message)
@@ -65,9 +78,10 @@ def post_message():
     Summary: Create a new message and add it to the database.
     
     Parameters:
-        JSON object with the following fields:
+        JSON PAYLOAD object with the following fields:
             - match_id str, required
             - message_content: str, required
+            - kind: str, optional (Default 'text' for now)
             
     Request Headers:
         X-Authorization: JWT Token for the requesting user (Needs to Be Apart of the Match)
@@ -80,37 +94,52 @@ def post_message():
     
         messager_id = get_jwt_identity()
         data = request.get_json()
+        print(f"Data: {data}")
+        print(f"Messager ID: {messager_id}")
+        
         
         req_params = {
             "messager_id": messager_id,
-            "match_id": data.get('match_id'),
-            "message_content": data.get('message_content')
+            "match_id": int(data.get('match_id')),
+            "message_content": data.get('message_content') # Default type for now
         }
+        
+        kind = data.get('kind')
+        if kind not in ['text', 'game']:
+            return jsonify({"error": "Invalid message type."}), 400
+        
+        elif kind is not None:
+            req_params["kind"] = kind
     
-        # Save the message to the database
-        save_message(req_params)
+        try:
+            print(f"Request Params: {req_params}")
+            # Save the message to the database
+            save_message(req_params)
+        except Exception as e:
+            return jsonify({"error": "Failed to save message.", "details": str(e)}), 500
+        
         
         # Get Recipient ID
-        match = models.match.Match.query.get(req_params["match_id"])
-        if match.matcher_id == messager_id:
-            reciever_id = match.matchee_id
-        else:
-            reciever_id = match.matcher_id
+       # match = models.match.Match.query.get(req_params["match_id"])
+        #if match.matcher_id == messager_id:
+        #    reciever_id = match.matchee_id
+        #else:
+        #    reciever_id = match.matcher_id
         
         # Send FCM Notification to the recipient
-        send_fcm_notification(
-                user_id=reciever_id,
-                title="New Message Received!",
-                body=req_params["message_content"],
-                data_payload={
-                    "match_id": req_params["match_id"],
-                    "messager_id": messager_id,
-                    "message_content": req_params["message_content"]
-                }
-            )
+        #send_fcm_notification(
+        #        user_id=reciever_id,
+        #        title="New Message Received!",
+        #        body=req_params["message_content"],
+        #        data_payload={
+        #            "match_id": req_params["match_id"],
+        #            "messager_id": messager_id,
+        #            "message_content": req_params["message_content"]
+        #        }
+        #    )
 
         # Success Response
-        return jsonify({"Success":"Message Created and Sent successfully!"}), 201
+        return jsonify({"status":"SUCCESS"}), 201
 
     # Handle Validation and Database Errors
     except ValidationError as e:
@@ -151,9 +180,11 @@ def get_conversation():
     # Extract Parameters, with Defaults
     match_id = request.args.get("match_id", type=int)
     page = request.args.get("page", type=int, default=1)
-    limit = request.args.get("limit", type=int, default=10)
+    limit = request.args.get("limit", type=int, default=20)
     get_all = request.args.get("all_messages", type=lambda x: x.lower() == "true", default=False)
-
+    print(f"Get All Messages: {get_all}")
+    
+    
     # Get Match from Database
     match = models.match.Match.query.get(match_id)
 
@@ -164,17 +195,22 @@ def get_conversation():
     # Make sure the  Requesting user is part of the match
     user_id = get_jwt_identity()    
     user = models.user.User.query.get(user_id)
-    user_in_match = (user.id == match.user1_id or user.id == match.user2_id)
+    user_in_match = (user.id == match.matcher_id or user.id == match.matchee_id)
     if not user or not user_in_match:
         return jsonify({"error": "User not found in Match."}), 404
     
     # Get Messages
-    
-    conversation_data = MatchModelHelper().get_messages_in_match(match, limit, page, get_all)
+    conversation_data = MatchModelHelper(match_id=match_id).get_messages(limit, page, get_all)
 
     # Extract only relevant messages
-    messages_list = [message_bp_schema.dump(msg) for msg in conversation_data["messages"]]
-
+    messages_list = conversation_data["messages"]
+    print(f"Messages List: {messages_list}")
+    print(f"Type of Messages List: {type(messages_list)}")
+    # Check if Messages Exist
+    if not messages_list:
+        return jsonify({"error": "No messages found in conversation."}), 404
+    
+    
     # Log Retrieved Messages - TODO
     #for message in messages_list:
         #logging.info(f"Message: {message} -")
@@ -182,16 +218,16 @@ def get_conversation():
     msgs_shaped = []
     for m in messages_list:
         msgs_shaped.append({
-            "kind":            "text",                   # always text for now
+            "kind":            m.kind,                   # always text for now
             "content":         m.message_content,        # rename field
             "sentFromClient":  (m.messager_id == user_id)  # Bool
         })
             
     # Construct the Response, Base Message Return
     message_return = {
-        "match_id": match_id,
-        "messages": msgs_shaped,
-        "total_messages": conversation_data["total_messages"],
+        "match_id": str(match_id),
+        #"total_messages": str(conversation_data["total_messages"]),
+        "messages": msgs_shaped
     }
     
 
@@ -206,5 +242,5 @@ def get_conversation():
 
         
     return jsonify({
-        message_return
+        **message_return
     }), 200
