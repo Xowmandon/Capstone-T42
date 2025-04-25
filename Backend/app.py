@@ -31,17 +31,6 @@ from Backend.src.routes import (
 envMan = EnvManager()
 PASS_SECRET_KEY = envMan.load_env_var("PASS_SECRET_KEY")
 
-# Initialize the Logger
-file_handler = logging.FileHandler("app.log")
-# Extend Flask With Logging
-file_handler.setLevel(logging.INFO)
-# Set the log format
-formatter = logging.Formatter(
-    "%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-)
-file_handler.setFormatter(formatter)
-logger = logging.getLogger(__name__)
-
 
 # Load the Config for Flask App
 # - DB Configurations, (Host, Port, Database Name), etc
@@ -89,8 +78,20 @@ socketio = SocketIO(app)
 socketio.on_namespace(ChatNamespace("/chat"))
 socketio.on_namespace(ChatNamespace("/swipe"))
 
-# Register Logger with Flask
-app.logger.addHandler(file_handler)
+
+# LOGGING
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%H:%M:%S",
+    handlers=[
+        logging.FileHandler("app.log"),
+        logging.FileHandler("error.log")
+    ]
+)
+logger = logging.getLogger("unhinged_api")
+app.logger.handlers = logger.handlers
+
 
 
 
@@ -121,9 +122,10 @@ def before_request():
     # Get the current timestamp
     timestamp = datetime.now(timezone.utc).isoformat()
 
+    app.logger.info("-------------REQUEST:----------"+"--" * 40)
     # Log the request method and URL
     app.logger.info(f"Request: {request.method} {request.path}")
-    app.logger.info(f"Request Headers: {request.headers}")
+    #app.logger.info(f"Request Headers: {request.headers}")
     
     
     # Log URL parameters (query string)
@@ -133,9 +135,9 @@ def before_request():
     # Log body parameters (for POST/PUT requests)
     if request.method in ['POST', 'PUT', 'PATCH']:
         try:
-            logger.info(f"Body Parameters: {request.json}")
+            app.logger.info(f"Body Parameters: {request.json}")
         except Exception as e:
-            logger.warning(f"Failed to parse body parameters: {e}")
+             app.logger.warning(f"Failed to parse body parameters: {e}")
           
     # Example: Add custom headers to the response
     request.start_time = datetime.now()  
@@ -146,8 +148,8 @@ def after_request(response):
     """
 
    # Log the response status, method, and url
-    logger.info(f"Response: {response.status_code} for {request.method} {request.path}")
-
+    app.logger.info(f"RESPONSE: {response.status_code} for {request.method} {request.path}")
+    
     # Log response body (if applicable)
     if response.is_json:
         app.logger.info(f"Response Body: {response.get_json()}")
@@ -155,8 +157,9 @@ def after_request(response):
     # Example: Log request duration
     if hasattr(request, 'start_time'):
         duration = datetime.now() - request.start_time
-        logger.info(f"Request duration: {duration.total_seconds()} seconds")
+        app.logger.info(f"Request duration: {duration.total_seconds()} seconds")
     
+    app.logger.info("---" * 40)
     return response
 
 
@@ -164,8 +167,9 @@ def after_request(response):
 # Main Entry Point for the API Application
 if __name__ == '__main__':
 
-    socketio.logger.info('Flask App Starting')
+    app.logger.info('Starting Flask App...')
+
     # Run the Flask App with HTTP Support
     socketio.run(app, debug=True, port=3001)
     
-    socketio.logger.info('Flask App Finished Running')
+    app.logger.info('Stopping Flask App...')
