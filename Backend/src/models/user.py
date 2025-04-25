@@ -52,10 +52,10 @@ class User(db.Model):
                                    #nullable=True,
                                    #) # Profile Picture - URL to Image
 
-    bio = db.Column(db.String(500), nullable=True) # Bio - Description of User
+    bio = db.Column(db.String(1000), nullable=True) # Bio - Description of User
     
     # Location Information
-    state_code = db.Column(db.String(10), nullable=True)
+    state = db.Column(db.String(10), nullable=True)
     city = db.Column(db.String(100), nullable=True)
     country_code = db.Column(db.String(10), nullable=True)
     
@@ -164,8 +164,8 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
             return # Allow Null Bio
         
         # Validate the Bio Length and Content
-        elif len(text) > 500:
-            raise ValidationError("Bio must be less than 500 characters.")
+        elif len(text) > 1000:
+            raise ValidationError("Bio must be less than 100 characters.")
         elif len(text) < 1:
             raise ValidationError("Bio must be at least 1 character.")
         
@@ -198,6 +198,6 @@ class UserProfileSchema(ma.SQLAlchemyAutoSchema):
         model = User
         load_instance = True
         include_relationships = True
-        fields = ('age', 'name', 'gender', 'state_code', 'city', 'bio')
+        fields = ('age', 'name', 'gender', 'state', 'city', 'bio')
 
         # Set the Gender, State, and City to Lowercase

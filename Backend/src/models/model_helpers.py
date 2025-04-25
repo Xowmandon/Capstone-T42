@@ -44,11 +44,12 @@ class MatchModelHelper:
         """
         message = self.get_messages(limit=1)
         if message and message.get("messages"):
-            return message["messages"][0]
+            last_msg = message["messages"][0]
+            return last_msg
         else:
             return None
 
-    def get_messages(self, limit=10, page=1, get_all_messages=False): 
+    def get_messages(self, limit=20, page=1, get_all_messages=True): 
     
         """
         Retrieve messages exchanged between two users in a match.
