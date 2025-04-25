@@ -25,11 +25,11 @@ def get_swipe_pool():
     
     Returns:
         JSON with list: A list of potential matches for the user, including:
-        - Userid: str
+        - UserID: str
         - age: int
         - name: str
         - gender: str
-        - state_code: str
+        - state: str
         - city: str
         - bio: str
     """
@@ -44,7 +44,7 @@ def get_swipe_pool():
     if not preferences:
         return jsonify({"error": "Please set your dating preferences first."}), 400
     
-    req_limit = request.args.get("limit", default=20, type=int)
+    req_limit = request.args.get("limit", default=20,type=int)
     pool_service = SwipePoolService()
 
     try:
@@ -56,11 +56,11 @@ def get_swipe_pool():
         profiles = []
         for user in users_swipe_pool:
             profile = {
-                "userId": user.get("id"),
-                "age": user.get("age"),
+                "userID": user.get("id"),
+                "age": str(user.get("age")),
                 "name": user.get("name"),
                 "gender": user.get("gender"),
-                "state_code": user.get("state_code"),
+                "state": user.get("state"),
                 "city": user.get("city"),
                 "bio": user.get("bio"),
             }
