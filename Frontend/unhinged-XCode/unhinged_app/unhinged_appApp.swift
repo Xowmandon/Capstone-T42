@@ -17,9 +17,10 @@ struct unhinged_appApp: App {
         case match
     }
     
-    @StateObject var appModel : AppModel = AppModel()
-    @State var userIsAuthenticated : Bool = false
-    @State var navPath : [AppRoute] = [.login]
+    @StateObject    var appModel            : AppModel              = AppModel()
+    @StateObject    var serverPoll          : ServerPollingRepeater = ServerPollingRepeater()
+    @State          var userIsAuthenticated : Bool                  = false
+    //@State          var navPath             : [AppRoute]            = [.login]
     
     //TODO: get token from keychain and do auth check
     private var account : AccountData = AccountData.shared
@@ -42,7 +43,6 @@ struct unhinged_appApp: App {
                  account.finishedFirstTimeSetup()
              }
          */
-        
         WindowGroup {
             NavigationStack {
                 if userIsAuthenticated {

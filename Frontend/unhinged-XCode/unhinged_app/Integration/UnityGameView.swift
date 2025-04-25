@@ -14,7 +14,9 @@ import SwiftUI
 struct UnityGameView: View {
     
     private var unity = Unity.shared
-    private var proxy : NativeCallProtocol = NativeCallProtocol.shared
+    
+    @Binding var showGameSheet : Bool
+    @ObservedObject var proxy : NativeCallProtocol = NativeCallProtocol.shared
     @EnvironmentObject var appModel : AppModel
     
     let message : Message
@@ -24,11 +26,12 @@ struct UnityGameView: View {
     
     @State var loading : Bool = false
     
-    init(message: Message, gameType: GameType, matchedProfile: Profile, matchId : String) {
+    init(message: Message, gameType: GameType, matchedProfile: Profile, matchId : String, showGameSheet: Binding<Bool>) {
         self.message = message
         self.gameType = gameType
         self.matchedProfile = matchedProfile
         self.matchId = matchId
+        self._showGameSheet = showGameSheet
     }
     
     var body: some View {
@@ -82,10 +85,11 @@ struct UnityGameView: View {
                                                                     clientPlayerProfile: appModel.profile,
                                                                     matchedPlayerProfile: matchedProfile)
                 let stateJSON = try JSONEncoder().encode(stateStruct)
-                gameData.stateJSON = String(data: stateJSON, encoding: .utf8)!
+                gameData.game_state = String(data: stateJSON, encoding: .utf8)!
             }
             DispatchQueue.main.async(execute: {
                 loading = true
+                proxy.gameType = gameData.game_name
                 proxy.startingState = gameData
                 unity.start() //Start Client
                 loading = false
@@ -103,11 +107,13 @@ struct UnityGameView: View {
             print("Game finished")
             Task{
                 var gameData : GameMessageData = GameMessageData(gameIdentifier: gameType, stateJSON: "")
-                gameData.stateJSON = proxy.receivedMessage
+                gameData.game_state = proxy.receivedMessage
                 let gameMessageData = try! JSONEncoder().encode(gameData)
                 let gameMessageString = String(data: gameMessageData, encoding: .utf8)!
-                await APIClient.shared.pushConversationMessage(match_id: matchId, type: Message.Kind.game, content: gameMessageString)
+                print("SENT GAME STATE MESSAGE: \(gameMessageString)")
+                await APIClient.shared.pushConversationMessage(match_id: matchId, msgType: Message.Kind.game, content: gameMessageString)
             }
+            showGameSheet = false
             proxy.didFinishGame = false
         }
     }

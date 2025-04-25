@@ -40,7 +40,7 @@ class Unity {
         // Set bundle containing Unity's data folder
         framework.setDataBundleId("com.unity3d.framework")
 
-        // Register native call protocol
+        // Register native call protocol singleton with framework
         nativeCall = NativeCallProtocol.shared
         FrameworkLibAPI.registerAPIforNativeCalls(nativeCall)
         print("Did Initialize Unity Singleton")

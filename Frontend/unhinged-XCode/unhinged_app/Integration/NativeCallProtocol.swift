@@ -11,11 +11,13 @@ import UnityFramework
 class NativeCallProtocol : NativeCallsProtocol, ObservableObject {
     
     static let shared = NativeCallProtocol()
+    //private var unity = Unity.shared
     
     @Published var receivedMessage : String = ""
     @Published var didFinishGame : Bool = false
     //@Published var didFinishLoading : Bool = false
     
+    var gameType : GameType = .none
     var startingState : GameMessageData = GameMessageData(gameIdentifier: .none, stateJSON: "")
     
     //Methods called from Unity
@@ -38,6 +40,7 @@ class NativeCallProtocol : NativeCallsProtocol, ObservableObject {
         print("RECIEVED UNITY GAME STATE JSON: \(json)")
         receivedMessage = jsonString
         didFinishGame = true
+        Unity.shared.stop()
     }
     
 }

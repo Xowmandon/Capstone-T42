@@ -58,9 +58,13 @@ struct BuildProfileView: View {
             ZStack {
             // MARK: Profile Content
                 ScrollView {
-                    Text("My Profile")
-                        .font(Theme.titleFont)
-                    
+                    if !isFirstTimeCreation {
+                        Text("My Profile")
+                            .font(Theme.titleFont)
+                    } else {
+                        Text("Create My Profile")
+                            .font(Theme.titleFont)
+                    }
                     /*
                     //Avatar Customization
                     VStack (alignment: .leading) {

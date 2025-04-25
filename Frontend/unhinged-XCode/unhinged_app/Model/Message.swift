@@ -10,12 +10,12 @@ import Foundation
 struct Message : Identifiable, Codable {
     
     enum Kind : String, Codable {
-        case text
-        case game
+        case text = "text"
+        case game = "game"
     }
-    let id : String = UUID().uuidString
+    let id : UUID = UUID()
     
-    var kind : Kind = Kind.text
+    var kind : Kind
     var content : String = ""
     var sentFromClient : Bool = false
     

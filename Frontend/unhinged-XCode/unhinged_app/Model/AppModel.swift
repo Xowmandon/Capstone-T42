@@ -17,34 +17,25 @@ final class AppModel : ObservableObject {
     @Published var prospectiveMatches : [Profile]
     @Published var conversations : [Conversation]
     
-    private var poller : ServerPollingRepeater?
-    
     init() {
         
         self.prospectiveMatches = []
         self.conversations = []
         self.profile = Profile(name: AccountData.shared.fullName)
-        self.startPolling()
         
     }
     
-    func startPolling() {
-        poller = ServerPollingRepeater()
-        self.poller?.start()
-    }
-    func stopPolling(){
-        self.poller?.stop()
-    }
-    
     func getClientUserProfile() async {
-        let profile = await APIClient.shared.getProfile(userID: nil)
-        self.profile = profile!
+        Task {
+            let profile = await APIClient.shared.getProfile(userID: nil)
+            self.profile = profile!
+        }
         return
     }
     
     func getSwipeProfiles() async {
         //API call returns profile data
-        let pulledSwipeProfiles = await APIClient.shared.getSwipes(limit: 5)
+        let pulledSwipeProfiles = await APIClient.shared.getSwipes(limit: 10)
         guard !pulledSwipeProfiles.isEmpty else {
             print("No profiles found.")
             return
@@ -56,6 +47,7 @@ final class AppModel : ObservableObject {
         let pulledConversations = await APIClient.shared.getMatches()
         guard !pulledConversations.isEmpty else {
             print("No conversations found.")
+            self.conversations.append(Conversation(matchId: "", matchedUserId: "", matchedName: "", matchDate: "", lastMessage: "", id: UUID(), matchedProfile: Profile(name: "apple"), messages: [], hasUnreadMessages: false))
             return
         }
         self.conversations = pulledConversations

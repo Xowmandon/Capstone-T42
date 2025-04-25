@@ -50,7 +50,7 @@ enum GameType : String, Codable, CaseIterable {
                                        "", "", ""]
         var nameP1      : String    = ""
         var nameP2      : String    = ""
-        var playerNum   : Int       = 1
+        var playerNum   : Int       = 0  // 0 or 1
     }
     
     static func createGameStateStructure (gameType : GameType, clientPlayerProfile : Profile, matchedPlayerProfile : Profile) -> Codable {
@@ -70,7 +70,7 @@ enum GameType : String, Codable, CaseIterable {
         case .rpgBattle:
             return 0
         case .ticTacToe:
-            return ticTacToeData()
+            return ticTacToeData(nameP1: clientPlayerProfile.name, nameP2: matchedPlayerProfile.name)
         case .wipeTheIck:
             return 0
         }
@@ -107,12 +107,12 @@ enum GameType : String, Codable, CaseIterable {
 }
 
 struct GameMessageData: Codable {
-    var gameIdentifier: GameType
-    var stateJSON: String
+    var game_name: GameType
+    var game_state: String
     
     init(gameIdentifier: GameType, stateJSON: String) {
-        self.gameIdentifier = gameIdentifier
-        self.stateJSON = stateJSON
+        self.game_name = gameIdentifier
+        self.game_state = stateJSON
     }
 }
 

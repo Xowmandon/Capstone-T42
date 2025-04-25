@@ -164,9 +164,9 @@ class APIClient {
         
     }
     
-    // MARK: Get Swipes
+    // MARK: Decode Profile
     // Get Swipe profiles for MatchView()
-    func decodeProfile (person: [String:String]) throws -> Profile  {
+    func decodeProfile (person: [String:String]) async throws -> Profile  {
         
         //get attributes
         guard let idString  = person["userID"] else {
@@ -209,28 +209,33 @@ class APIClient {
         var mainPhoto : SwiftUI.Image = SwiftUI.Image(systemName: "person.fill")
         var galleryItems : [ImageGalleryItem] = []
         
-        Task {
-            let imgs = await getProfileImgs(userId: idString)
-            
-            if let mainPhotoURL = imgs["main_photo"]?.first {
-                let mainPhotoUIImage = self.imageCache.image(/*for: URLRequest(url: URL(string: mainPhotoURL)!),*/ withIdentifier: mainPhotoURL)
-                mainPhoto = Image(uiImage: mainPhotoUIImage!)
-            }
-            
-            if let userPhotoUrls = imgs["user_photos"],
-               let galleryItemTitles = imgs["titles"],
-               let galleryItemDescs = imgs["descriptions"] {
-                for ((url, title), desc) in zip(zip(userPhotoUrls, galleryItemTitles), galleryItemDescs) {
-                    let galleryPhotoUIImage = self.imageCache.image(withIdentifier: url) //may need URLRequest
-                    let galleryImg = Image(uiImage: galleryPhotoUIImage!)
-                    galleryItems.append(ImageGalleryItem(image: galleryImg, title: title, description: desc))
-                }
-            }
+        let imgs = await getProfileImgs(userId: idString)
+        print("GET IMGS RETURNED: \(imgs)")
+        
+        if let mainPhotoURL = imgs["main_photo"]?.first {
+            let mainPhotoUIImage = self.imageCache.image(for: URLRequest(url: URL(string: mainPhotoURL)!), withIdentifier: mainPhotoURL)
+            mainPhoto = Image(uiImage: mainPhotoUIImage!)
+            print("DECODE PROFILE MAIN PHOTO: \(mainPhotoURL)")
+        } else {
+            print("DECODE PROFILE MAIN PHOTO: NONE")
         }
         
+        if let userPhotoUrls = imgs["user_photos"],
+           let galleryItemTitles = imgs["titles"],
+           let galleryItemDescs = imgs["descriptions"] {
+            for ((url, title), desc) in zip(zip(userPhotoUrls, galleryItemTitles), galleryItemDescs) {
+                let galleryPhotoUIImage = self.imageCache.image(for: URLRequest(url: URL(string: url)!),withIdentifier: url) //may need URLRequest
+                let galleryImg = Image(uiImage: galleryPhotoUIImage!)
+                galleryItems.append(ImageGalleryItem(image: galleryImg, title: title, description: desc))
+            }
+        } else {
+            print("DECODE PROFILE USER PHOTOS: NONE")
+        }
+    
         return Profile(id: idString, name: name, age: age, gender: gender, state: stateCode, city: cityString, bio: bioString, image: mainPhoto, galleryItems: galleryItems,)
     }
     
+    //MARK: Get Swipes
     func getSwipes (limit: Int) async -> [Profile] {
         print("Attempting to pull swipe pool")
         let queryLimit : [URLQueryItem] = [URLQueryItem(name: "limit", value: String(limit))]
@@ -243,7 +248,7 @@ class APIClient {
             print(response)
             for person in response {
                 print("decoding \(person)")
-                let personProfile = try self.decodeProfile(person: person)
+                let personProfile = try await self.decodeProfile(person: person)
                 
                 /*
                 let decodedName = personProfile.name
@@ -363,7 +368,7 @@ class APIClient {
         
     // MARK: Push Message
     //Send message to conversation associated with match
-    func pushConversationMessage (match_id: String, type: Message.Kind?, content: String) async {
+    func pushConversationMessage (match_id: String, msgType: Message.Kind?, content: String) async {
         // Author: Joshua Ferguson (Xowmandon)
 
         guard let token = KeychainHelper.load(key: "JWTToken") else {
@@ -371,10 +376,11 @@ class APIClient {
             return
         }
 
-        var payload: [String: Any] = ["match_id": match_id,
-                                      "message_content": content,]
+        var payload: [String: String] = ["match_id" : match_id,
+                                         "kind"     : "",
+                                         "message_content": content,]
         // if you ever want to send kind to server:
-        if let kind = type {
+        if let kind = msgType {
             payload["kind"] = kind.rawValue
         }
 
@@ -394,7 +400,7 @@ class APIClient {
                 queryItems: nil,
                 payload: body
             )
-            print("✅ Message sent successfully")
+            print("✅ Message sent successfully: \(body)")
         } catch {
             print("❌ pushConversationMessage failed:", error.localizedDescription)
         }
@@ -457,12 +463,12 @@ class APIClient {
     
     
     // MARK: Poll Matches
-    func pollMatches() async {
+    func pollMatches() async -> Bool {
         // Author: Joshua Ferguson (Xowmandon)
         
         guard let token = KeychainHelper.load(key: "JWTToken") else {
             print("❌ No JWT token found")
-            return
+            return false
         }
 
         // Poll for new matches
@@ -482,7 +488,7 @@ class APIClient {
             let resp = try decoder.decode(PollMatchesResponse.self, from: data)
             if resp.status == "NEW" {
                 print("🎉 New match detected!")
-                
+                return true
                 // Handle new match here (TODO)
                 // Resp Structure:
                 // {
@@ -501,16 +507,16 @@ class APIClient {
             print("⚠️ Could not parse response:", error.localizedDescription)
         }
         // Send Signal if Returns New Match
-        
+        return false
     }
     
     // MARK: Poll messages
-    func pollMessages(matchId: String? = nil) async {
+    func pollMessages(matchId: String? = nil) async -> Bool {
         // Author: Joshua Ferguson (Xowmandon)
 
         guard let token = KeychainHelper.load(key: "JWTToken") else {
             print("❌ No JWT token found")
-            return
+            return false
         }
 
         print("Attempting to poll messages...Match ID: \(matchId ?? "No Match ID")")
@@ -537,7 +543,7 @@ class APIClient {
                 print("🎉 New messages detected for match_id: \(resp.matchId ?? "")")
                 print("Messages: \(resp.messages)")
                 print("Total messages: \(resp.messages.count)")
-                
+                return true
                 
                 // Handle new messages here (TODO)
                 // Resp Structure:
@@ -561,6 +567,7 @@ class APIClient {
         } catch {
             print("⚠️ Could not parse response:", error.localizedDescription)
         }
+        return false
     }
     
     
@@ -588,7 +595,7 @@ class APIClient {
                                          payload: nil)
             let response : [String:String] = try JSONDecoder().decode([String:String].self, from: data)
             print(response)
-            profile = try decodeProfile(person: response)
+            profile = try await decodeProfile(person: response)
             print("Got profile: \(profile?.name)")
         } catch {
             print("Get Profile failed with error \(error.localizedDescription)")
@@ -596,15 +603,110 @@ class APIClient {
         return profile
     }
     
-    // MARK: Get Profile Images (Main, Gallery)
+    // MARK: Get Images (Main, Gallery)
     struct ImgResponse : Codable {
         
-        var main_photo : [String]?
+        var main_photo : String?
         var user_photos : [String]?
         var titles : [String]?
         var descriptions : [String]?
         
     }
+    private func getProfileImgs(userId: String? = nil) async -> [String: [String]] {
+        // Initialize empty results
+        var result: [String: [String]] = [
+            "main_photo": [],
+            "user_photos": [],
+            "titles": [],
+            "descriptions": []
+        ]
+        
+        guard let token = KeychainHelper.load(key: "JWTToken") else {
+            print("❌ No JWT token found")
+            return result
+        }
+        
+        print("📥 Fetching profile images...")
+        
+        // If userId is nil, then Fetch Current User's Profile Images
+        let queryItems: [URLQueryItem]? = userId != nil ? [URLQueryItem(name: "user_id", value: userId)] : nil
+        
+        do {
+            // Make GET Request for Main and Additional Profile Picture S3 URLS
+            let data = try await apiTask(
+                type: .get,
+                endpoint: "users/profile_picture",
+                hasHeader: true,
+                headerValue: "Bearer \(token)",
+                headerField: "X-Authorization",
+                queryItems: queryItems,
+                payload: nil
+            )
+            
+            print("✅ getProfileImgs Success")
+            let decoder = JSONDecoder()
+            let resp = try decoder.decode(ImgResponse.self, from: data)
+            print("GET PROFILE IMG RESPONSE: \(resp)")
+            
+            // Process main photo
+            if let mainPhotoURL = resp.main_photo {
+                result["main_photo"] = [mainPhotoURL]
+                await cacheImage(urlString: mainPhotoURL)
+            }
+            
+            // Process user photos
+            if let userPhotos = resp.user_photos,
+               let titles = resp.titles,
+               let descriptions = resp.descriptions {
+                
+                result["user_photos"] = userPhotos
+                result["titles"] = titles
+                result["descriptions"] = descriptions
+                
+                // Cache all user photos
+                await withTaskGroup(of: Void.self) { group in
+                    for urlString in userPhotos {
+                        group.addTask {
+                            await self.cacheImage(urlString: urlString)
+                        }
+                    }
+                }
+            } else {
+                print("NO USER IMAGES FOUND")
+            }
+            
+        } catch {
+            print("⚠️ Get Profile Imgs failed with error:", error)
+        }
+        
+        print("GOT PROFILE IMG DATA: \(result)")
+        return result
+    }
+
+    private func cacheImage(urlString: String) async {
+        guard let url = URL(string: urlString) else { return }
+        
+        return await withCheckedContinuation { continuation in
+            AF.request(url).responseImage { response in
+                switch response.result {
+                case .success(let image):
+                    let request = URLRequest(url: url)
+                    self.imageCache.add(image, for: request, withIdentifier: urlString)
+                    print("✅ Cached image: \(urlString)")
+                    let requested = URLRequest(url: URL(string: urlString)!)
+                    guard let imagePullTest = self.imageCache.image(for: requested, withIdentifier: urlString) else {
+                        print("Failed to immediately retrieve image: <\(urlString)> <\(requested)>")
+                        return
+                    }
+                case .failure(let error):
+                    print("❌ Failed to fetch image \(urlString):", error.localizedDescription)
+                }
+                continuation.resume()
+            }
+        }
+    }
+    
+    /*
     private func getProfileImgs(userId: String? = nil) async -> [String:[String]] {
         
         var mainPhotoURL : [String] = []
@@ -624,8 +726,10 @@ class APIClient {
         let queryItems: [URLQueryItem]? = userId != nil ? [URLQueryItem(name: "user_id", value: userId)] : nil
 
         // Make GET Request for Main and Additional Profile Picture S3 URLS
+        let data : Data
+        let resp : ImgResponse = ImgResponse()
         do {
-            let data = try await apiTask(
+            data = try await self.apiTask(
                 type: .get,
                 endpoint: "users/profile_picture",
                 hasHeader: true,
@@ -639,33 +743,35 @@ class APIClient {
             let resp = try decoder.decode(ImgResponse.self, from: data)
             print("GET PROFILE IMG RESPONSE: \(resp)")
             
+        } catch {
+            print("⚠️ Get Profile Imgs failed with error:", error)
+        }
+        
+        await Task {
             // Decode Main Photo
             //var pulledProfileImageURLReqs : [URLRequest] = []
-            if let pulledPfp = resp.main_photo,
-               let pfpImgURLString = pulledPfp.first,
+            if let pfpImgURLString = resp.main_photo,
                let pfpImgURL = URL(string: pfpImgURLString) {
-                mainPhotoURL = pulledPfp
                 let pfpImgURLRequest = URLRequest(url: pfpImgURL)
-                AF.request(pfpImgURL).responseImage { response in
+                mainPhotoURL.append(pfpImgURLString)
+                AF.request(pfpImgURLRequest).responseImage { response in
                     print("AF MAIN PHOTO REQUEST: \(response)")
                     switch response.result {
-                        case .success(let image):
-                            self.imageCache.add(image, for: pfpImgURLRequest, withIdentifier: pfpImgURLString)
-                            print("✅ Cached image: \(pfpImgURL)")
-                        case .failure(let error):
-                            print("❌ Failed to fetch image:", error.localizedDescription)
-                        }
+                    case .success(let image):
+                        self.imageCache.add(image, for: pfpImgURLRequest, withIdentifier: pfpImgURLString)
+                        print("✅ Cached image: \(pfpImgURL)")
+                    case .failure(let error):
+                        print("❌ Failed to fetch image:", error.localizedDescription)
+                    }
                 }
                 
             }
-            
             // Decode Additional Photos
             var pulledGalleryImageURLReqs : [URLRequest] = []
-            
             if let pulledGallery = resp.user_photos,
                let pulledTitles = resp.titles,
                let pulledDescs = resp.descriptions
-               {
+            {
                 userPhotoURLs = pulledGallery
                 userPhotoTitles = pulledTitles
                 userPhotoDescs = pulledDescs
@@ -677,7 +783,8 @@ class APIClient {
                     }
                 }
                 for (urlString, urlReq) in zip(pulledGallery, pulledGalleryImageURLReqs) {
-                    AF.request(urlString).responseImage { response in
+                    AF.request(urlReq).responseImage { response in
+                        print("AF USER PHOTO REQUEST: \(response)")
                         switch response.result {
                             case .success(let image):
                             self.imageCache.add(image, for: urlReq, withIdentifier: urlString)
@@ -688,21 +795,29 @@ class APIClient {
                     }
                 }
                 
+            } else {
+                print("NO USER IMAGES FOUND")
             }
-        } catch {
-            print("⚠️ Get Profile Imgs failed with error:", error)
+            
         }
-        return ["main_photo" : mainPhotoURL,
-                "user_photos" : userPhotoURLs,
-                "titles" : userPhotoTitles,
-                "descriptions" : userPhotoDescs]
+
+        
+        let profileImgData = ["main_photo" : mainPhotoURL,
+                              "user_photos" : userPhotoURLs,
+                              "titles" : userPhotoTitles,
+                              "descriptions" : userPhotoDescs]
+        
+        print("GOT PROFILE IMG DATA: \(profileImgData)")
+        
+        return profileImgData
+        
     }
-    
+    */
     // MARK: Push Profile Image
     func pushProfileImg(isMainPhoto : Bool, title : String?, description: String?, image: SwiftUI.Image) async {
         //Author: Joshua Ferguson, pair programmed with Harry Aguinaldo
         
-        let uiImage = imageToUIImage(image: image, size: CGSize(width: 300, height: 300))
+        let uiImage = imageToUIImage(image: image, size: CGSize(width: 400, height: 400))
         
         // Make POST Request with JWT Token
         guard let token = KeychainHelper.load(key: "JWTToken") else {
@@ -777,26 +892,28 @@ class APIClient {
         }
     }
     func imageToUIImage(image: SwiftUI.Image, size: CGSize) -> UIImage {
-        let controller = UIHostingController(rootView: image
-            .resizable()
-            .aspectRatio(contentMode: .fit)
-            .frame(width: size.width, height: size.height)
-        )
+        DispatchQueue.main.sync{
+            let controller = UIHostingController(rootView: image
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: size.width, height: size.height)
+            )
 
-        let view = controller.view
-        let targetSize = CGSize(width: size.width, height: size.height)
+            let view = controller.view
+            let targetSize = CGSize(width: size.width, height: size.height)
 
-        let window = UIWindow(frame: CGRect(origin: .zero, size: targetSize))
-        window.rootViewController = controller
-        window.makeKeyAndVisible()
+            let window = UIWindow(frame: CGRect(origin: .zero, size: targetSize))
+            window.rootViewController = controller
+            window.makeKeyAndVisible()
 
-        view?.bounds = window.bounds
-        view?.backgroundColor = .clear
-        view?.layoutIfNeeded()
+            view?.bounds = window.bounds
+            view?.backgroundColor = .clear
+            view?.layoutIfNeeded()
 
-        let renderer = UIGraphicsImageRenderer(size: targetSize)
-        return renderer.image { _ in
-            view?.drawHierarchy(in: view!.bounds, afterScreenUpdates: true)
+            let renderer = UIGraphicsImageRenderer(size: targetSize)
+            return renderer.image { _ in
+                view?.drawHierarchy(in: view!.bounds, afterScreenUpdates: true)
+            }
         }
     }
 
@@ -805,33 +922,33 @@ class APIClient {
 
 
 struct PollMatchesResponse: Codable {
-let status: String
-let matchId: String?
-let matchedUserId: String?
-let matchedUserName: String?
-let matchDate: String?
-let lastMessage: String?
+    let status: String
+    let matchId: String?
+    let matchedUserId: String?
+    let matchedUserName: String?
+    let matchDate: String?
+    let lastMessage: String?
 
-enum CodingKeys: String, CodingKey {
-    case status
-    case matchId = "match_id"
-    case matchedUserId = "matched_user_id"
-    case matchedUserName = "matched_user_name"
-    case matchDate = "match_date"
-    case lastMessage = "last_message"
-}
+    enum CodingKeys: String, CodingKey {
+        case status
+        case matchId = "match_id"
+        case matchedUserId = "matched_user_id"
+        case matchedUserName = "matched_user_name"
+        case matchDate = "match_date"
+        case lastMessage = "last_message"
+    }
 
 }
 
 
 struct PollMessagesResponse: Codable {
-let status: String
-let matchId: String?
-let messages: [Message]
+    let status: String
+    let matchId: String?
+    let messages: [Message]
 
-enum CodingKeys: String, CodingKey {
-    case status = "status"
-    case matchId = "match_id"
-    case messages = "messages"
-}
+    enum CodingKeys: String, CodingKey {
+        case status = "status"
+        case matchId = "match_id"
+        case messages = "messages"
+    }
 }

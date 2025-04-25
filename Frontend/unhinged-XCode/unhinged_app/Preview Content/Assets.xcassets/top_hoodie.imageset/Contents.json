@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "top_hoodie.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

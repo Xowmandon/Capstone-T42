@@ -355,7 +355,7 @@ struct MatchView : View {
     
     func refreshMatches() {
         //MARK: Get Swipe Pool
-        if appModel.prospectiveMatches.isEmpty || appModel.prospectiveMatches.count < 2{
+        if appModel.prospectiveMatches.isEmpty || appModel.prospectiveMatches.count == 0{
             shouldShowProfile = false
             Task{
                 await appModel.getSwipeProfiles()

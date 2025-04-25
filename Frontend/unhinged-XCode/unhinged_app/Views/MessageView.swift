@@ -50,16 +50,19 @@ struct MessageView : View {
             } else if message.kind == .game{
                 VStack{
                     Image(systemName: "gamecontroller.fill")
+                        .foregroundStyle(.background)
                     Button{
                         showUnityPlayer = true
                     } label: {
                         Text("Play Game")
+                            .foregroundStyle(.background)
                     }
-                    .disabled(sentFromClient)
+                    //.disabled(sentFromClient)
                 }
+                .padding()
                 .background{
                     RoundedRectangle(cornerRadius: 10)
-                        .foregroundStyle( message.sentFromClient ? .blue : .gray)
+                        .foregroundStyle( sentFromClient ? .blue : .gray)
                 }
             }
             if !sentFromClient {
@@ -69,7 +72,7 @@ struct MessageView : View {
             }
         }
         .sheet(isPresented: $showUnityPlayer){
-            UnityGameView(message: message, gameType: .none, matchedProfile: profile, matchId: matchId)
+            UnityGameView(message: message, gameType: .none, matchedProfile: profile, matchId: matchId, showGameSheet: $showUnityPlayer)
                 .interactiveDismissDisabled(true)
         }
     }
@@ -107,7 +110,8 @@ struct MessageView : View {
     }
     */
     @ViewBuilder
-    func gameSelect() -> some View {
+    func gameSelect(showGameSheet : Binding<Bool>) -> some View {
+        
         NavigationStack {
             VStack{
                 HStack {
@@ -123,7 +127,8 @@ struct MessageView : View {
                         NavigationLink(destination: UnityGameView(message: Message(kind:.game, content: "", sentFromClient: true),
                                                                   gameType: game.self,
                                                                   matchedProfile: profile,
-                                                                  matchId: matchId).navigationBarBackButtonHidden())
+                                                                  matchId: matchId,
+                                                                  showGameSheet: $showGameSheet,).navigationBarBackButtonHidden())
                         {
                             HStack{
                                 Text("\(game.displayName)")
@@ -180,7 +185,7 @@ struct MessageView : View {
                             
                             if !messages.isEmpty {
                                 VStack{
-                                    ForEach(messages.reversed()) {message in
+                                    ForEach(messages.reversed(), id: \.id) {message in
                                         messageBubble(message: message, sentFromClient: message.sentFromClient)
                                     }
                                     Color.clear.id("bottom")
@@ -250,6 +255,10 @@ struct MessageView : View {
                     shouldUpdateScrollPosition = true
                 }
             }
+            .onChange(of: unityProxy.didFinishGame){
+                fetchMessages()
+            }
+            
         }
         .toolbar{
             ToolbarItemGroup (placement: .keyboard) {
@@ -320,7 +329,7 @@ struct MessageView : View {
         }
         // MARK: Game Entry Point
         .fullScreenCover(isPresented: $showGameSheet){
-            gameSelect()
+            gameSelect(showGameSheet: $showGameSheet)
         }
         .navigationBarBackButtonHidden()
     }
@@ -328,7 +337,7 @@ struct MessageView : View {
         // push message
         if !messageText.isEmpty {
             Task {
-                await APIClient.shared.pushConversationMessage(match_id: matchId , type: Message.Kind.text, content: messageText)
+                await APIClient.shared.pushConversationMessage(match_id: matchId , msgType: Message.Kind.text, content: messageText)
                 messageText = ""
                 fetchMessages();
             }
