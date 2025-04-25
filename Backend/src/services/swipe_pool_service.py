@@ -8,7 +8,7 @@ TODO - Testing and Validating Swipe Pool Generation and Cache
 import json, asyncio
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import joinedload
-from sqlalchemy import and_, exists, not_, or_
+from sqlalchemy import and_, exists, literal, not_, or_, select
 
 
 from Backend.src.extensions import db, redis_client # Import the DB Instance
@@ -65,7 +65,7 @@ class SwipePoolService:
         
         current_user = User.query.get(user_id)
         print(f"Current User: {current_user}")
-        print(f"Current User State: {current_user.state_code if current_user else 'None'}")
+        print(f"Current User State: {current_user.state if current_user else 'None'}")
         print(f"Current User City: {current_user.city if current_user else 'None'}")
 
         if not current_user:
@@ -81,26 +81,34 @@ class SwipePoolService:
         
         active_date = datetime.now() - timedelta(weeks=2)
         
-        #----- Raw, Basic Potential Matchmaking, filtered over Minimal Discriminants-----
+        # Exclude users swiped on by the current user (regardless of result) or involved in an "ACCEPTED" swipe
+        swipe_exclusion_exists = exists().where(
+            or_(
+                and_(Swipe.swiper_id == user_id, Swipe.swipee_id == User.id),
+                and_(Swipe.swiper_id == User.id, Swipe.swipee_id == user_id, Swipe.swipe_result == "ACCEPTED"),
+            )
+        ).correlate(User) 
+
         
-        # Check if a user has already been swiped on
-        current_user_already_swiped_exists = exists().where(
-            and_(Swipe.swiper_id == user_id, Swipe.swipee_id == User.id)
-        )
-
-        # Check if a user has rejected the current user
+        # Exclude users who have rejected the current user
         current_user_rejected_exists = exists().where(
-            and_(Swipe.swiper_id == User.id, Swipe.swipee_id == user_id, Swipe.swipe_result == "REJECTED")
-        )
-
+                and_(
+                    Swipe.swiper_id == User.id,
+                    Swipe.swipee_id == user_id,
+                    Swipe.swipe_result == "REJECTED"
+                )
+        ).correlate(User) 
+            
         # Base query for potential matches
         base_query = User.query.filter(
             User.id != user_id,
-            User.state_code == current_user.state_code,  # Same City and State
-            User.city == current_user.city,
-            not_(current_user_already_swiped_exists),  # Exclude users the current user has swiped on
-            not_(current_user_rejected_exists)  # Exclude users who rejected the current user
+            User.state == current_user.state,  # Same City and State
+            User.city == current_user.city, # Exclude users the current user has swiped on
+            not_(swipe_exclusion_exists),          #Exclude users who rejected the current use
+            not_(current_user_rejected_exists)    # Exclude users with "ACCEPTED" result
         )
+        
+        print(str(base_query.statement.compile(compile_kwargs={"literal_binds": True})))
  
         # Filtered Query for potential matches with Additional Dating Preferences
         filtered_query = base_query.join(DatingPreference, DatingPreference.user_id == User.id).filter(
@@ -117,6 +125,16 @@ class SwipePoolService:
             DatingPreference.age_preference_lower <= current_user.age,
             DatingPreference.age_preference_upper >= current_user.age
         )
+        
+        # Barb - PENDING
+        # Paula PENDING
+        #Brittany - PENDING
+        #Angela - PENDING
+        # Kristina - PENDING
+        # Bar Cohen
+        
+        print(str(base_query))
+        print(str(filtered_query))
 
         # Fetch Results from Filtered Query with Limit
         potential_matches = filtered_query.limit(limit).all()
