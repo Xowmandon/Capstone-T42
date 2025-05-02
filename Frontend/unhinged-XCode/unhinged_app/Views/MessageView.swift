@@ -45,8 +45,9 @@ struct MessageView : View {
             task = Task {
                 while !Task.isCancelled{
                     print("Polling for new messages in convo with: \(profile.name) \(matchId)")
-                    fetchMessages()
-                    try? await Task.sleep(nanoseconds: 10 * 1_000_000_000)
+                    messages = appModel.testMessages
+                    //fetchMessages()
+                    try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
                 }
             }
         }
@@ -76,18 +77,39 @@ struct MessageView : View {
             } else if bubbleMessage.kind == .game{
                 
                 VStack{
-                    Image(systemName: "gamecontroller.fill")
-                        .foregroundStyle(.background)
-                        .padding()
-                        .font(.largeTitle)
+                    
+                    if let gameName = gameData?.game_name.rawValue {
+                        Image("\(gameName)Thumb")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 200, maxHeight: 200)
+                            .mask(RoundedRectangle(cornerRadius: 10))
+                            .font(.largeTitle)
+                    } else {
+                        Image(systemName: "gamecontroller.circle.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: 200, maxHeight: 200)
+                            .mask(RoundedRectangle(cornerRadius: 10))
+                            .font(.largeTitle)
+                            .foregroundStyle(.background)
+                    }
                     NavigationLink(destination: UnityGameView(message: bubbleMessage,
                                                               gameType: gameData?.game_name ?? .none,
                                                               matchedProfile: profile,
                                                               matchId: matchId,
                                                               showGameSheet: $showGameSheet,)
                                                                 .navigationBarBackButtonHidden()){
-                        Text("\(sentFromClient ? "Let's" : "Tap to ") Play: \(gameData?.game_name.rawValue ?? "")")
-                            .foregroundStyle(.background)
+                        HStack {
+                            Text("\(sentFromClient ? "Let's" : " ▶️ Let's ") Play: \(gameData?.game_name.displayName ?? "")")
+                        }
+                        .padding()
+                        .frame(maxWidth: 200)
+                        .background{
+                            RoundedRectangle(cornerRadius: 10)
+                                .foregroundStyle(.background)
+                                .shadow(radius: 3)
+                        }
                     }
                     .disabled(sentFromClient)
                     
@@ -104,7 +126,7 @@ struct MessageView : View {
                 .padding()
                 .background{
                     RoundedRectangle(cornerRadius: 10)
-                        .foregroundStyle( sentFromClient ? .blue : .gray)
+                        .foregroundStyle( sentFromClient ? .blue : .secondary)
                         .shadow(radius:3)
                 }
             }
@@ -173,11 +195,13 @@ struct MessageView : View {
                                 Text("\(game.displayName)")
                                     .font(Theme.headerFont)
                                 Spacer()
-                                Image(systemName: "\(game.imageName)")
+                                Text("\(game.emoji)")
+                                    .font(.largeTitle)
+                                /*Image(systemName: "\(game.imageName)")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(maxWidth: 50)
-                                    .foregroundStyle(.blue)
+                                    .foregroundStyle(.blue)*/
                             }
                             .padding()
                             .background{
@@ -243,7 +267,7 @@ struct MessageView : View {
                             
                             if !messages.isEmpty {
                                 VStack{
-                                    ForEach(messages.reversed(), id: \.id) {message in
+                                    ForEach(/*appModel.testMessages*/messages.reversed(), id: \.id) {message in
                                         messageBubble(bubbleMessage: message, sentFromClient: message.sentFromClient)
                                     }
                                     Color.clear.id("bottom")
@@ -331,7 +355,9 @@ struct MessageView : View {
                         showGameSheet.toggle()
                         focusedOnKeyboard = false
                     } label: {
-                        Image(systemName: "gamecontroller.fill")
+                        //Image(systemName: "gamecontroller.fill")
+                        Text("🕹️")
+                            .font(.largeTitle)
                         Text("Press Start!")
                             .font(Theme.bodyFont)
                         Spacer()
@@ -391,6 +417,9 @@ struct MessageView : View {
         .onAppear{
             startMessagePoller()
         }
+        .onDisappear{
+            //stopMessagePoller()
+        }
         /*.onChange(of: serverPoll.didDetectNewMessages) {
             fetchMessages()
         }*/
@@ -418,6 +447,7 @@ struct MessageView : View {
               "game_state": "{\\\"boardState\\\":[\\\"X\\\",\\\"\\\",\\\"\\\",\\\"\\\",\\\"O\\\",\\\"\\\",\\\"\\\",\\\"X\\\",\\\"X\\\"],\\\"nameP1\\\":\\\"Harry Sho\\\",\\\"winner\\\":\\\"\\\",\\\"nameP2\\\":\\\"DEBUG\\\",\\\"playerNum\\\":0}"
             }
             """
+        
         Task{
             loading = true
             messages = await APIClient.shared.getConversationMessages(match_id: self.matchId, limit: nil, page: nil, all_messages: true)

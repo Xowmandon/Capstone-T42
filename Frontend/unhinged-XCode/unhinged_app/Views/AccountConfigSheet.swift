@@ -28,7 +28,7 @@ struct AccountConfigSheet : View {
                 NavigationLink(destination: BuildProfileView(isFirstTimeCreation: false)) {
                     HStack{
                         
-                        //Avatar
+                        //TODO: Avatar
                         appModel.profile.image
                             .resizable()
                             .scaledToFit()

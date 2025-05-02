@@ -17,6 +17,8 @@ final class AppModel : ObservableObject {
     @Published var prospectiveMatches : [Profile]
     @Published var conversations : [Conversation]
     
+    @Published var testMessages : [Message] = []
+    
     init() {
         
         self.prospectiveMatches = []
@@ -28,7 +30,7 @@ final class AppModel : ObservableObject {
     func getClientUserProfile() async {
         Task {
             let profile = await APIClient.shared.getProfile(userID: nil)
-            self.profile = profile!
+            self.profile = profile ?? Profile(name: AccountData.shared.fullName)
         }
         return
     }
@@ -47,11 +49,10 @@ final class AppModel : ObservableObject {
         let pulledConversations = await APIClient.shared.getMatches()
         guard !pulledConversations.isEmpty else {
             print("No conversations found.")
-            self.conversations.append(Conversation(matchId: "", matchedUserId: "", matchedName: "", matchDate: "", lastMessage: "", id: UUID(), matchedProfile: Profile(name: "apple"), messages: [], hasUnreadMessages: false))
+            //self.conversations.append(Conversation(matchId: "", matchedUserId: "", matchedName: "", matchDate: "", lastMessage: "", id: UUID(), matchedProfile: Profile(name: "DEBUG"), messages: [], hasUnreadMessages: false))
             return
         }
         self.conversations = pulledConversations
-        self.conversations.append(Conversation(matchId: "", matchedUserId: "", matchedName: "", matchDate: "", lastMessage: "", id: UUID(), matchedProfile: Profile(name: "DEBUG"), messages: [], hasUnreadMessages: false))
     }
     
 }

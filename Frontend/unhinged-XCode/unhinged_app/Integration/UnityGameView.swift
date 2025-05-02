@@ -59,9 +59,9 @@ struct UnityGameView: View {
                  */
             } else {
                 if !proxy.didFinishGame {
-                    Button("Start Game", systemImage: "play", action: {
+                    /*Button("Start Game", systemImage: "play", action: {
                         launchGame()
-                    })
+                    })*/
                 } else {
                     Text("Finished Game")
                         .onAppear{
@@ -80,6 +80,10 @@ struct UnityGameView: View {
                 }
                 Spacer()
             }
+        }
+        .onAppear(){
+            loading = true
+            launchGame()
         }
         .onDisappear{
             print("send message if finished game")
@@ -130,6 +134,8 @@ struct UnityGameView: View {
                 let gameMessageString = String(data: gameMessageData, encoding: .utf8)!
                 print("SENT GAME STATE MESSAGE: \(gameMessageString)")
                 await APIClient.shared.pushConversationMessage(match_id: matchId, msgType: Message.Kind.game, content: gameMessageString)
+                //MARK: test messages
+                appModel.testMessages.append(Message(kind: .game, content: gameMessageString))
             }
             proxy.didFinishGame = false
         }

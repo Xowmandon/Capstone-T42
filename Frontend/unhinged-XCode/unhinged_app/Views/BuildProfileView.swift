@@ -41,12 +41,16 @@ struct BuildProfileView: View {
     
     //@State var mainPhoto : Image = Image("default_avatar")
     //@State var biographyText : String = ""
-    @State var avatar : Avatar = Avatar(
-        body: .skin3,
-        hair: .shortBrown,
-        top: .hoodie,
-        bottom: .jeans,
-        face: .plain
+    @State private var avatar = Avatar(
+        body: .skin2,
+        hair: .longBlack,
+        face: .blush,
+        topCategory: .hoodies,
+        topIndex: 1,          // selects "top_hoodie2"
+        bottomCategory: .pants,
+        bottomIndex: 3,       // selects "bottom_pants4"
+        hatCategory: .caps,
+        hatIndex: 0           // selects "hat_cap1"
     )
     @State var prompts : [PromptItem] = []
     @State var galleryItems : [ImageGalleryItem] = []
@@ -104,8 +108,14 @@ struct BuildProfileView: View {
                         Text("My Avatar")
                             .font(Theme.headerFont)
                         HStack {
-                            AvatarPreview(avatar: avatar)
-                                .frame(maxHeight: 200)
+                            AvatarPreview(
+                                avatar: avatar,
+                                topSprite:    avatar.topCategory.sprites[avatar.topIndex],
+                                bottomSprite: avatar.bottomCategory.sprites[avatar.bottomIndex],
+                                hatSprite:    avatar.hatCategory.sprites[avatar.hatIndex]
+                            )
+                            .frame(maxHeight: 200)
+                            .scaledToFit()
                             NavigationLink(destination: AvatarCreator(profileAvatar: $avatar).navigationBarBackButtonHidden()){
                                 VStack {
                                     Image(systemName: "theatermask.and.paintbrush.fill")
