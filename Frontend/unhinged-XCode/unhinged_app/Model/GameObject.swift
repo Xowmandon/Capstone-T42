@@ -145,7 +145,7 @@ enum GameType: String, Codable, CaseIterable {
                 playerHPs: [100, 100],
                 playerStatuses: [.none, .none],
                 playerStatusDurations: [0, 0],
-                bossHP: 250,
+                bossHP: 500,
                 bossStatus: .none,
                 bossStatusDuration: 0,
                 randomSeed: 5678 /*Int.random(in: 0...Int.max)*/,

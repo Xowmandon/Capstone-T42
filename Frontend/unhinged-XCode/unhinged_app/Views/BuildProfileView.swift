@@ -304,6 +304,10 @@ struct BuildProfileView: View {
                         Spacer()
                         Button {
                             isShowingExitConfirmation = true
+                            if(isFirstTimeCreation){
+                                saveProfile()
+                                shouldGoToMatchView = true
+                            }
                         } label: {
                             Image(systemName: "checkmark")
                                 .padding()

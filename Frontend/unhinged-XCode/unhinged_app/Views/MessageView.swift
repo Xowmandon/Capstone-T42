@@ -45,9 +45,9 @@ struct MessageView : View {
             task = Task {
                 while !Task.isCancelled{
                     print("Polling for new messages in convo with: \(profile.name) \(matchId)")
-                    messages = appModel.testMessages
-                    //fetchMessages()
-                    try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+                    //messages = appModel.testMessages
+                    fetchMessages()
+                    try? await Task.sleep(nanoseconds: 10 * 1_000_000_000)
                 }
             }
         }
@@ -293,7 +293,7 @@ struct MessageView : View {
                         .onChange(of: focusedOnKeyboard) {
                             if focusedOnKeyboard {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
-                                    shouldUpdateScrollPosition = true
+                                    shouldUpdateScrollPosition.toggle()
                                 }
                             }
                         }
@@ -340,11 +340,14 @@ struct MessageView : View {
             .onTapGesture {
                 DispatchQueue.main.async{
                     focusedOnKeyboard = false
-                    shouldUpdateScrollPosition = true
+                    shouldUpdateScrollPosition.toggle()
                 }
             }
             .onChange(of: unityProxy.didFinishGame){
                 fetchMessages()
+                DispatchQueue.main.async{
+                    shouldUpdateScrollPosition.toggle()
+                }
             }
             
         }
@@ -435,7 +438,8 @@ struct MessageView : View {
             Task {
                 await APIClient.shared.pushConversationMessage(match_id: matchId , msgType: Message.Kind.text, content: messageText)
                 messageText = ""
-                fetchMessages();
+                fetchMessages()
+                shouldUpdateScrollPosition.toggle()
             }
         }
         
@@ -453,7 +457,7 @@ struct MessageView : View {
             messages = await APIClient.shared.getConversationMessages(match_id: self.matchId, limit: nil, page: nil, all_messages: true)
             //messages.append(Message(kind: .game, content: testJsonString, sentFromClient: false))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05){
-                shouldUpdateScrollPosition = true
+                shouldUpdateScrollPosition.toggle()
             }
             loading = false
         }

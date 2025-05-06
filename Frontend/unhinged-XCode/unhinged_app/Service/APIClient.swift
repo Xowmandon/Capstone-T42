@@ -234,7 +234,7 @@ class APIClient {
             for (url, (title, desc)) in zip(userPhotoUrls, zip(galleryItemTitles, galleryItemDescs)) {
                 print("DECODE USER PHOTO: \(url)")
                 let galleryPhotoUIImage = self.imageCache.image(for: URLRequest(url: URL(string: url)!),withIdentifier: url) //may need URLRequest
-                let galleryImg = Image(uiImage: galleryPhotoUIImage!)
+                let galleryImg = Image(uiImage: galleryPhotoUIImage ?? UIImage(systemName: "photo")!)
                 galleryItems.append(ImageGalleryItem(image: galleryImg, title: title, description: desc))
             }
         } else {
@@ -248,7 +248,7 @@ class APIClient {
     func getSwipes (limit: Int) async -> [Profile] {
         print("Attempting to pull swipe pool")
         let queryLimit : [URLQueryItem] = [URLQueryItem(name: "limit", value: String(limit))]
-        let token : String = KeychainHelper.load(key: "JWTToken")!
+        let token : String = KeychainHelper.load(key: "JWTToken") ?? ""
         var profiles : [Profile] = []
         do {
             let data = try await apiTask(type: .get, endpoint: "users/swipe_pool", hasHeader: true, headerValue: "Bearer \(token)", headerField: "X-Authorization", queryItems: queryLimit, payload: nil)

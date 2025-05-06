@@ -134,7 +134,7 @@ struct UnityGameView: View {
                 let gameMessageString = String(data: gameMessageData, encoding: .utf8)!
                 print("SENT GAME STATE MESSAGE: \(gameMessageString)")
                 await APIClient.shared.pushConversationMessage(match_id: matchId, msgType: Message.Kind.game, content: gameMessageString)
-                //MARK: test messages
+                //MARK: test messagesz
                 appModel.testMessages.append(Message(kind: .game, content: gameMessageString))
             }
             proxy.didFinishGame = false
