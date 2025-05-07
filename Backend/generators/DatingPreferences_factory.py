@@ -1,28 +1,23 @@
-
-
-import uuid
-import factory # Factory Boy
 import random
-from faker import Faker
-import bcrypt
-import faker
+import uuid
 
+import factory  # Factory Boy
 
-from Backend.src.extensions import db
 import Backend.src.models as models
-
+from Backend.src.extensions import db
 
 
 class DatingPreferencesFactory(factory.alchemy.SQLAlchemyModelFactory):
     class Meta:
         model = models.datingPreference.DatingPreference
         sqlalchemy_session = db.session
-        sqlalchemy_session_persistence = 'commit'
-        
+        sqlalchemy_session_persistence = "commit"
 
-    interested_in = factory.LazyFunction(lambda: random.choice(['male', 'female', 'any']))
+    interested_in = factory.LazyFunction(
+        lambda: random.choice(["male", "female", "any"])
+    )
 
-    #Generate the lower bound
+    # Generate the lower bound
     age_preference_lower = factory.LazyFunction(lambda: random.randint(18, 22))
 
     # Ensure the upper bound is strictly greater than the lower
@@ -31,6 +26,5 @@ class DatingPreferencesFactory(factory.alchemy.SQLAlchemyModelFactory):
     )
 
     # Link back to User
-    #from Backend.Generators.User_factory import UserFactory
+    # from Backend.Generators.User_factory import UserFactory
     user_id = factory.LazyAttribute(lambda o: uuid.uuid4())
-
