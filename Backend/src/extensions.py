@@ -51,8 +51,8 @@ redis_client = redis.Redis(
 ## S3 Client for Media Storage
 # Import the MediaStorageService Class - Imported Here to Avoid Circular Imports
 from Backend.src.services.media_storage_services import (
-    MediaStorageService,  # noqa: E402
-)
+    MediaStorageService,
+)  # noqa: E402; noqa: E402
 
 s3_client = boto3.client("s3", region_name=AWS_REGION)
 media_storage_service = MediaStorageService(
@@ -68,6 +68,6 @@ firebase_app = GCPService().get_app()
 # OpenAI Service
 
 
-from Backend.src.services.llm_service import LLMService
+from Backend.src.services.llm_service import LLMService  # noqa: E402
 
 llm_service = LLMService()

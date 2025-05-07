@@ -4,7 +4,7 @@ from typing import List
 from faker import Faker
 from flask_jwt_extended import create_access_token
 
-# import Backend.src.models as models
+import Backend.src.models as models
 from Backend import app
 from Backend.generators.DatingPreferences_factory import DatingPreferencesFactory
 from Backend.generators.photo_factory import PhotoFactory
@@ -21,10 +21,9 @@ fake = Faker()
 fake.seed_instance(16)
 
 
-
 class FactoryManager:
 
-    import Backend.src.models as models
+    # import Backend.src.models as models
 
     def __init__(self):
         self.jwts = []
@@ -254,9 +253,9 @@ class FactoryManager:
                 print(f"User with ID {user_id} not found.")
                 return
 
-            files = {
-                "profile_picture": open(file_path, "rb"),
-            }
+            # files = {
+            # "profile_picture": open(file_path, "rb"),
+            # }
 
             # content_type =
 
