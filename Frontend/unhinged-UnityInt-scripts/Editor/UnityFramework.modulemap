@@ -1,0 +1,14 @@
+/* Custom modulemap declaring NativeState plugin as submodule of
+   UnityFramework. This will expose plugin to Swift when importing framework.
+   See Assets/Editor/PostProcessBuild.cs for how this gets added to the Unity Xcode project. */
+// harry aguinaldo 04/21/2025
+// script adds bridging header to unity framework target membership
+framework module UnityFramework {
+  umbrella header "UnityFramework.h"
+  export *
+
+  module NativeState {
+      header "NativeCallProxy.h"
+      export *
+  }
+}

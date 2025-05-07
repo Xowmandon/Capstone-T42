@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "hat_beanie1.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
