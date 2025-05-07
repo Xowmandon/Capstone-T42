@@ -191,21 +191,21 @@ class MediaStorageService(BucketService):
                 
                 # LIMITS 1 GALLERY PHOTO
                 # If the user already has a gallery photo, Update URL and Upload_date
-                TESTING_EXISTING_GALLERY_PHOTO = UserPhoto.query.filter_by(user_id=user_id, is_main_photo=False).first()
-                if TESTING_EXISTING_GALLERY_PHOTO and not is_main_photo:
+                #TESTING_EXISTING_GALLERY_PHOTO = UserPhoto.query.filter_by(user_id=user_id, is_main_photo=False).first()
+                #if TESTING_EXISTING_GALLERY_PHOTO and not is_main_photo:
                     
                     # Get the old URL and filename TO Delete Old Object from S3
-                    old_url = TESTING_EXISTING_GALLERY_PHOTO.url
-                    old_parsed_url = urlparse(old_url)
-                    old_filename = os.path.basename(old_parsed_url.path)
+                    #old_url = TESTING_EXISTING_GALLERY_PHOTO.url
+                    #old_parsed_url = urlparse(old_url)
+                    #old_filename = os.path.basename(old_parsed_url.path)
                     
-                    TESTING_EXISTING_GALLERY_PHOTO.url = file_url
-                    db.session.commit()
+                    #TESTING_EXISTING_GALLERY_PHOTO.url = file_url
+                    #db.session.commit()
                     
                     # Delete Old Object from S3
-                    file_path = self._make_file_path(user_id=user_id, file_name=old_filename, folder=folder)
-                    super().delete_file(file_path)
-                    return file_url
+                    #file_path = self._make_file_path(user_id=user_id, file_name=old_filename, folder=folder)
+                    #super().delete_file(file_path)
+                    #return file_url
                 
                 
                 # Save to PostgreSQL

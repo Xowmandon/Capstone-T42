@@ -134,9 +134,10 @@ class MatchModelHelper:
                 models.message.Message.message_date > user.last_online
             )
         else:
+            match_ids = UserModelHelper(user.id).get_user_matches_ids()
             # Otherwise, get all new messages for the user
             new_messages = models.message.Message.query.filter(
-                models.message.Message.match_id.in_(user.get_user_matches_ids()),
+                models.message.Message.match_id.in_(match_ids),
                 models.message.Message.message_date > user.last_online
             )
             
